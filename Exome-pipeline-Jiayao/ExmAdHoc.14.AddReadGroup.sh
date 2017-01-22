@@ -51,6 +51,7 @@ BamNam=$(basename $BAM | sed s/.bam// ) # a name for the output files - basicall
 
 
 if [[ -z "$LogFil" ]]; then LogFil=$BamNam.FqB.log; fi # a name for the log file
+ADRFil=$BamNam.tmp.bam
 SrtFil=$BamNam.AddRG.bam #output file for sorted bam
 TmpLog=$BamNam.FqB.temp.log #temporary log file
 TmpDir=$BamNam.FqB.tempdir; mkdir -p $TmpDir #temporary directory
@@ -64,14 +65,25 @@ echo "----------------------------------------------------------------" >> $TmpL
 StepName="Add Read Groups with Picard"
 StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD AddOrReplaceReadGroups
  INPUT=$BAM
- OUTPUT=$SrtFil
- RGID=$SrtFil
+ OUTPUT=$ADRFil
+ RGID=$BamNam
  RGLB=lib1
  RGPL=illumina
  RGPU=unit1
  RGSM=20
  2>>$TmpLog"
 funcRunStep
+
+#Sort the bam file by coordinate
+StepName="Sort Bam using PICARD"
+StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD SortSam
+ INPUT=$ADRFil
+ OUTPUT=$SrtFil
+ SORT_ORDER=coordinate
+ CREATE_INDEX=TRUE
+ 2>>$TmpLog"
+funcRunStep
+rm $ADRFil #remove the "Aligned bam"
 
 #End Log
 funcWriteEndLog
