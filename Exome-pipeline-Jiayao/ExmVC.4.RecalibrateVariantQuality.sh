@@ -1,6 +1,4 @@
 #!/bin/bash
-#$ -cwd -l mem=24G,time=6:: -N VQSRFilt
-
 #This script takes a raw VCF file and performs GATK's variant quality score recalibration
 #    InpFil - (required) - Path to VCF file to be recalibrated
 #    RefFil - (required) - shell file containing variables with locations of reference files, jar files, and resource directories; see list below for required variables
@@ -16,6 +14,9 @@
 # $EXOMPPLN - directory containing exome analysis pipeline scripts
 # $GATK - GATK jar file 
 # $ETKEY - GATK key file for switching off the phone home feature, only needed if using the B flag
+# $TGVCF
+# $ONEKG
+# $INDEL
 
 #list of required tools:
 # java <http://www.oracle.com/technetwork/java/javase/overview/index.html>
@@ -65,12 +66,8 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions
 
 #Set local Variables
 VcfFil=`readlink -f $InpFil` #resolve absolute path to vcf
-HapChec=$(less $VcfFil | head -n 20 | grep "HaplotypeCaller" | wc -l) #check which VC tool was used
-if [[ $HapChec -gt 0 ]]; then
-    InfoFields="-an DP -an QD -an FS -an MQRankSum -an ReadPosRankSum"
-else
-    InfoFields="-an DP -an QD -an FS -an MQRankSum -an ReadPosRankSum -an HaplotypeScore"
-fi
+
+
 VcfNam=`basename $VcfFil | sed s/.gz$// | sed s/.vcf$// | sed s/.annotated$// | sed s/.list//` #basename for outputs
 if [[ -z "$LogFil" ]];then LogFil=$VcfNam.VQSR.log; fi # a name for the log file
 GatkLog=$VcfNam.VQSR.gatklog #a log for GATK to output to, this is then trimmed and added to the script log
@@ -81,11 +78,10 @@ TmpDir=$VcfNam.VQSR.tempdir; mkdir -p $TmpDir #temporary directory
 ProcessName="Variant Quality Score Recalibration GATK" # Description of the script - used in log
 funcWriteStartLog
 
-GATKJAR=/home/local/ARCS/hz2408/bin/GATK/GenomeAnalysisTK.jar
-
 ##Build the SNP recalibration model
+InfoFields="-an QD -an MQRankSum  -an ReadPosRankSum -an FS -an MQ -an SOR" 
 StepName="Build the SNP recalibration model with GATK VariantRecalibrator" # Description of this step - used in log
-StepCmd="java -Xmx9G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx12G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T VariantRecalibrator 
  -R $REF
  -input $VcfFil
@@ -97,6 +93,14 @@ StepCmd="java -Xmx9G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -mode SNP
  -tranche 100.0
  -tranche 99.9
+ -tranche 99.8
+ -tranche 99.7
+ -tranche 99.6
+ -tranche 99.5
+ -tranche 99.4
+ -tranche 99.3
+ -tranche 99.2 
+ -tranche 99.1
  -tranche 99.0
  -tranche 90.0
  -recalFile $VcfNam.recalibrate_SNP.recal
@@ -105,17 +109,17 @@ StepCmd="java -Xmx9G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -log $GatkLog" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 if [[ "$NoRecal" == "false" ]]; then
- funcRunStep
+  funcRunStep
 fi
 
 ##Apply SNP recalibration
 StepName="Apply SNP recalibration with GATK ApplyRecalibration" # Description of this step - used in log
-StepCmd="java -Xmx9G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx12G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T ApplyRecalibration
  -R $REF
  -input $VcfFil
  -mode SNP
- --ts_filter_level 99.0
+ --ts_filter_level 99.5
  -recalFile $VcfNam.recalibrate_SNP.recal
  -tranchesFile $VcfNam.recalibrate_SNP.tranches
  -o $VcfNam.recal_snps.vcf
@@ -123,14 +127,14 @@ StepCmd="java -Xmx9G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 if [[ "$NoRecal" == "false" ]]; then 
     funcRunStep
-    rm -f $VcfFil $VcfFil.tbi
+    #rm -f $VcfFil $VcfFil.tbi
     VcfFil=$VcfNam.recal_snps.vcf
 fi
 
 ##Build the InDel recalibration model
+InfoFields="-an QD -an MQRankSum -an ReadPosRankSum -an FS -an SOR" 
 StepName="Build the InDel recalibration model with GATK VariantRecalibrator" # Description of this step - used in log
-InfoFields="-an DP -an FS -an MQRankSum -an ReadPosRankSum"
-StepCmd="java -Xmx9G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx12G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T VariantRecalibrator
  -R $REF
  -input $VcfFil
@@ -140,6 +144,14 @@ StepCmd="java -Xmx9G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -mode INDEL
  -tranche 100.0
  -tranche 99.9
+ -tranche 99.8
+ -tranche 99.7
+ -tranche 99.6
+ -tranche 99.5
+ -tranche 99.4
+ -tranche 99.3
+ -tranche 99.2 
+ -tranche 99.1
  -tranche 99.0
  -tranche 90.0
  --maxGaussians 4
@@ -152,7 +164,7 @@ if [[ "$NoRecal" == "false" ]]; then funcRunStep; fi
 
 ##Apply InDel recalibration
 StepName="Apply InDel recalibration with GATK ApplyRecalibration" # Description of this step - used in log
-StepCmd="java -Xmx9G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx12G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T ApplyRecalibration
  -R $REF
  -input $VcfFil
@@ -167,12 +179,12 @@ if [[ "$NoRecal" == "false" ]]; then
    funcRunStep
    rm -f $VcfFil $VcfFil.idx
    VcfFil=$VcfNam.recalibrated.vcf
-   rm -rf *INDEL* *SNP*
+   #rm -rf *INDEL* *SNP*
 fi
 
 #Apply Hard Filters to VCF
 StepName="Apply Hard Filters with GATK Variant Filtration" # Description of this step - used in log
-StepCmd="java -Xmx9G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx12G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T VariantFiltration
  -R $REF
  --variant $VcfFil
@@ -186,10 +198,8 @@ StepCmd="java -Xmx9G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  --filterName \"FS_Bad_SNP\"
  --filterExpression \"FS>=25.0&&FS<40.0\"
  --filterName \"FS_Mid_SNP\"
- --filterExpression \"QD<2.5\"
+ --filterExpression \"QD<2\"
  --filterName \"QD_Bad_SNP\"
- --filterExpression \"QD>=2.5&&QD<4.0\"
- --filterName \"QD_Mid_SNP\"
  --filterExpression \"QD<1.0\"
  --filterName \"LowQD_Indel\"
  --filterExpression \"FS>=25.0\"
@@ -199,30 +209,21 @@ StepCmd="java -Xmx9G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  --missingValuesInExpressionsShouldEvaluateAsFailing
  -log $GatkLog" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags e.g. -B or -F
-funcRunStep
-rm $VcfFil $VcfFil.idx
-VcfFil=$VcfNam.hardfiltered.vcf
+#funcRunStep
+#rm $VcfFil $VcfFil.idx
+#VcfFil=$VcfNam.hardfiltered.vcf
 
 #gzip and index
 StepName="Gzip the vcf and index" # Description of this step - used in log
 StepCmd="bgzip $VcfFil; tabix -f -p vcf $VcfFil.gz"
-funcRunStep
-rm $VcfFil $VcfFil.idx
-VcfFil=$VcfFil.gz
+#funcRunStep
+#rm $VcfFil $VcfFil.idx
+#VcfFil=$VcfFil.gz
 
-
-#Call next steps of pipeline if requested
-NextJob="Recalibrate Variant Quality"
-NextCmd="$EXOMPPLN/ExmVC.5.MakeKinTestFilesFromVCF.sh -i $VcfFil -l $LogFil > stdostde/MakeKinFiles.$VcfNam 2>&1"
-funcPipeLine
-
-#Get VCF stats with python script
-PipeLine="true"
-NextJob="Get VCF stats"
-NextCmd="$EXOMPPLN/ExmVC.6.GetVCFStats.sh -i $VcfFil -l $LogFil > stdostde/GetVCFstats.$VcfNam 2>&1"
-funcPipeLine
-
+rm *R
+rm *tranches
+rm *idx
+rm *recal
 #End Log
 funcWriteEndLog
 
-#Clean up

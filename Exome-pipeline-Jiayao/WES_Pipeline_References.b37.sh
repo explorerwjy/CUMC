@@ -4,20 +4,20 @@ export EXOMRES="/home/local/users/jw/resources" # Directory containing resources
 
 #jar files  and directories for software
 GATKJAR="/home/local/users/jw/bin/GenomeAnalysisTK.jar" #Current GATK jar file
-PICARD="/home/local/users/jw/bin/" #directory containing Picard jar files
+PICARD="/home/local/users/jw/bin/picard.jar" #directory containing Picard jar files
 SNPEFF="/home/local/users/jw/bin/snpEff.jar" # Current snpEff jar file
 
 ## References
 export BUILD="b37" # shorthand for build
 export REF="$EXOMRES/reference_genomes/hg19/hg19.fasta" # human 1000 genome assembly from GATK
 export HAPMAP="$EXOMRES/references/b37/hapmap_3.3.b37.vcf" # hapmap vcf from GATK
-export INDEL="$EXOMRES/references/b37/Mills_and_1000G_gold_standard.indels.b37.vcf" # Gold standard INDEL reference from GATK
-export TGVCF="$EXOMRES/references/b37/1000G_omni2.5.b37.vcf" 
+export INDEL="$EXOMRES/references/b37/Mills_and_1000G_gold_standard.indels.b37.sites.vcf" # Gold standard INDEL reference from GATK
+export TGVCF="$EXOMRES/references/b37/1000G_omni2.5.b37.sites.vcf" 
 export INDEL1KG="$EXOMRES/references/b37/1000G_phase1.indels.b37.vcf" # INDEL reference from 1000 genomes
-export DBSNP="$EXOMRES/references/b37/dbsnp_137.b37.vcf" # dbSNP vcf from GATK
+export DBSNP="$EXOMRES/references/b37/dbsnp_138.b37.vcf" # dbSNP vcf from GATK
 export ONEKG="$EXOMRES/references/b37/1000G_phase1.snps.high_confidence.b37.vcf" # 1000 genome SNPs vcf
-export ANNOVAR='/home/local/ARCS/hq2130/src/annovar'
-export ANNHDB='/home/local/ARCS/hz2408/resources/humandb/' #Location of annovar databases
+export ANNOVAR='/home/local/users/jw/software_packages/annovar'
+export ANNHDB='/home/local/users/jw/software_packages/annovar/humandb' #Location of annovar databases
 export HUMANREF="$EXOMRES/human_g1k_v37.fasta" # human 1000 genome assembly from GATK
 
 export STHSH="$EXOMRES/references/b37/stampy_b37" # hash file for Stampy - omit ".sthash" extension for compatibility with Stampy
