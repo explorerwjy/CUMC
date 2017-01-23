@@ -149,6 +149,9 @@ for WhichCode in CodingTypes:
                         if str(GT) == "./.":
                             # the genotype was not called...
                             UnCalled=True
+                        if str(GT) == ".":
+                            # the genotype was not called...
+                            UnCalled=True
                         if str(GT) == "0/0":
                             # the genotype was not called...
                             WildType=True

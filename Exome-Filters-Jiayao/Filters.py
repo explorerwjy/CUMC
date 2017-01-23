@@ -56,18 +56,19 @@ def Filter(VCFin,VCFout,Filters):
 		#	Count_Pass += 1
 		
 		#CodingRegion = ['exonic','splicing']
-		#if F_ExAC_Coding(llist[7],0.001,CodingRegion):
-		#	fout.write(l)
-		#	Count_Pass += 1
+		CodingRegion = ['exonic','splicing','exonic-splicing']
+		if F_ExAC_Coding(llist[7],0.01,CodingRegion):
+			fout.write(l)
+			Count_Pass += 1
 		
 		#CodingRegion = ['exonic','splicing','exonic-splicing']
 		#if F_Coding(llist[7],CodingRegion):
 		#	fout.write(l)
 		#	Count_Pass += 1
 	
-		if F_ExAC(llist[7],0.0001):
-			fout.write(l)
-			Count_Pass +=1
+		#if F_ExAC(llist[7],0.001):
+		#	fout.write(l)
+		#	Count_Pass +=1
 		
 		if Count_All % 10000 == 0:
 			print "Read %d Variants"%Count_All
@@ -120,14 +121,6 @@ def F_ExAC(INFO,ExACfreq):
 		except ValueError:
 			return True
 	return False
-
-def main():
-	VCFin,VCFout,Filters = GetOptions()
-	Filter(VCFin,VCFout,Filters)
-
-if __name__=='__main__':
-	main()
-
 
 def F_ExAC_Coding(INFO,ExACfreq,Region):
 	infolist = INFO.split(';')
