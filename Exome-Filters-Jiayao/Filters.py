@@ -5,7 +5,7 @@
 # Filters on VCF file
 #========================================================================================================
 
-from optparse import OptionParser
+from optparse import OptionParserfgfgfgfgfgfgfgf
 import gzip
 import os
 
