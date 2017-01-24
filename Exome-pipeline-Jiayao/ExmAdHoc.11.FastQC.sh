@@ -18,29 +18,39 @@ usage="
  (-t <X>-<Y> [if providing a list]) ExmAdHoc.11.FastQC.sh -i <InputFile> -H
 
      -i (required) - Path to Bam file or \".list\" file containing a multiple paths
-     -H (flag) - echo this message and exit
+	 -a (optional) - ArrNum for jobs if a list of bam/fq given.
+	 -r (required)
+	 -H (flag) - echo this message and exit
 "
 
 
 
 #get arguments
-while getopts i:H opt; do
+while getopts i:r:d:a:H opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
-        H) echo "$usage"; exit;;
+		r) RefFil="$OPTARG";;
+		a) ArrNum="$OPTARG";;
+		d) OutDir="$OPTARG";;
+		H) echo "$usage"; exit;;
     esac
 done
 
+#RefFil=`readlink -f $RefFil`
+#source $RefFil
 
 #Load script library
-source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
+#source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
 
 #Set Local Variables
-ArrNum=$SGE_TASK_ID
-funcFilfromList #if the input is a list get the appropriate input file for this job of the array --> $InpFil
-FQFil=`readlink -f $InpFil`
+#ArrNum=$SGE_TASK_ID
+
+#funcFilfromList #if the input is a list get the appropriate input file for this job of the array --> $InpFil
+InpFil=`readlink -f $InpFil`
+FQFil=$(tail -n+$ArrNum $InpFil | head -n 1)
 
 #Run fastqc
 echo $InpFil
 echo $FQFil
-fastqc --outdir ./ $FQFil
+mkdir -p $OutDir
+fastqc --outdir $OutDir $FQFil
