@@ -1,13 +1,8 @@
 #!/bin/bash
-#$ -S /bin/bash
-#$ -j y
-#$ -N DepOfCov
-#$ -l h_rt=12:00:00
-#$ -l h_vmem=16G
-#$ -cwd
 
 #This script takes a bam file and generates depth of coverage statistics using GATK
-#    InpFil - (required) - Path to Bam file to be aligned.
+#    InpFil - (required) - Path to Bam file to be aligned or a file containing a list of bam files one per line (file names must end ".list")
+#            if it is a list then call the job as an array job with -t 1:n where n is the number of bams
 #    RefFil - (required) - shell file containing variables with locations of reference files, jar files, and resource directories; see list below for required variables
 #    TgtBed - (required) - Exome capture kit targets bed file (must end .bed for GATK compatability)
 #    LogFil - (optional) - File for logging progress
@@ -48,13 +43,15 @@ BadEt="false"
 FullDoC="false"
 
 #get arguments
-while getopts i:r:t:l:DCBH opt; do
+while getopts i:r:a:t:l:DCBFH opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
         r) RefFil="$OPTARG";; 
+        a) ArrNum="$OPTARG";; 
         t) TgtBed="$OPTARG";; 
         l) LogFil="$OPTARG";;
         D) FullDoC="true";;
+        F) FixMisencoded="true";;
         C) BadCigar="true";;
         B) BadET="true";;
         H) echo "$usage"; exit;;
@@ -62,7 +59,7 @@ while getopts i:r:t:l:DCBH opt; do
 done
 
 #check all required paramaters present
-if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]] || [[ -z "$TgtBed" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
+if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]] ; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
 
 #Call the RefFil to load variables
 RefFil=`readlink -f $RefFil`
@@ -70,12 +67,10 @@ source $RefFil
 
 #Load script library
 source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
-
+funcGetTargetFile
 #Set Local Variables
-ArrNum=$SGE_TASK_ID
-funcGetTargetFile #If the target file has been specified using a code, get the full path from the exported variable
-funcFilfromList #if the input is a list get the appropriate input file for this job of the array --> $InpFil
-BamFil=`readlink -f $InpFil` #resolve absolute path to bam
+InpFil=`readlink -f $InpFil` #resolve absolute path to bam
+BamFil=$(tail -n+$ArrNum $InpFil | head -n 1) 
 BamNam=`basename $BamFil | sed s/.bam//` #a name to use for the various files
 if [[ -z $LogFil ]];then LogFil=$BamNam.DoC.log; fi # a name for the log file
 OutFil=$BamNam.DoC #prefix used in names of output files
@@ -89,12 +84,12 @@ funcWriteStartLog
 
 #Calculate depth of coverage statistics
 StepName="Calculate depth of coverage statistics using GATK DepthOfCoverage" # Description of this step - used in log
-StepCmd="java -Xmx10G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx5G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T DepthOfCoverage
  -R $REF
  -I $BamFil
- -L $TgtBed
  -o $OutFil
+ -L $TgtBed
  -ct 1 
  -ct 5
  -ct 10
@@ -107,6 +102,3 @@ funcRunStep
 
 #End Log
 funcWriteEndLog
-
-#CleanUp
-if [[ "$FullDoC" == "false" ]]; then rm -rf $BamNam.DoC; fi
