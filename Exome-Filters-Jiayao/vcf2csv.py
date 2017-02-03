@@ -2,6 +2,9 @@
 #read a vcf file and write as tsv file
 from utils import *
 import re
+import os
+import shutil
+
 class Variant():
 	def __init__(self,record,headers):
 		self.record = record.strip()
@@ -90,11 +93,11 @@ def GetOptions():
 	parser=OptionParser()
 	parser.add_option('-v','--vcf',dest='VCF',metavar='VCF',help='Input VCF file name')
 	parser.add_option('-o','--outname',dest='OutName',metavar='OutName',help='Name of Output table')
-	
+	parser.add_option('-d','--dir',dest='Dir',help='InputDir, if given, all vcf in the dir will be converted to tsv file')	
 	(options,args) = parser.parse_args()
-	if options.OutName == None:
+	if options.OutName == None and options.VCF != None:
 		options.OutName = GetBaseName(options.VCF)
-	return options.VCF,options.OutName
+	return options.VCF,options.OutName,options.Dir
 def VCF2TABLE(vcf,out):
 	fin = open(vcf,'rb')
 	INFOs = []
@@ -114,8 +117,18 @@ def VCF2TABLE(vcf,out):
 			variant = Variant(line,header)
 			fout.write(variant2tsv(variant,new_header,info_num))
 
+def MultiVcf2Table(DIR):
+	DIR = os.path.abspath(DIR)
+	vcfs = get_files(DIR,'.vcf')
+	for vcf in vcfs:
+		outname = GetBaseName(vcf)
+		VCF2TABLE(vcf,outname)
+
 def main():
-	VCF,OUT=GetOptions()
-	VCF2TABLE(VCF,OUT)
+	VCF, OUT, DIR =GetOptions()
+	if DIR == None:
+		VCF2TABLE(VCF,OUT)
+	else:
+		MultiVcf2Table(DIR)
 if __name__ == '__main__':
 	main()

@@ -2,12 +2,58 @@
 # =================================================================================
 # Script used for Seperate a vcf file into n vcf files according to a pedifree file
 # =================================================================================
-#from Filters import *
-from Variant import *
+from Filters import *
+from Variant import Variant
 import argparse
 import sys
 import os
 import re
+import gzip
+# =================================================================================
+# Manipulate Pedgrees
+def WriteSeperatePedFile(fam,PedHeader,buff):
+	fout = open(fam+'.ped','wb')
+	fout.write(PedHeader)
+	for l in buff:
+		fout.write(l)
+	fout.close()
+def ReadPedigreeFromPedFile(PedFile):
+	fin = open(PedFile)
+	PedHeader = fin.readline()
+	Res = [] # The list store pedigrees
+	buff = [] # Used to store lines from ped file in same family
+	Last_fam = None
+	for l in fin:
+		llist = l.strip().split('\t')
+		fam = llist[0]
+		if fam != Last_fam:
+			if Last_fam != None:
+				Res.append(Pedigree(buff))
+				WriteSeperatePedFile(Last_fam,PedHeader,buff)
+			buff = [l]
+			Last_fam = fam
+		else:
+			buff.append(l)
+	Res.append(Pedigree(buff))
+	WriteSeperatePedFile(Last_fam,PedHeader,buff)
+	return Res
+class Pedigree():
+	def __init__(self,buff):
+		self.famid = buff[0].split('\t')[0]
+		self.out_name = self.famid + '.vcf'
+		self.individuals = []
+		self.ids = []
+		for l in buff:
+			llist = l.strip().split('\t')
+			self.individuals.append((llist[1],llist[5])) # (SampleID, Phenotype)
+			self.ids.append(llist[1])
+	def show(self):
+		print "\nFamily:",self.famid
+		for k,v in self.individuals:
+			print "SampleID: %s\tPhenotype: %s" % (k,v)
+		print 
+
+# =================================================================================
 
 # =================================================================================
 # Get the basename of a vcf file, should be name of a variant caller
@@ -19,25 +65,21 @@ def get_basename(name):
 # Trim header line with a trios.
 # the 8 basics + proband father mother
 # =================================================================================
-def trim_head(header,fam):
-	if fam.father != '0' and fam.mother != '0':
-		return '\t'.join(header[0:9])+'\t'+'\t'.join([fam.proband,fam.father,fam.mother])+'\n'
-	elif fam.father != '0':
-		return '\t'.join(header[0:9])+'\t'+'\t'.join([fam.proband,fam.father]) + '\n'
-	elif fam.mother != '0':
-		return '\t'.join(header[0:9])+'\t'+'\t'.join([fam.proband,fam.mother]) + '\n'
-	else:
-		return '\t'.join(header[0:9])+'\t'+'\t'.join([fam.proband]) + '\n'
+def trim_head(header,indiList):
+	return '\t'.join(header[0:9])+'\t'+'\t'.join(indiList) + '\n'
 		
 # =================================================================================
 # Seperate a vcf file by a ped_file
 # Given a work_dir, fout splited files here and put into a new dir with associate name.
 # =================================================================================
-def seperate_by_trios(work_dir,vcf_file,fams,filters=None):
+def seperate_by_fam(work_dir,vcf_file,fams,filters=None):
 	if not work_dir.endswith('/'):
 		work_dir += '/'
 	os.chdir(work_dir)
-	vcf_hand = open(vcf_file,'rb')
+	if vcf_file.endswith('.vcf.gz'):
+		vcf_hand = gzip.open(vcf_file,'rb')
+	else:
+		vcf_hand = open(vcf_file,'rb')
 	vcf_file_basename = get_basename(vcf_file)
 	print "Processiing",vcf_file_basename,"variants"
 	#open len(fams) handle to save variants in each proband
@@ -56,70 +98,24 @@ def seperate_by_trios(work_dir,vcf_file,fams,filters=None):
 			header = line.strip().split('\t')
 			for fam_i,fam in enumerate(fams):
 				sub_vcf_hands[fam_i].write(''.join(meta_info))
-				sub_vcf_hands[fam_i].write(trim_head(header,fam))
+				sub_vcf_hands[fam_i].write(trim_head(header,fam.ids))
 		#read variants
 		else: 
 			var = Variant(line,header)
 			for fam_i,fam in enumerate(fams):
 				# If on this site, proban have an un-wild genotype and parients have a clear genotype, write file
 				#print fam.proband
-				"""
-				#works for compete trios, not for incomplete trios.
-				try:
-					if (var.Sample[fam.proband].GT != ['0','0']) and ('.' not in var.Sample[fam.proband].GT) and ('.' not in var.Sample[fam.father].GT) and ('.' not in var.Sample[fam.mother].GT):
-						#print var.Sample[fam.proband].GT
-						if filters == None:	
-							sub_vcf_hands[fam_i].write(var.write([fam.proband,fam.father,fam.mother]))
-						else:
-							if pass_filter(var,fam,vcf_file_basename):
-								sub_vcf_hands[fam_i].write(var.write([fam.proband,fam.father,fam.mother]))
-				except KeyError as e:
-					print e
-					print "No sample:" ,fam.proband
-					pass
-				"""
-				# Try to make it work for incomplete trios
-				try:
-					#complte trios
-					if fam.proband in var.Sample and fam.father in var.Sample and fam.mother in var.Sample:
-						if (var.Sample[fam.proband].GT != ['0','0']) and ('.' not in var.Sample[fam.proband].GT) and ('.' not in var.Sample[fam.father].GT) and ('.' not in var.Sample[fam.mother].GT):
-							if filters == None:	
-								sub_vcf_hands[fam_i].write(var.write([fam.proband,fam.father,fam.mother]))
-							else:
-								if pass_filter(var,fam,vcf_file_basename):
-									sub_vcf_hands[fam_i].write(var.write([fam.proband,fam.father,fam.mother]))
-					elif fam.proband in var.Sample and fam.father in var.Sample:
-						if (var.Sample[fam.proband].GT != ['0','0']) and ('.' not in var.Sample[fam.proband].GT) and ('.' not in var.Sample[fam.father].GT):
-							if filters == None:	
-								sub_vcf_hands[fam_i].write(var.write([fam.proband,fam.father]))
-							else:
-								if pass_filter(var,fam,vcf_file_basename):
-									sub_vcf_hands[fam_i].write(var.write([fam.proband,fam.father]))
-						
-					elif fam.proband in var.Sample and fam.mother in var.Sample:
-						if (var.Sample[fam.proband].GT != ['0','0']) and ('.' not in var.Sample[fam.proband].GT) and ('.' not in var.Sample[fam.mother].GT):
-							if filters == None:	
-								sub_vcf_hands[fam_i].write(var.write([fam.proband,fam.mother]))
-							else:
-								if pass_filter(var,fam,vcf_file_basename):
-									sub_vcf_hands[fam_i].write(var.write([fam.proband,fam.mother]))
-
-					elif fam.proband in var.Sample:
-						if (var.Sample[fam.proband].GT != ['0','0'] and ('.' not in var.Sample[fam.proband].GT)): 
-							if filters == None:	
-								sub_vcf_hands[fam_i].write(var.write([fam.proband]))
-							else:
-								if pass_filter(var,fam,vcf_file_basename):
-									sub_vcf_hands[fam_i].write(var.write([fam.proband]))
-
+				flag = False
+				for k,v in fam.individuals:
+					if v == '2': # Phenotype
+						if var.Sample[k].GT != ['0','0'] and ('.' not in var.Sample[k].GT):
+							flag = True
+				if flag :
+					if filters == None:
+						sub_vcf_hands[fam_i].write(var.write(fam.ids))
 					else:
-						print fam.proband,"Not in vcf file, please check the individual ids"
-						exit()
-				except KeyError as e:
-					print e
-					print line
-					exit()
-					pass
+						if pass_filter(var,fam,vcf_file_basename):
+							sub_vcf_hands[fam_i].write(var.write(fam.ids))
 	vcf_hand.close()
 	for sub_hand in sub_vcf_hands:
 		sub_hand.close()
@@ -138,19 +134,12 @@ def seperate_by_trios(work_dir,vcf_file,fams,filters=None):
 # Seperate each vcf file according to a pedigree file. output splited vcf files 
 # =================================================================================
 def Seperate(work_dir,VCFs,ped_file,debug):
-	# Example:
-	#	work_dir = "/home/local/users/jw/Consensus_Pipeline/trios_50/Analysis/SNV/"
-	#	gatk_snv = "gatk.snv.vcf"
-	#	st_snv = "st.snv.vcf"
-	#	pt_snv = "pt.snv.vcf"
-	#	ped_file = "/home/local/users/jw/Consensus_Pipeline/trios_50/trios_50.ped"
 	work_dir = os.path.abspath(work_dir)
-	print "Work Dir is:",work_dir
-	fams = get_pedigrees(ped_file)
+	fams = ReadPedigreeFromPedFile(ped_file)
 	for fam in fams:
-		print fam.proband,fam.father,fam.mother
+		fam.show()
 	for vcf in VCFs:
-		seperate_by_trios(work_dir,vcf,fams,filters=['GT','ExAC_All'])
+		seperate_by_fam(work_dir,vcf,fams,filters=['GT','ExAC_All'])
 	return
 # =================================================================================
 
@@ -159,27 +148,15 @@ def Seperate(work_dir,VCFs,ped_file,debug):
 # Filter the variant for some contitions, like GQ, ExAC_All
 # =================================================================================
 def pass_filter(var,fam,vcf_file_basename):
-	if vcf_file_basename == 'gatk':
-		if float(var.Sample[fam.proband].dict['GQ']) <= 20:
-			return False
-	elif vcf_file_basename == 'st':
-		if pick_PL(var.Sample[fam.proband].dict['PL']) <= 20:
-			return False
-	elif vcf_file_basename == 'pt':
-		if float(var.Sample[fam.proband].dict['GQ']) <= 20:
-			return False
-	elif vcf_file_basename == 'fb':
-		if pick_GL(var.Sample[fam.proband].dict['GL']) >= -10:
-			return False
-	else:
-		try:
-			if float(var.Sample[fam.proband].dict['GQ']) <= 20:
-				return False
-		except KeyError:
-			print var.Sample[fam.proband].dict
-			exit()
 	try:
-		if float(var.Info.annovar[int(var.Sample[fam.proband].GT[1])-1]['ExAC_ALL']) > 0.01:
+		flag = False
+		for k,v in fam.individuals:
+			if v == '2':
+				if float(var.Info.annovar[int(var.Sample[k].GT[1])-1]['ExAC_ALL']) > 0.01:
+					flag = flag or False
+				else:
+					flag = flag or True
+		if not flag:
 			return False
 	except ValueError:
 		return True
@@ -195,8 +172,8 @@ def pick_GL(GL):
 # =================================================================================
 def main():
 	parser = argparse.ArgumentParser()
-	parser.add_argument("-d", "--dir", type=str,required=True,
-        help="<Required> Enter the work_dir to generate the results")
+	parser.add_argument("-d", "--dir", type=str,
+        help="Enter the work_dir to generate the results")
 	parser.add_argument("-v","--vcf_file",type=str,nargs='+',required=True,
 		help="<Required> Enter the vcf file you wanna seperate. E.g: gatk.vcf")
 	parser.add_argument('-p',"--pedigree",type=str,default='/home/local/users/jw/Consensus_Pipeline/trios_50/trios_50.ped',
@@ -204,7 +181,8 @@ def main():
 	parser.add_argument('--debug',type=int,default=0,choices=[0,1],
 		help="Turn on Debug mod, output many mid results for debugging default=0")
 	args = parser.parse_args()
-	print args.vcf_file
+	if args.dir == None:
+		args.dir = os.getcwd()
 	Seperate(args.dir,args.vcf_file,args.pedigree,args.debug)
 # =================================================================================
 if __name__=='__main__':

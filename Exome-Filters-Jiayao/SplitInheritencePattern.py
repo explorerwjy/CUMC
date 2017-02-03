@@ -8,6 +8,8 @@
 from optparse import OptionParser
 import utils
 import re
+import os
+import shutil
 
 def GetOptions():
 	parser = OptionParser()
@@ -92,6 +94,8 @@ def LookCompoundHeter(CH_buffer,fout_CH,RecordLen,Format_idx):
 
 
 def SplitInheritencePattern(InpDir):
+	InpDir = os.path.abspath(InpDir)
+	print InpDir
 	vcfs = utils.get_files(InpDir,'.tsv')
 	peds = utils.get_files(InpDir,'.ped')
 	vcf_peds = MatchVcfPed(vcfs,peds)
@@ -142,6 +146,16 @@ def SplitInheritencePattern(InpDir):
 		fout_AD.close()
 		fout_XL.close()
 		fout_CH.close()
+		new_dir = os.path.join(InpDir,utils.GetBaseName(vcf))
+		print new_dir
+		if not os.path.exists(new_dir):
+			os.mkdir(new_dir)
+		shutil.copy(vcf, new_dir)
+		shutil.copy(ped, new_dir)
+		for dest in [utils.GetBaseName(vcf)+'_AR.tsv',utils.GetBaseName(vcf)+'_AD.tsv',utils.GetBaseName(vcf)+'_XL.tsv',utils.GetBaseName(vcf)+'_CH.tsv']:
+			if os.path.exists(os.path.join(new_dir, dest)):
+				os.remove(os.path.join(new_dir, dest))
+			shutil.move(dest, new_dir)
 
 def main():
 	InpDir = GetOptions()
