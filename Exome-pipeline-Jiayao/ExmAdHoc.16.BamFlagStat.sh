@@ -1,4 +1,11 @@
 #!/bin/bash
+#$ -S /bin/bash
+#$ -j y
+#$ -N BamFlagStat 
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=16G
+#$ -cwd
+
 
 #This script takes a bam file and generates depth of coverage statistics using GATK
 #    InpFil - (required) - Path to Bam file to be aligned or a file containing a list of bam files one per line (file names must end ".list")
@@ -46,7 +53,8 @@ FullDoC="false"
 while getopts i:r:a:t:l:DCBFH opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
-        a) ArrNum="$OPTARG";; 
+        r) RefFil="$OPTARG";;
+		a) ArrNum="$OPTARG";; 
         H) echo "$usage"; exit;;
     esac
 done
@@ -54,13 +62,11 @@ done
 #check all required paramaters present
 if [[ ! -e "$InpFil" ]] ; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
 
-#Call the RefFil to load variables
 RefFil=`readlink -f $RefFil`
 source $RefFil
-
-#Load script library
-source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
+source $EXOMPPLN/exome.lib.sh
 funcGetTargetFile
+
 #Set Local Variables
 InpFil=`readlink -f $InpFil` #resolve absolute path to bam
 BamFil=$(tail -n+$ArrNum $InpFil | head -n 1) 
@@ -72,7 +78,7 @@ funcWriteStartLog
 
 #Calculate depth of coverage statistics
 StepName="Samtools flagstat" # Description of this step - used in log
-StepCmd="samtools flagstat $BamFil  >> $BamFil.reads.mapped" #command to be run
+StepCmd="samtools flagstat $BamFil  >> $BamNam.reads.mapped" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep
 
