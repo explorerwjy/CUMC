@@ -22,9 +22,7 @@ def GetOptions():
 	
 	return
 def GetBaseName(fname):
-	fname = fname.split('/')[-1]
-	#return '.'.join(fname.split('.')[:-1])
-	return fname.split('.')[0]
+	return '.'.join(fname.split('.')[:-1])
 def main():
 	return	
 
