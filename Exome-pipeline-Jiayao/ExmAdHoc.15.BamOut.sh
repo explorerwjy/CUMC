@@ -73,6 +73,7 @@ InpFil=`readlink -f $InpFil` #resolve absolute path to bam
 BamFil=$(tail -n+$ArrNum $InpFil | head -n 1) 
 BamNam=`basename $BamFil | sed s/.bam//`
 BamNam=${BamNam/.bam/} # a name for the output files
+BamOutName=$BamNam.bamout.bam
 if [[ -z $LogFil ]]; then LogFil=$BamNam.HCgVCF.log; fi # a name for the log file
 VcfFil=$BamNam.g.vcf #Output File
 GatkLog=$BamNam.HCgVCF.gatklog #a log for GATK to output to, this is then trimmed and added to the script log
@@ -105,6 +106,7 @@ StepCmd="java -Xmx5G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATK
  $infofields
  --filter_mismatching_base_and_quals
  --interval_padding 100
+ -bamout $BamOutName
  -log $GatkLog" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep

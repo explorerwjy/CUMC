@@ -71,6 +71,7 @@ echo $BamNam
 if [[ -z "$LogFil" ]]; then LogFil=$BamNam.MrgBam.log; fi # a name for the log file
 MrgDir=wd.$BamNam.merge # directory in which processing will be done
 MrgFil=$BamNam.merged.bam #filename for bwa-mem aligned file
+ADRFil=$BamNam.RG.bam
 SrtFil=$BamNam.merged.sorted.bam #filename for bwa-mem aligned file
 DdpFil=$BamNam.merged.mkdup.bam #filename for bwa-mem aligned file
 FlgStat=$BamNam.merged.flagstat #output file for bam flag stats
@@ -90,25 +91,30 @@ StepName="Merge with Samtools"
 StepCmd="samtools merge -b $InpFil $MrgFil" #commandtoberun
 funcRunStep
 
-#Sort the bam file by coordinate
-StepName="Sort Bam using PICARD"
-StepCmd="java -Xmx4G -Djava.io.tmpdir=$TmpDir -jar $PICARD SortSam
- INPUT=$MrgFil
- OUTPUT=$SrtFil
- SORT_ORDER=coordinate
- CREATE_INDEX=TRUE"
+#Replace Read Groups
+StepName="Add Read Groups with Picard"
+StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD AddOrReplaceReadGroups
+INPUT=$MrgFil
+OUTPUT=$ADRFil
+RGID=$BamNam
+RGLB=lib1
+RGPL=illumina
+RGPU=unit1
+RGSM=20
+SORT_ORDER=coordinate
+CREATE_INDEX=TRUE"
 funcRunStep
 rm $MrgFil #removed the "Aligned bam"
 
 #Mark the duplicates
 StepName="Mark PCR Duplicates using PICARD"
-StepCmd="java -Xmx4G -Djava.io.tmpdir=$TmpDir -jar $PICARD MarkDuplicates
- INPUT=$SrtFil
+StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD MarkDuplicates
+ INPUT=$ADRFil
  OUTPUT=$DdpFil
  METRICS_FILE=$DdpFil.dup.metrics.txt
  CREATE_INDEX=TRUE"
 funcRunStep
-rm $SrtFil ${SrtFil/bam/bai} #removed the "Sorted bam"
+rm $ADRFil ${ADRFil/bam/bai} #removed the "Sorted bam"
 
 #Get flagstat
 StepName="Output flag stats using Samtools"

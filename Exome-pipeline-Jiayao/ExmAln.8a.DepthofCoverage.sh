@@ -84,7 +84,7 @@ funcWriteStartLog
 
 #Calculate depth of coverage statistics
 StepName="Calculate depth of coverage statistics using GATK DepthOfCoverage" # Description of this step - used in log
-StepCmd="java -Xmx5G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx20G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T DepthOfCoverage
  -R $REF
  -I $BamFil
