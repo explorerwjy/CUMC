@@ -103,6 +103,7 @@ StepCmd="java -Xmx12G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -tranche 99.1
  -tranche 99.0
  -tranche 90.0
+ --maxGaussians 4
  -recalFile $VcfNam.recalibrate_SNP.recal
  -tranchesFile $VcfNam.recalibrate_SNP.tranches
  -rscriptFile $VcfNam.recalibrate_SNP_plots.R
@@ -154,7 +155,7 @@ StepCmd="java -Xmx12G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -tranche 99.1
  -tranche 99.0
  -tranche 90.0
- --maxGaussians 4
+ --maxGaussians 2
  -recalFile $VcfNam.recalibrate_INDEL.recal
  -tranchesFile $VcfNam.recalibrate_INDEL.tranches
  -rscriptFile $VcfNam.recalibrate_INDEL_plots.R

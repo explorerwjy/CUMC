@@ -34,7 +34,7 @@ usage="
 
      -i (required) - Path to Bam file for variant calling or \".list\" file containing a multiple paths
      -r (required) - shell file containing variables with locations of reference files and resource directories
-     -t (required) - Exome capture kit targets or other genomic intervals bed file (must end .bed for GATK compatability)
+     -t (optional) - Exome capture kit targets or other genomic intervals bed file (must end .bed for GATK compatability)
      -l (optional) - Log file
      -B (flag) - Prevent GATK from phoning home
      -F (flag) - Fix mis-encoded base quality scores - see GATK manual
@@ -58,7 +58,7 @@ while getopts i:r:a:n:l:t:BFH opt; do
 done
 
 #check all required paramaters present
-if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]] || [[ -z "$TgtBed" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
+if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]] ; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
 
 #Call the RefFil to load variables
 RefFil=`readlink -f $RefFil`
@@ -91,7 +91,6 @@ StepName="gVCF generation with GATK HaplotypeCaller"
 StepCmd="java -Xmx5G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T HaplotypeCaller
  -R $REF
- -L $TgtBed
  -I $BamFil
  --genotyping_mode DISCOVERY
  -stand_emit_conf 10

@@ -88,7 +88,7 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func"
 #set local variables
 BamFil=`readlink -f $InpFil` #resolve absolute path to bam
 BamNam=`basename $BamFil` 
-BamNam=`basename $BamFil | sed s/.bam$//` # a name for the output files
+BamNam=`basename $BamFil | sed s/.bam$// | sed s/.cram$//` # a name for the output files
 if [[ -z "$LogFil" ]]; then LogFil=$BamNam.BbB.log; fi # a name for the log file
 AlnDir=$BamNam.align # directory in which processing will be done
 RgIdLst=$BamNam.byRGID.list # a file containing a list of RG ID specific bamfiles
