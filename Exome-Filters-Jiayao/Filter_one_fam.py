@@ -46,9 +46,13 @@ def check_rare(INFOstring):# find variant with propability < 1% in ExAc
 
 def check_GQ(fmt,proband,father,mother):
 	fmt = fmt.split(':')
-	proband_GQ = int(proband.split(':')[fmt.index('GQ')])
-	father_GQ = int(father.split(':')[fmt.index('GQ')])
-	mother_GQ = int(mother.split(':')[fmt.index('GQ')])
+	try:
+		proband_GQ = int(proband.split(':')[fmt.index('GQ')])
+		#father_GQ = int(father.split(':')[fmt.index('GQ')])
+		#mother_GQ = int(mother.split(':')[fmt.index('GQ')])
+	except: 
+		#print fmt,proband,father,mother
+		return False
 	if proband_GQ > 20:
 		return True
 	else:
@@ -77,7 +81,7 @@ def Filter(VCFin,VCFout,Filters):
 		Count_All += 1
 
 		CodingRegion = ['exonic','splicing','exonic-splicing']
-		if not check_rare(llist[7],0.01,CodingRegion):
+		if not check_rare(llist[7]):
 			continue
 		if not check_GQ(llist[8],llist[9],llist[10],llist[10]):
 			continue

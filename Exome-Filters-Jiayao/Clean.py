@@ -1,4 +1,5 @@
-#!/home/local/users/jw/bin/python2.7
+#!/home/local/users/jw/anaconda2/bin/python
+# -*- coding: utf-8 -*-
 #Author: jywang	explorerwjy@gmail.com
 
 #========================================================================================================
