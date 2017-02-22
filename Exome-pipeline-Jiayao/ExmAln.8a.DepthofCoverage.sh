@@ -1,4 +1,11 @@
 #!/bin/bash
+#$ -S /bin/bash
+#$ -j y
+#$ -N DoC 
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=8G
+#$ -cwd
+
 
 #This script takes a bam file and generates depth of coverage statistics using GATK
 #    InpFil - (required) - Path to Bam file to be aligned or a file containing a list of bam files one per line (file names must end ".list")

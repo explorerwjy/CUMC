@@ -1,5 +1,11 @@
 #!/bin/bash
-#$ -cwd -l mem=8G,time=4:: -N FastqQC
+#$ -S /bin/bash
+#$ -j y
+#$ -N FastQC 
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=8G
+#$ -cwd
+
 
 #This script takes a fastq file and generates QC information using fastqc
 #    InpFil - (required) - Path to fastq file to be QC'ed or a file containing a list of fastq files one per line (file names must end ".list")
