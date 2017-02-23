@@ -109,6 +109,7 @@ StepCmd="java -Xmx5G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATK
  --comp:HapMapV3 $HAPMAP 
  -pairHMM VECTOR_LOGLESS_CACHING
  -rf BadCigar
+ --dontUseSoftClippedBases 
  $infofields
  --filter_mismatching_base_and_quals
  --interval_padding 100
