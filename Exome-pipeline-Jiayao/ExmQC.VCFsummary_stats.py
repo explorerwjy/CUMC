@@ -1,4 +1,4 @@
-#!~/bin/python2.7
+#!/home/local/users/jw/anaconda2/bin/python
 #Author: jywang	explorerwjy@gmail.com
 
 #========================================================================================================
@@ -64,6 +64,8 @@ def GetOptions():
 	parser.add_option("-p","--num_procs",dest="Nprocs",help="Number of process running", metavar="Nprocs", default=1, type=int)
 	(options, args) = parser.parse_args()
 	QC_folder = os.path.abspath(options.QC_folder)
+	if not os.path.exists(QC_folder):
+		os.mkdir(QC_folder)
 	return options.VCFfile,QC_folder,options.Nprocs
 
 def GetInfoDict(linelist):
@@ -154,7 +156,8 @@ def WriteSummary(STATS,outfname):
 		Output.write("\t\n")
 	Output.close()
 
-def PlotSummary(STATS,QC_folder,outname):
+def PlotSummary(QC_folder,outname):
+	print "Plotting"
 	plot_caterogy = ['SNVs','InDels','known Ti/TV ratio','novel Ti/TV ratio','Rare (AAF<0.01) - ExAC']
 	with open(outname) as f:
 		for line in f:
@@ -174,7 +177,8 @@ def PlotSummary(STATS,QC_folder,outname):
 			caterogy = info[0]
 			if caterogy in plot_caterogy:
 				print 'plot: {} - {}'.format(output_type, caterogy)
-				hist = map(float,info[2:])
+				hist = map(float,info[3:])
+				print max(hist), hist.index(max(hist))
 				pdfname = os.path.join(QC_folder, output_type+'-'+caterogy.replace('/','')+'.pdf')
 				pdf = PdfPages(pdfname)
 				fig, ax = plt.subplots(dpi = 100)
@@ -192,7 +196,6 @@ def PlotSummary(STATS,QC_folder,outname):
 				plt.close()
 
 def Summary(VCF,QCdir,Nprocs):
-
 	Nucleotides=['A','C','G','T']
 	MutUnknown=['unknown']
 	MutSilent=['synonymous_SNV']
@@ -235,8 +238,10 @@ def Summary(VCF,QCdir,Nprocs):
 			Transversion = ((REF[0]=='C' and ALT[0]=='A') or (REF[0]=='A' and ALT[0]=='C') or (REF[0]=='G' and ALT[0]=='C') or (REF[0]=='C' and ALT[0]=='G') or (REF[0]=='T' and ALT[0]=='A') or (REF[0]=='A' and ALT[0]=='T') or (REF[0]=='T' and ALT[0]=='G') or (REF[0]=='G' and ALT[0]=='T'))
 
 			#Update stats
-			for i in range(0, All.SamLength-1):
-				ColNum=i+8
+			for i in range(0, All.SamLength):
+				ColNum=i+7
+				if i == 0:
+
 				if i > 1:
 					if './.' not in linelist[ColNum]:
 						INFOSPL = ParseFormat(linelist[8],linelist[ColNum])
@@ -295,75 +300,75 @@ def Summary(VCF,QCdir,Nprocs):
 							else:
 								noncoding.knownTvCount[i] += 1
 					else:
-						All.NovelCount[i]=All.NovelCount[i]+1
+						All.NovelCount[i] += 1
 						if (MutationFunct in CodingCodes): 
 							coding.NovelCount[i] += 1 
 						else:
 							noncoding.NovelCount[i] += 1
 						if Transition:
-							All.novelTiCount[i]=All.novelTiCount[i]+1
+							All.novelTiCount[i] += 1
 							if (MutationFunct in CodingCodes): 
 								coding.novelTiCount[i] += 1 
 							else:
 								noncoding.novelTiCount[i] += 1
 						if Transversion:
-							All.novelTvCount[i]=All.novelTvCount[i]+1
+							All.novelTvCount[i] += 1
 							if (MutationFunct in CodingCodes): 
 								coding.novelTvCount[i] += 1 
 							else:
 								noncoding.novelTvCount[i] += 1
 					if MutationClass in MutSilent:
-						All.silentCount[i]=All.silentCount[i]+1
+						All.silentCount[i] += 1
 						if (MutationFunct in CodingCodes): 
 							coding.silentCount[i]+= 1 
 						else:
 							noncoding.silentCount[i] += 1
 					elif MutationClass in MutMissense:
-						All.missenseCount[i]=All.missenseCount[i]+1
+						All.missenseCount[i] += 1
 						if (MutationFunct in CodingCodes): 
 							coding.missenseCount[i] += 1 
 						else:
 							noncoding.missenseCount[i] += 1
 					elif MutationClass in MutNonsense:
-						All.nonsenseCount[i]=All.nonsenseCount[i]+1
+						All.nonsenseCount[i] += 1
 						if (MutationFunct in CodingCodes): 
 							coding.nonsenseCount[i] += 1 
 						else:
 							noncoding.nonsenseCount[i] += 1
 					elif MutationClass in MutUnknown:
-						All.unknownCount[i]=All.unknownCount[i]+1
+						All.unknownCount[i] += 1
 						if (MutationFunct in CodingCodes): 
 							coding.unknownCount[i] += 1 
 						else:
 							noncoding.unknownCount[i] += 1
 					elif MutationClass in MutFrameshift:
-						All.frameShiftCount[i]=All.frameShiftCount[i]+1
+						All.frameShiftCount[i] += 1
 						if (MutationFunct in CodingCodes): 
 							coding.frameShiftCount[i] += 1 
 						else:
 							noncoding.frameShiftCount[i] += 1
 
 					if KGscore<=0.01:
-						All.KGRareCount[i]=All.KGRareCount[i]+1
+						All.KGRareCount[i] += 1
 						if (MutationFunct in CodingCodes): 
 							coding.KGRareCount[i] += 1 
 						else:
 							noncoding.KGRareCount[i] += 1
 					if ESPscore<=0.01:
-						All.ESPRareCount[i]=All.ESPRareCount[i]+1
+						All.ESPRareCount[i] += 1
 						if (MutationFunct in CodingCodes): 
 							coding.ESPRareCount[i] += 1 
 						else:
 							noncoding.ESPRareCount[i] += 1
 					if ExACscore<=0.01:
-						All.ExACRareCount[i]=All.ExACRareCount[i]+1
+						All.ExACRareCount[i] += 1
 						if (MutationFunct in CodingCodes): 
 							coding.ExACRareCount[i] += 1 
 						else:
 							noncoding.ExACRareCount[i] += 1
 
 					if KGscore<=0.01 or ESPscore<=0.01:
-						All.RareCount[i]=All.RareCount[i]+1
+						All.RareCount[i] += 1
 						if (MutationFunct in CodingCodes): 
 							coding.RareCount[i] += 1 
 						else:
@@ -407,14 +412,15 @@ def Summary(VCF,QCdir,Nprocs):
 	STATS=[coding,noncoding,All]
 	outfname=os.path.join(QCdir, 'sample.summary.txt')
 	WriteSummary(STATS,outfname)
-	PlotSummary(STATS,QCdir,outfname)
 
 	print "QC Summary Finished"
 	print '-' * 50
+	return QCdir,outfname
 
 def main():
 	VCF,QCdir,Nprocs=GetOptions()
 	Summary(VCF,QCdir,Nprocs)
+	PlotSummary(QCdir,outfname)
 
 if __name__=='__main__':
 	main()
