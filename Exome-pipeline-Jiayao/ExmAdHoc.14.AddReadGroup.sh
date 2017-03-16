@@ -19,12 +19,13 @@ usage="
 PipeLine="false"
 
 #get arguments
-while getopts i:r:a:l:t:PFH opt; do
+while getopts i:r:a:g:l:t:PFH opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
         r) RefFil="$OPTARG";; 
         a) ArrNum="$OPTARG";; 
-        l) LogFil="$OPTARG";;
+	    g) ReadGroup="$OPTARG";;
+		l) LogFil="$OPTARG";;
         t) TgtBed="$OPTARG";; 
         P) PipeLine="true";;
         F) FixMisencoded="true";;
@@ -48,11 +49,15 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func"
 InpFil=`readlink -f $InpFil`  # resolve input file path
 BAM=`readlink -f $(tail -n+$ArrNum $InpFil | head -n 1 | cut -f1)`
 BamNam=$(basename $BAM | sed s/.bam// ) # a name for the output files - basically the original file name
-
+if [[ ! -e "$ReadGroup" ]];then
+	ReadGroup=$BamNam
+fi
+echo $ReadGroup
 
 if [[ -z "$LogFil" ]]; then LogFil=$BamNam.FqB.log; fi # a name for the log file
 ADRFil=$BamNam.tmp.bam
 SrtFil=$BamNam.AddRG.bam #output file for sorted bam
+DdpFil=$BamNam.mkdup.bam #output file for dedup bam
 TmpLog=$BamNam.FqB.temp.log #temporary log file
 TmpDir=$BamNam.FqB.tempdir; mkdir -p $TmpDir #temporary directory
 
@@ -66,17 +71,17 @@ StepName="Add Read Groups with Picard"
 StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD AddOrReplaceReadGroups
  INPUT=$BAM
  OUTPUT=$ADRFil
- RGID=$BamNam
- RGLB=lib1
- RGPL=illumina
- RGPU=unit1
- RGSM=20
+ RGID=$ReadGroup
+ RGLB=$ReadGroup
+ RGPL=$ReadGroup
+ RGPU=$ReadGroup
+ RGSM=$ReadGroup
  2>>$TmpLog"
 funcRunStep
 
 #Sort the bam file by coordinate
 StepName="Sort Bam using PICARD"
-StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD SortSam
+StepCmd="java -Xmx8G -XX:ParallelGCThreads=4 -Djava.io.tmpdir=$TmpDir -jar $PICARD SortSam
  INPUT=$ADRFil
  OUTPUT=$SrtFil
  SORT_ORDER=coordinate
@@ -84,6 +89,17 @@ StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICA
  2>>$TmpLog"
 funcRunStep
 rm $ADRFil #remove the "Aligned bam"
+
+#Mark the duplicates
+StepName="Mark PCR Duplicates using PICARD"
+StepCmd="java -Xmx8G -XX:ParallelGCThreads=4 -Djava.io.tmpdir=$TmpDir -jar $PICARD MarkDuplicates
+ INPUT=$SrtFil
+ OUTPUT=$DdpFil
+ METRICS_FILE=$DdpFil.dup.metrics.txt
+ CREATE_INDEX=TRUE
+ 2>>$TmpLog"
+funcRunStep
+rm $SrtFil ${SrtFil/bam/bai} #remove the "Sorted bam"
 
 #End Log
 funcWriteEndLog

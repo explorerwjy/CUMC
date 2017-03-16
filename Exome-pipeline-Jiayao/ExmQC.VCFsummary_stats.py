@@ -240,8 +240,6 @@ def Summary(VCF,QCdir,Nprocs):
 			#Update stats
 			for i in range(0, All.SamLength):
 				ColNum=i+7
-				if i == 0:
-
 				if i > 1:
 					if './.' not in linelist[ColNum]:
 						INFOSPL = ParseFormat(linelist[8],linelist[ColNum])
@@ -268,7 +266,7 @@ def Summary(VCF,QCdir,Nprocs):
 						GT = './.'
 				else:
 					GT = '0/0'
-				if GT != '0/0' or i == 0:
+				if (GT != '0/0' and GT != './.') or i == 0:
 					if Indel:
 						All.InDelCount[i] += 1
 						if (MutationFunct in CodingCodes): 
@@ -419,8 +417,8 @@ def Summary(VCF,QCdir,Nprocs):
 
 def main():
 	VCF,QCdir,Nprocs=GetOptions()
-	Summary(VCF,QCdir,Nprocs)
-	PlotSummary(QCdir,outfname)
+	QCdir, outfname = Summary(VCF,QCdir,Nprocs)
+	PlotSummary(QCdir,os.path.join(QCdir, 'sample.summary.txt'))
 
 if __name__=='__main__':
 	main()

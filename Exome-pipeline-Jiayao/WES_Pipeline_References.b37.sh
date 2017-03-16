@@ -1,5 +1,5 @@
 ## Resource Directories
-export EXOMPPLN="/home/local/users/jw/wes_pipeline/Exome-vc-pipeline-V3-master_AshGit" # Directory containing pipeline shell scripts
+export EXOMPPLN="/home/local/users/jw/CUMC/Exome-pipeline-Jiayao" # Directory containing pipeline shell scripts
 export EXOMRES="/home/local/users/jw/resources" # Directory containing resources/references for pipeline
 
 #jar files  and directories for software
@@ -14,7 +14,8 @@ export HAPMAP="$EXOMRES/references/b37/hapmap_3.3.b37.vcf" # hapmap vcf from GAT
 export INDEL="$EXOMRES/references/b37/Mills_and_1000G_gold_standard.indels.b37.sites.vcf" # Gold standard INDEL reference from GATK
 export TGVCF="$EXOMRES/references/b37/1000G_omni2.5.b37.sites.vcf" 
 export INDEL1KG="$EXOMRES/references/b37/1000G_phase1.indels.b37.vcf" # INDEL reference from 1000 genomes
-export DBSNP="$EXOMRES/references/b37/dbsnp_138.b37.vcf" # dbSNP vcf from GATK
+#export DBSNP="$EXOMRES/references/b37/dbsnp_138.b37.vcf" # dbSNP vcf from GATK
+export DBSNP="/home/local/users/jw/resources/references/b37/dbsnp_138.b37.excluding_sites_after_129.vcf"
 export ONEKG="$EXOMRES/references/b37/1000G_phase1.snps.high_confidence.b37.vcf" # 1000 genome SNPs vcf
 export ANNOVAR='/home/local/users/jw/software_packages/annovar'
 export ANNHDB='/home/local/users/jw/software_packages/annovar/humandb' #Location of annovar databases

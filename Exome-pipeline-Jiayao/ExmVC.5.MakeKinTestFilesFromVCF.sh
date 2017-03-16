@@ -132,7 +132,7 @@ fi
 
 #split the pseudo-autosomal X into "XY" for sex check
 StepName="Split the pseudo-autosomal X into XY for sex check with plink"
-StepCmd="plink --bfile KinshipFiles/$OutNam --split-x hg19 --make-bed --out KinshipFiles/$OutNam"
+StepCmd="plink --bfile KinshipFiles/$OutNam --split-x hg19 no-fail --make-bed --out KinshipFiles/$OutNam"
 funcRunStep
 
 #run sex check

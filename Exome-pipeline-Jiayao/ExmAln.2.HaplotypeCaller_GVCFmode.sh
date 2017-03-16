@@ -3,7 +3,7 @@
 #$ -j y
 #$ -N HaplotypeCaller_GVCFmode
 #$ -l h_rt=12:00:00
-#$ -l h_vmem=10G
+#$ -l h_vmem=20G
 #$ -cwd
 
 #This script takes a bam file or a list of bam files (filename must end ".list") and runs variant calling using the HaplotypeCaller in gVCF mode
@@ -93,7 +93,7 @@ funcWriteStartLog
 
 ##Run genomic VCF generation
 StepName="gVCF generation with GATK HaplotypeCaller"
-StepCmd="java -Xmx5G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx20G -XX:ParallelGCThreads=16 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T HaplotypeCaller
  -R $REF
  -L $TgtBed
@@ -109,13 +109,15 @@ StepCmd="java -Xmx5G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATK
  --comp:HapMapV3 $HAPMAP 
  -pairHMM VECTOR_LOGLESS_CACHING
  -rf BadCigar
- --dontUseSoftClippedBases 
  $infofields
  --filter_mismatching_base_and_quals
  --interval_padding 100
  -log $GatkLog" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep
+
+#--dontUseSoftClippedBases 
+
 
 ##gzip and index the gVCF
 StepName="gzip and index the gVCF"

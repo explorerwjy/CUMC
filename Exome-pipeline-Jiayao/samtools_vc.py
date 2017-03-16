@@ -50,13 +50,17 @@ def calculate_bed(n_cpu,bedfile):
 	class Interval():
 		def __init__(self,CHR,START,END):
 			self.CHR=CHR
-			self.START=START
-			self.END=END
-			self.LENGTH=int(END)-int(START)+1
+			#self.START=max(0, int(START)-10)
+			#self.END=int(END) + 10
+			self.START=int(START)
+			self.END=int(END)
+			self.LENGTH=int(self.END)-int(START)+1
 	f_bed = open(bedfile,'rb')
 	intervals = []
 	Total_length = 0
 	for l in f_bed:
+		if l.startswith('#'):
+			continue
 		CHR,START,END = l.strip().split()[:3]
 		CHR = CHR.strip('chr')
 		interval = Interval(CHR,START,END)
@@ -97,7 +101,7 @@ def make_bed(bed_name,current_window):
 	current_window.sort(key = lambda x : (add_zero(x.CHR), int(x.START)))
 	fout = open(bed_name,'wb')
 	for item in current_window:
-		fout.write(item.CHR+'\t'+item.START+'\t'+item.END+'\n')
+		fout.write(str(item.CHR)+'\t'+str(item.START)+'\t'+str(item.END)+'\n')
 	fout.close()
 
 def make_script(bedfiles,samtools,bcftools,bamlist,ref_genome):

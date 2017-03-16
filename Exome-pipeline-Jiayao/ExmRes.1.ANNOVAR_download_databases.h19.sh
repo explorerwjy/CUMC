@@ -132,6 +132,22 @@ case $dbToDownload in
 		nam="Download: EIGEN "
 		cmd="perl annotate_variation.pl -downdb -buildver hg19 -webfrom annovar $EIGEN humandb/"
 		;;
+	25) 
+		nam="Download: gnomad_exome"
+		cmd="perl annotate_variation.pl -downdb -buildver hg19 -webfrom annovar gnomad_exome humandb/"
+		;;
+	26)	
+		nam="Download: gnomad_exome"
+		cmd="perl annotate_variation.pl -downdb -buildver hg38 -webfrom annovar gnomad_exome humandb/"
+		;;
+	27)
+		nam="Download: gnomad_genome"
+		cmd="perl annotate_variation.pl -downdb -buildver hg19 -webfrom annovar gnomad_genome humandb/"
+		;;
+	28)
+		nam="Download: gnomad_genome"
+		cmd="perl annotate_variation.pl -downdb -buildver hg38 -webfrom annovar gnomad_genome humandb/"
+		;;
 esac
 
 echo "Start $nam - `date`"
