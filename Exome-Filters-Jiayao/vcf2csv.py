@@ -51,22 +51,33 @@ def get_header(line):
 	return line.strip().split('\t')
 
 
-def variant2tsv(variant,header,info_num):
+def variant2tsv(variant,header,info_num,Ind):
 	tmp = [variant.Chrom,variant.Pos,variant.Id,variant.Ref,variant.Alt,variant.Qual,variant.Filter]
 	for field in header[7:info_num+7]:
 		try:
 			tmp.append(variant.Info[field])
 		except KeyError:
 			#print field
-			tmp.append('.')
+			if field == 'ExACfreq':
+				tmp.append('0')
+			else:
+				tmp.append('.')
 	tmp.append(variant.Format)
 	for field in header[info_num+8:]:
 		#print field
-		try:
-			tmp.append(variant.Sample[field])
-		except KeyError:
-			print field
-			tmp.append('.')
+		if Ind != None:
+			try:
+				tmp.append(variant.Sample[field])
+			except KeyError:
+				print field
+				tmp.append('.')
+		else:
+			try:
+				if field in header:
+					tmp.append(variant.Sample[field])
+			except KeyError:
+				print field
+				tmp.append('.')
 	#print '\t'.join(tmp)+'\n'
 	for i,item in enumerate(tmp):
 		if item == None:
@@ -81,12 +92,20 @@ def format_info(INFOs):
 	#print res
 	return res
 
-Custome_info = ['Func.refGene','Gene.refGene','GeneDetail.refGene','ExonicFunc.refGene','AAChange.refGene','esp6500siv2_all','1000g2015aug_all','ExAC_ALL','MetaSVM_pred','CADD13_PHRED','MCAP','avsnp147','Annotation','GeneticModels','ModelScore','Compounds',]
+Custome_info = ['Func.refGene','Gene.refGene','GeneDetail.refGene','ExonicFunc.refGene','AAChange.refGene','MLEAC','MLEAF','gnomAD_genome_ALL','gnomAD_exome_ALL','esp6500siv2_all','1000g2015aug_all','ExAC_ALL','MetaSVM_pred','CADD13_PHRED','MCAP','avsnp147','Annotation','GeneticModels','ModelScore','Compounds',]
+#Custome_info = ['VarClass','AAChange','ESPfreq','1KGfreq','ExACfreq','PP2.hvar.prd','MetaSVMprd','CADDphred','CADDInDelraw','CADDInDelphred','VarFunc','GeneName']
 
-def format_header(header,Infos):
+def format_header(header,Infos,Ind):
 	res = header[:7]
 	res.extend(Infos)
-	res.extend(header[8:])
+	if Ind == None:
+		res.extend(header[8:])
+	else:
+		res.append(header[8])
+		for item in header[9:]:
+			if item in Ind:
+				res.append(item)
+
 	return res,len(Infos)
 
 def GetOptions():
@@ -94,11 +113,17 @@ def GetOptions():
 	parser.add_option('-v','--vcf',dest='VCF',metavar='VCF',help='Input VCF file name')
 	parser.add_option('-o','--outname',dest='OutName',metavar='OutName',help='Name of Output table')
 	parser.add_option('-d','--dir',dest='Dir',help='InputDir, if given, all vcf in the dir will be converted to tsv file')	
+	parser.add_option('-i','--ind',dest='Ind',help='Sample Id in header to keep in resutls')	
 	(options,args) = parser.parse_args()
 	if options.OutName == None and options.VCF != None:
 		options.OutName = GetBaseName(options.VCF)
-	return options.VCF,options.OutName,options.Dir
-def VCF2TABLE(vcf,out):
+	return options.VCF,options.OutName,options.Dir,options.Ind
+def VCF2TABLE(vcf,out,Ind):
+	print vcf
+	if Ind != None:
+		fin = open(Ind,'rb')
+		Ind = [item.strip() for item in fin.readlines()]
+	print Ind
 	fin = open(vcf,'rb')
 	INFOs = []
 	header = []
@@ -107,28 +132,30 @@ def VCF2TABLE(vcf,out):
 			if line.startswith('##INFO'): #Info
 				INFOs.append(line)
 		elif line.startswith('#C'): #header line, next line is variant.
+			#print line
 			header = get_header(line)
 			#Infos = format_info(INFOs)
 			Infos = Custome_info 
-			new_header,info_num = format_header(header,Infos)
+			new_header,info_num = format_header(header,Infos,Ind)
 			fout = open(out+'.tsv','wb')
 			fout.write('\t'.join(new_header)+'\n')
 		else:
 			variant = Variant(line,header)
-			fout.write(variant2tsv(variant,new_header,info_num))
+			fout.write(variant2tsv(variant,new_header,info_num,Ind))
 
-def MultiVcf2Table(DIR):
+def MultiVcf2Table(DIR, Ind):
 	DIR = os.path.abspath(DIR)
 	vcfs = get_files(DIR,'.vcf')
+	
 	for vcf in vcfs:
 		outname = GetBaseName(vcf)
-		VCF2TABLE(vcf,outname)
+		VCF2TABLE(vcf,outname,Ind)
 
 def main():
-	VCF, OUT, DIR =GetOptions()
+	VCF, OUT, DIR , Ind =GetOptions()
 	if DIR == None:
-		VCF2TABLE(VCF,OUT)
+		VCF2TABLE(VCF,OUT, Ind)
 	else:
-		MultiVcf2Table(DIR)
+		MultiVcf2Table(DIR, Ind)
 if __name__ == '__main__':
 	main()

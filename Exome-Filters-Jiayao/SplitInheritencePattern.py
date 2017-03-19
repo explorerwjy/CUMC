@@ -14,9 +14,47 @@ import shutil
 def GetOptions():
 	parser = OptionParser()
 	parser.add_option('-d','--dir',dest = 'dir', metavar = 'dir', help = 'InputDir contains VCF file and pedigree files')
+	parser.add_option('-v','--vcf',dest = 'vcf', help = 'Inhretence annotated VCF file')
+	parser.add_option('-p','--ped',dest = 'ped', help = 'Pedigree file')
+	
 	(options,args) = parser.parse_args()
 	
-	return options.dir
+	return options.dir, options.vcf, options.ped
+
+class Individual():
+	def __init__(self, List):
+		self.Fam, self.Sample, self.Father, self.Mother, self.Gender, self.Pheno = List[:6]
+
+class Pedigree():
+	def __init__(self, PedFil):
+		fin = open(PedFil,'r')
+		individuals = []
+		for l in fin:
+			if l.startswith('#'):
+				continue
+			indi = l.strip().split('\t')
+			individuals.append(Individual(indi))
+		self.Proband, self.Father, self.Mother = None, None, None
+		for ind in individuals:
+			if ind.Fam in ind.Sample:
+				self.Proband = ind
+		for ind in individuals:
+			if self.Proband.Father == ind.Sample :
+				self.Father = ind
+			if self.Proband.Mother == ind.Sample :
+				self.Mother = ind
+class Format():
+    #GT:AD:DP:GQ:PL 0/0:7,0:7:18:0,18,270
+    def __init__(self,Format,tmp):
+		self.formats = Format.split(':')
+		self.info = tmp.split(':')
+		self.GT = re.findall('[\d.]',self.info[0])
+		self.fmt = {}
+		for i,item in enumerate(self.formats):
+			self.fmt[item] = self.info[i]
+		if 'AD' in self.fmt:
+			self.fmt['AD'] = self.fmt['AD'].split(',')
+
 def MatchVcfPed(vcfs,peds):
 	res = []
 	for vcf in vcfs:
@@ -34,10 +72,13 @@ def MatchVcfPed(vcfs,peds):
 def getGT(GTstring):
 	return re.findall('[\d.]',GTstring.split(':')[0])
 
-def CompoundTrios(CH_buffer,fout_CH,Proband_idx,Father_idx,Mother_idx):
+def CompoundTrios(CH_buffer, fout_CH, headerList, Ped):
 	Flag1 = False
 	Flag2 = False
 	res = []
+	Proband_idx = headerList.index(Ped.Proband.Sample)
+	Father_idx = headerList.index(Ped.Father.Sample)
+	Mother_idx = headerList.index(Ped.Mother.Sample)
 	for l in CH_buffer:
 		llist = l.strip().split('\t')
 		GT_Proband = getGT(llist[Proband_idx])
@@ -54,7 +95,7 @@ def CompoundTrios(CH_buffer,fout_CH,Proband_idx,Father_idx,Mother_idx):
 	if Flag1 and Flag2:
 		for l in res:
 			fout_CH.write(l)
-def CompoundDual(CH_buffer,fout_CH,Proband_idx,Parent_idx):
+def CompoundDual(CH_buffer,fout_CH, Ped):
 	Flag1 = False
 	Flag2 = False
 	res = []
@@ -73,10 +114,10 @@ def CompoundDual(CH_buffer,fout_CH,Proband_idx,Parent_idx):
 	if Flag1 and Flag2:
 		for l in res:
 			fout_CH.write(l)
-def CompoundQuart(CH_buffer,fout_CH,Proand1_idx,Proband2_idx,i):
+def CompoundQuart(CH_buffer,fout_CH, Ped):
 	return
 
-def LookCompoundHeter(CH_buffer,fout_CH,RecordLen,Format_idx):
+def LookCompoundHeter(CH_buffer,fout_CH,RecordLen,Format_idx, headerList, Ped):
 	if RecordLen < 2:
 		return
 	if RecordLen - Format_idx - 1 == 1: # Singleton
@@ -86,20 +127,61 @@ def LookCompoundHeter(CH_buffer,fout_CH,RecordLen,Format_idx):
 		CompoundDual(CH_buffer,fout_CH,Proband_idx,Parent_idx)
 	if RecordLen - Format_idx - 1 == 3: # Trios
 		Proband_idx,Father_idx,Mother_idx = [Format_idx+i+1 for i in range(3)]
-		CompoundTrios(CH_buffer,fout_CH,Proband_idx,Father_idx,Mother_idx)
+		CompoundTrios(CH_buffer,fout_CH, headerList, Ped)
 	if RecordLen - Format_idx - 1 == 4: # quart	
 		CompoundQuart()
 		
 	return
 
+def selectAD_DN(llist, headerList, Ped, Model, Format_idx):
+	Flag_pass = True
+	if 'dn' in Model:
+		try:
+			Proband_idx = headerList.index(Ped.Proband.Sample)
+			Father_idx = headerList.index(Ped.Father.Sample)
+			Mother_idx = headerList.index(Ped.Mother.Sample)
+			_format = llist[Format_idx]
+			Proband = Format(_format, llist[Proband_idx])
+			Father = Format(_format, llist[Father_idx])
+			Mother = Format(_format, llist[Mother_idx])
 
-def SplitInheritencePattern(InpDir):
-	InpDir = os.path.abspath(InpDir)
-	print InpDir
+			#print Proband.fmt['AD'], int(Proband.fmt['GT'][1]), float(Proband.fmt['AD'])
+			if Proband.GT[1] == '.':
+				return False
+			ADDP = float(Proband.fmt['AD'][int(Proband.GT[1])]) / float(Proband.fmt['DP'])
+			if (ADDP < 0.2) or (float(Proband.fmt['GQ']) < 30) or (Proband.fmt['AD'][int(Proband.GT[1])] < 3) or (int(Father.fmt['DP'])<10) or (int(Mother.fmt['DP'])<10):
+				Flag_pass = False
+				#print Proband.fmt['AD'],Proband.fmt['DP'], Proband.fmt['GQ']
+				#print "Allele Balance: %.3f"%ADDP
+			else:
+				#print Proband.fmt['AD'],Proband.fmt['DP']
+				#print "Allele Balance: %.3f"%ADDP
+				pass	
+		except Exception as e:
+		#except IOError as e:
+			print e, Proband.fmt
+			Flag_pass = False
+	return Flag_pass
+	
+def selectAR(llist, headerList, Ped, Model, Format_idx):
+	Flag_pass = True
+	try:
+		Proband_idx = headerList.index(Ped.Proband.Sample)
+		_format = llist[Format_idx]
+		Proband = Format(_format, llist[Proband_idx])
+		if Proband.GT[1] == '.':
+			return False
+	except Exception as e:
+		print e
+	return True
+
+def SplitInheritencePattern(InpDir, VCF, PED):
 	vcfs = utils.get_files(InpDir,'.tsv')
 	peds = utils.get_files(InpDir,'.ped')
 	vcf_peds = MatchVcfPed(vcfs,peds)
+	#vcf_peds = [[VCF,PED]]	
 	for vcf,ped in vcf_peds:
+		Ped = Pedigree(ped)
 		print "Processing vcf: %s\tpedigree: %s" % (vcf,ped)
 		fout_AR = open(utils.GetBaseName(vcf)+'_AR.tsv','wb')
 		fout_AR.write('Autsomal Recessive Variants\n')
@@ -127,21 +209,21 @@ def SplitInheritencePattern(InpDir):
 			llist = l.strip().split('\t')
 			Gene = llist[Gene_idx]
 			Model = llist[Model_idx].split(':')[-1]
-			if 'AR' in Model:
+			if 'AR' in Model and selectAR(llist, headerList, Ped, Model, Format_idx): 
 				fout_AR.write(l)
-			if 'AD' in Model:
+			if 'AD' in Model and selectAD_DN(llist,headerList, Ped, Model, Format_idx):
 				fout_AD.write(l)
 			if 'X' in Model:
 				fout_XL.write(l)
 
 			if Gene != LastGene:
 				if LastGene != None:
-					LookCompoundHeter(CH_buffer,fout_CH,RecordLen,Format_idx)
+					LookCompoundHeter(CH_buffer,fout_CH,RecordLen,Format_idx, headerList, Ped)
 				CH_buffer = [l]
 				LastGene = Gene
 			else:
 				CH_buffer.append(l)
-		LookCompoundHeter(CH_buffer,fout_CH,RecordLen,Format_idx)
+		LookCompoundHeter(CH_buffer,fout_CH,RecordLen,Format_idx, headerList, Ped)
 		fout_AR.close()
 		fout_AD.close()
 		fout_XL.close()
@@ -158,8 +240,8 @@ def SplitInheritencePattern(InpDir):
 			shutil.move(dest, new_dir)
 
 def main():
-	InpDir = GetOptions()
-	SplitInheritencePattern(InpDir)
+	DIR, VCF,PED = GetOptions()
+	SplitInheritencePattern(DIR, VCF, PED)
 	return
 
 if __name__=='__main__':
