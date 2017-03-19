@@ -57,7 +57,7 @@ def Filter(VCFin,VCFout,Filters):
 		
 		#CodingRegion = ['exonic','splicing']
 		CodingRegion = ['exonic','splicing','exonic-splicing']
-		if F_ExAC_Coding(llist[7],0.01,CodingRegion):
+		if F_ExAC_Coding(llist[7],0.005,CodingRegion):
 			fout.write(l)
 			Count_Pass += 1
 		

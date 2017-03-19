@@ -84,10 +84,16 @@ def GetInfoDict(linelist):
 def InitStats(line):
 	return stats(line,"Coding Variants"),stats(line,"Non-coding Variants"),stats(line,"All Variants")
 
+def changevalue(value):
+	if value != '.':
+		return float(value)
+	else:
+		return 2
+
 def GetFrequency(INFOdict):
-	KGseq = [ float(rate) for rate in INFOdict.get('1000g2015aug_all','2').split(',') if rate != '.']
-	ESPseq = [ float(rate) for rate in INFOdict.get('esp6500siv2_all','2').split(',') if rate != '.']
-	ExACseq = [ float(rate) for rate in INFOdict.get('ExAC_ALL','2').split(',') if rate != '.']
+	KGseq = [ changevalue(rate) for rate in INFOdict.get('1000g2015aug_all',2).split(',')]
+	ESPseq = [ changevalue(rate) for rate in INFOdict.get('esp6500siv2_all',2).split(',')]
+	ExACseq = [ changevalue(rate) for rate in INFOdict.get('ExAC_ALL',2).split(',')]
 	KGseq.append(0)
 	ESPseq.append(0)
 	ExACseq.append(0)
@@ -223,6 +229,9 @@ def Summary(VCF,QCdir,Nprocs):
 			linelist=line.split("\t")
 			INFOdict=GetInfoDict(linelist)
 			KGscore,ESPscore,ExACscore=GetFrequency(INFOdict)
+
+			#print KGscore,ESPscore,ExACscore
+
 			MutationFunct = str(INFOdict.get('Func.refGene','none').split(',')[0])
 			MutationClass = str(INFOdict.get('ExonicFunc.refGene','none').split(',')[0])
 			ID = str(linelist[2])
@@ -371,7 +380,7 @@ def Summary(VCF,QCdir,Nprocs):
 							coding.RareCount[i] += 1 
 						else:
 							noncoding.RareCount[i] += 1
-				if KGscore==2 and ESPscore==2:
+				if KGscore=='.' and ESPscore=='.':
 					All.NoAAF[i]=All.NoAAF[i]+1
 					if (MutationFunct in CodingCodes): 
 						coding.NoAAF[i] += 1 
