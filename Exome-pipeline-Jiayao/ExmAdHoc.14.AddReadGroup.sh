@@ -1,5 +1,10 @@
 #!/bin/bash
-#$ -cwd -pe smp 6 -l mem=4G,time=6:: -N FQBWABam
+#$ -S /bin/bash
+#$ -j y
+#$ -N AddReadGroup 
+#$ -l h_rt=24:00:00
+#$ -l h_vmem=16G
+#$ -cwd
 
 # This script add or change the Read Groups for bam files
 
