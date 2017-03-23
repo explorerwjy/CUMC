@@ -1,5 +1,10 @@
 #!/bin/bash
-#$ -cwd -pe smp 6 -l mem=4G,time=6:: -N FQBWABam
+#$ -S /bin/bash
+#$ -j y
+#$ -N BWAMEM 
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=20G
+#$ -cwd
 
 # This script takes fastq files and aligns them with BWA mem
 # The primary input is a TAB-delimited table containing the path to the fastq file and the RG read header for the output SAM file.
@@ -75,7 +80,6 @@ source $RefFil
 source $EXOMPPLN/exome.lib.sh #library functions begin "func"
 
 #set local variables
-#ArrNum=1 #line of table to read
 
 InpFil=`readlink -f $InpFil`  # resolve input file path
 NCOL=$(head -n1 $InpFil | wc -w | cut -d" " -f1) #get number of columns in file to determine SE or PE
