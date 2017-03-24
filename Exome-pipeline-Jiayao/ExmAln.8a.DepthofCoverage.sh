@@ -3,7 +3,7 @@
 #$ -j y
 #$ -N DoC 
 #$ -l h_rt=12:00:00
-#$ -l h_vmem=16G
+#$ -l h_vmem=15G
 #$ -cwd
 
 
@@ -102,6 +102,8 @@ StepCmd="java -Xmx10G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -ct 10
  -ct 15
  -ct 20
+ --countType COUNT_FRAGMENTS 
+ --minMappingQuality 20
  --filter_mismatching_base_and_quals
  -log $GatkLog" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)

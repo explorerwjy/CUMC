@@ -1,5 +1,10 @@
 #!/bin/bash
-#$ -cwd -l mem=12G,time=6:: -N MrgBam
+#$ -S /bin/bash
+#$ -j y
+#$ -N MergeBam 
+#$ -l h_rt=24:00:00
+#$ -l h_vmem=10G
+#$ -cwd
 
 # This script takes a a list of bam files and merges them into a single bam file. It is primarily for use in merging bams from a single sample that are from different read groups (e.g. have been sequenced on different lanes and aligned separately)
 # The script can be pipelined directly to the GATK local indel realignment stage of the pipeline
@@ -71,9 +76,7 @@ echo $BamNam
 if [[ -z "$LogFil" ]]; then LogFil=$BamNam.MrgBam.log; fi # a name for the log file
 MrgDir=wd.$BamNam.merge # directory in which processing will be done
 MrgFil=$BamNam.merged.bam #filename for bwa-mem aligned file
-ADRFil=$BamNam.RG.bam
 SrtFil=$BamNam.merged.sorted.bam #filename for bwa-mem aligned file
-DdpFil=$BamNam.merged.mkdup.bam #filename for bwa-mem aligned file
 FlgStat=$BamNam.merged.flagstat #output file for bam flag stats
 IdxStat=$BamNam.merged.idxstats #output file for bam index stats
 mkdir -p $MrgDir # create working directory
@@ -89,41 +92,29 @@ funcWriteStartLog
 #Merge with samtools
 StepName="Merge with Samtools"
 StepCmd="samtools merge -b $InpFil $MrgFil" #commandtoberun
+echo $StepCmd
 funcRunStep
 
-#Replace Read Groups
-StepName="Add Read Groups with Picard"
-StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD AddOrReplaceReadGroups
-INPUT=$MrgFil
-OUTPUT=$ADRFil
-RGID=$BamNam
-RGLB=lib1
-RGPL=illumina
-RGPU=unit1
-RGSM=20
-SORT_ORDER=coordinate
-CREATE_INDEX=TRUE"
+#Sort the bam file by coordinate
+StepName="Sort Bam using PICARD"
+StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar  $PICARD SortSam
+ INPUT=$MrgFil
+ OUTPUT=$SrtFil
+ SORT_ORDER=coordinate
+ CREATE_INDEX=TRUE
+  2>>$TmpLog"
 funcRunStep
+echo $StepCmd
 rm $MrgFil #removed the "Aligned bam"
-
-#Mark the duplicates
-StepName="Mark PCR Duplicates using PICARD"
-StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD MarkDuplicates
- INPUT=$ADRFil
- OUTPUT=$DdpFil
- METRICS_FILE=$DdpFil.dup.metrics.txt
- CREATE_INDEX=TRUE"
-funcRunStep
-rm $ADRFil ${ADRFil/bam/bai} #removed the "Sorted bam"
 
 #Get flagstat
 StepName="Output flag stats using Samtools"
-StepCmd="samtools flagstat $DdpFil > $FlgStat"
+StepCmd="samtools flagstat $SrtFil > $FlgStat"
 funcRunStep
 
 #get index stats
 StepName="Output idx stats using Samtools"
-StepCmd="samtools idxstats $DdpFil > $IdxStat"
+StepCmd="samtools idxstats $SrtFil > $IdxStat"
 funcRunStep
 
 #Call next steps of pipeline if requested

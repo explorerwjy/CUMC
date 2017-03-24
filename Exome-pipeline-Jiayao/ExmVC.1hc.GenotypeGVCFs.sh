@@ -93,8 +93,6 @@ funcGetTargetFile #If the target file has been specified using a code, get the f
 # bash arithmetic division actually gives the quotient, so if there are 1010 lines and 40 jobs the division would still give 25 lines per a job and the last 10 lines would be lost
 # to compensate for this we will find the remainder (RemTar) and then add an extra line to the first $RemTar jobs
 
-NumJobs=5
-
 if [[ $JobNum ]]; then NumJobs=$JobNum; fi
 echo $NumJobs
 TarLen=$(cat $TgtBed | wc -l) 
