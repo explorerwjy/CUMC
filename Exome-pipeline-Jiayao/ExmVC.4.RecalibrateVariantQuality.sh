@@ -1,4 +1,11 @@
 #!/bin/bash
+#$ -S /bin/bash
+#$ -j y
+#$ -N VQSR 
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=20G
+#$ -cwd
+
 #This script takes a raw VCF file and performs GATK's variant quality score recalibration
 #    InpFil - (required) - Path to VCF file to be recalibrated
 #    RefFil - (required) - shell file containing variables with locations of reference files, jar files, and resource directories; see list below for required variables
@@ -103,7 +110,7 @@ StepCmd="java -Xmx12G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -tranche 99.1
  -tranche 99.0
  -tranche 90.0
- --maxGaussians 4
+ --maxGaussians 8
  -recalFile $VcfNam.recalibrate_SNP.recal
  -tranchesFile $VcfNam.recalibrate_SNP.tranches
  -rscriptFile $VcfNam.recalibrate_SNP_plots.R
@@ -155,7 +162,7 @@ StepCmd="java -Xmx12G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -tranche 99.1
  -tranche 99.0
  -tranche 90.0
- --maxGaussians 2
+ --maxGaussians 4
  -recalFile $VcfNam.recalibrate_INDEL.recal
  -tranchesFile $VcfNam.recalibrate_INDEL.tranches
  -rscriptFile $VcfNam.recalibrate_INDEL_plots.R

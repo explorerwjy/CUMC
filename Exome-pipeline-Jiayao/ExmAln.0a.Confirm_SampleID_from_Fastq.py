@@ -8,7 +8,7 @@
 import argparse
 import re
 
-name = re.compile('(OMG\d+-\d+)-') #PIPseq ID
+name = re.compile('(OMG\d+-\d+-[A-Za-z0-9-]+)') #PIPseq ID
 
 class Sample:
     def __init__(self, ID, F_path):

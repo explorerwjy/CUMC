@@ -1,6 +1,10 @@
 #!/bin/bash
-#$ -cwd -l mem=4G,time=6:: -N AnnVCF
-
+#$ -S /bin/bash
+#$ -j y
+#$ -N Annovar 
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=20G
+#$ -cwd
 
 #This script takes a bam file or a list of bam files (filename must end ".list") and runs variant calling using the HaplotypeCaller in gVCF mode
 #    InpFil - (required) - Path to Bam file to be aligned. Alternatively a file with a list of bams can be provided and the script run as an array job. List file name must end ".list"
@@ -69,7 +73,7 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions
 ArrNum=$SGE_TASK_ID
 funcFilfromList #if the input is a list get the appropriate input file for this job of the array --> $InpFil
 VcfFil=$InpFil #input vcf file
-VcfNam=`basename $VcfFil |  sed s/.gz$//| sed s/.vcf$// | sed s/.rawvariants$//` #basename for outputs
+VcfNam=`basename $VcfFil |  sed s/.gz$//| sed s/.vcf$// | sed s/.rawvariants$//| sed s/.recalibrated$//` #basename for outputs
 if [[ -z $LogFil ]]; then LogFil=$VcfNam.AnnVCF.log; fi # a name for the log file
 TmpLog=$VcfNam.AnnVCF.temp.log #temporary log file
 TmpVar=$VcfNam.tempvar
@@ -104,7 +108,7 @@ if [[ $FilTyp == "gz" ]]; then StepCmd=`echo $StepCmd | sed s/--vcf/--gzvcf/g`; 
 echo $StepCmd
 
 #funcRunStep
-rm -f TEMP.$VcfFil.recode.vcf
+#rm -f TEMP.$VcfFil.recode.vcf
 
 ##Run Annovar to Annotate VCF file
 StepName="Build Annotation table using ANNOVAR"
@@ -118,13 +122,13 @@ funcRunStep
 VcfFilOut=$VcfFil.hg19_multianno.vcf
 #
 StepName="Chenge invalid char"
-StepCmd="sed -i -e 's/\\x3d/:/g' $VcfFilOut;
-	     sed -i -e 's/\\x3b/-/g' $VcfFilOut;
+StepCmd="sed -i -e 's/\\\x3d/:/g' $VcfFilOut;
+	     sed -i -e 's/\\\x3b/-/g' $VcfFilOut;
 		 bgzip $VcfFilOut;
 		 tabix -f -p vcf $VcfFilOut.gz;"
 
 #End Log
-#funcRunStep
+funcRunStep
 funcWriteEndLog
 
 #Cleanup

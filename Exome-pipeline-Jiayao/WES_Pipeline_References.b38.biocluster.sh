@@ -11,11 +11,12 @@ SNPEFF="$HOME/bin/snpEff.jar" # Current snpEff jar file
 export BUILD="b38" # shorthand for build
 #export REF="$EXOMRES/reference_genomes/GRCh38/Homo_sapiens_assembly38.fasta" 
 export REF="$EXOMRES/reference_genomes/GRCh38/GRCh38.no_alt_analysis_set.fa" 
-export HAPMAP="$EXOMRES/references/GRCh38/hapmap_3.3.hg38.vcf.gz" # hapmap vcf from GATK
-export INDEL="$EXOMRES/references/GRCh38/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz" # Gold standard INDEL reference from GATK
-export TGVCF="$EXOMRES/references/GRCh38/1000G_omni2.5.hg38.vcf.gz" 
-export DBSNP="$EXOMRES/references/GRCh38/dbsnp_146.hg38.vcf.gz" # dbSNP vcf from GATK
-export ONEKG="$EXOMRES/references/GRCh38/1000G_phase1.snps.high_confidence.hg38.vcf.gz" # 1000 genome SNPs vcf
+export HAPMAP="$EXOMRES/references/GRCh38/hapmap_3.3.hg38.vcf" # hapmap vcf from GATK
+export INDEL="$EXOMRES/references/GRCh38/Mills_and_1000G_gold_standard.indels.hg38.vcf" # Gold standard INDEL reference from GATK
+export TGVCF="$EXOMRES/references/GRCh38/1000G_omni2.5.hg38.vcf" 
+export DBSNP="$EXOMRES/references/GRCh38/dbsnp_146.hg38.vcf" # dbSNP vcf from GATK
+#export DBSNP="$EXOMRES/references/GRCh38/dbsnp_138.hg38.excluding_sites_after_129.sorted.cleaned.vcf " # dbSNP vcf from GATK
+export ONEKG="$EXOMRES/references/GRCh38/1000G_phase1.snps.high_confidence.hg38.vcf" # 1000 genome SNPs vcf
 export ANNOVAR="$HOME/software_pkg/annovar"
 export ANNHDB="/share/archive/yufengshen/ANNOVAR_DATA/humandb" #Location of annovar databases
 

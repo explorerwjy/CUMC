@@ -1,6 +1,10 @@
 #!/bin/bash
-#$ -cwd -l mem=4G,time=2:: -N MergeVCF
-
+#$ -S /bin/bash
+#$ -j y
+#$ -N MergeVCF 
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=10G
+#$ -cwd
 #This script concatenates multiple vcfs into a single vcf, for example vcfs that have been split by chromosome. 
 #    InpFil - (required) - A driectory containging vcf files to be concatenated - they should all contain the same samples 
 #    RefFil - (required) - shell file containing variables with locations of reference files, jar files, and resource directories; see list below for required variables
