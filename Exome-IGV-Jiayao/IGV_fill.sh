@@ -3,6 +3,7 @@
 pip_IGV="/home/yufengshen/CUMC/Exome-IGV-Jiayao/Generate_IGV_plots.sh"
 igvscript="/home/yufengshen/CUMC/Exome-IGV-Jiayao/igvscript.sh"
 len_read=150;
+#source /home/local/ARCS/nz2274/Pipeline/Exome_pipeline_scripts_GATKv3/WES_Pipeline_References.b37.sh
 source /home/local/ARCS/nz2274/Pipeline/Exome_pipeline_scripts_GATKv3/WES_Pipeline_References.b37.sh
 
 function bamout {
