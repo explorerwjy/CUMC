@@ -35,9 +35,9 @@ DIR=$BamNam'_snapshot' ## figure output folder
 mkdir -p $DIR
 
 ###=========================================================
-ADDRESS="/home/yufengshen/software_pkg/IGV_2.3.92/"
+ADDRESS="/home/local/ARCS/hq2130/src/IGV_2.3.68/"
 IGVR=$ADDRESS"igv.sh" ## igv 
-SCRF=$INDELS.txt
+SCRF="igv_batch_script_v4.txt" 
 rm -rf $SCRF
 touch $SCRF
 printf "#! /bin/bash\n" >> $SCRF
@@ -53,7 +53,7 @@ do
 	VALUE=`echo $line | cut -d ' ' -f 2`
 	SAMPLE=`echo $line | cut -d  ' ' -f 3`
 	SAMS=`echo $SAMPLE|tr "," "\n"`
-
+	#echo $VALUE
 	i=1
 	for ONE in $SAMS;
  	do	
@@ -71,20 +71,27 @@ do
 	done
 
 	
-	if [[  "$BAMS0" != "$BAMS" ]];then
-		printf "new\n" >> $SCRF
-		printf "genome hg19\n"  >> $SCRF
-		printf "load  $BAMS\n" >> $SCRF
-		printf "snapshotDirectory $DIR \n" >>  $SCRF
+	if [[ $kk -gt 1 ]];then
+		if [[  "$BAMS0" != "$BAMS" ]];then
+			printf "new\n" >> $SCRF
+			printf "genome hg19\n"  >> $SCRF
+			printf "load  $BAMS\n" >> $SCRF
+			printf "snapshotDirectory $DIR \n" >>  $SCRF
+		fi
+	else
+			printf "new\n" >> $SCRF
+			printf "genome hg19\n"  >> $SCRF
+			printf "load  $BAMS\n" >> $SCRF
+			printf "snapshotDirectory $DIR \n" >>  $SCRF	
 	fi
 	
 	BAMS0=$BAMS
 	
 
-	let "START=$VALUE - 50"
-	let "END=$VALUE + 50"
+	let "START=$VALUE - 20"
+	let "END=$VALUE + 20"
 	printf "goto chr$NAME:$START-$END \n" >> $SCRF
-	printf "sort base \n" >> $SCRF
+	printf "sort readGroup \n" >> $SCRF
 	if [[ $ExpandMode == "true" ]]; then
 		#trackname=`echo $SAMPLE | cut -d ',' -f1`
 		#printf "expand $trackname\n" >> $SCRF
@@ -99,14 +106,15 @@ do
 
 
 	printf "maxPanelHeight 300 \n" >> $SCRF
-	printf "snapshot $SAMPLE.$NAME.$VALUE.png \n" >> $SCRF
+	SAMPLE1=$(echo $SAMPLE|cut -f 1 -d"," )
+	printf "snapshot  $SAMPLE1.$NAME.$VALUE.png \n" >> $SCRF
 	printf "\n" >> $SCRF
 	
 	let kk+=1
 done < "$INDELS"
 
-printf "exit \n" >> $SCRF
+#printf "exit \n" >> $SCRF
 ## run IGV
-$IGVR  -g hg38 -b $SCRF	
+#$IGVR  -g hg19 -b $SCRF	
 #rm $SCRF	
 	
