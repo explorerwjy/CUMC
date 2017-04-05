@@ -14,15 +14,95 @@ name = re.compile('(OMG\d+-\d+)-') #PIPseq ID
 #=========================================================================
 # Modify this part each time run. Customized by different Batch of Data
 SM = '(OMG\d+-\d+-[A-Za-z0-9-]+)'
-ID = '_([A-Za-z0-9-]+)_'
+ID = 1
 PL = 'Illumina'
-LB = 'LIB'
-PAIR = '_R(1|2)'
+LB = 'Lib'
+LB_extra = '[A-Za-z0-9]+_[A-Za-z0-9]+_[A-Za-z0-9]+_[A-Za-z0-9]+' #160729_D00437_0328_BC9JMUANXX
+PAIR = 'Paired(1|2)'
 CN = 'OMG'
 #=========================================================================
 SM = re.compile(SM)
 ID = re.compile(ID)
 PAIR = re.compile(PAIR)
+
+class FastqTableRecord:
+    def __init__(self, f_path_1):
+        self.Path1 = f_path_1
+        self.Marker = self.Path1.rstrip('.gz').rstrip('.fq').rstrip('.fastq').rstrip('Paired1').rstrip('Paired2')
+    def ParseName(self):
+        self.Fname1 = self.Path1.split('\t')[-1]
+        self.SM = SM.search(self.Fname1).group(1) # Sample Name
+        self.ID = 1
+        if 'Project_Clinical_WES' in self.Path1:
+            LB = LB_extra.search(self.Path1).group(1)
+        self.LB = LB
+        self.CN
+        self.RF1 = PAIR.search(self.Fname1).group(1) # Pair end #
+    def checkRepeat(self, Sample_Dict):
+        if self.SM in Sample_Dict:
+            Sample_Dict[self.SM] += 1
+            self.ID = Sample_Dict[self.SM]
+        else:
+            Sample_Dict[self.SM] = self.ID
+    def search_mate(self, fq_list):
+        for j in xrange(1, len(fq_list)):
+            fq_path_2 = "/".join(fq_list[j].split('/')[:-1])
+            Marker = fq_path_2.rstrip('.gz').rstrip('.fq').rstrip('.fastq').rstrip('Paired1').rstrip('Paired2')
+            if self.Marker == Marker:  # Find Mate
+                self.Path2 = fq_path_2
+                self.Fname2 = self.Path2.split('\t')[-1]
+                self.RF2 = PAIR.search(self.Fname2).group(1)
+                if self.RF1 == '1' and self.RF2 == '2':
+                    self.FR, self.RE = self.Path1, self.Path2
+                    fq_list.pop(j)
+                    fq_list.pop(0)
+                elif self.RF1 == '2' and self.RF2 == '1':
+                    self.FR, self.RE = self.Path2, self.Path1
+                    fq_list.pop(j)
+                    fq_list.pop(0)
+                else:
+                    print 'Error with File Name', fq_name, mate_name
+                    exit()
+        # Didn't find a mate:
+        self.FR, self.RE = self.Path1, ""
+        fq_list.pop(0)
+    def Format(self):
+        RG = '{}\\t{}\\t{}\\t{}\\t{}\\t{}'.format('@RG', 'ID:' + str(self.ID), 'SM:' + self.SM, 'LB:' + self.LB, 'PL:' + self.PL, 'CN:' + self.CN)
+        return '{}\t{}\t{}\n'.format(self.FR, RG, self.RE)
+
+def MakeFastqTable(Input, Output):
+    fq_list = [tmp.strip() for tmp in open(Input, 'rb').readlines()]
+    fout = open(Output, 'wb')
+    Sample_Dict = {}
+    while len(fq_list) != 0:
+        record = FastqTableRecord(l.strip('\n'))
+        record.ParseName()
+        record.checkRepeat(Sample_Dict)
+        record.search_mate(fq_list)
+        fout.write(record.format())
+    fout.close()
+
+
+
+def GetOptions():
+    parser = OptionParser()
+    parser.add_option('-i', '--input', dest='input',
+                      metavar='input', help='Input fastq file listSRA')
+    parser.add_option('-o', '--output', dest='output',
+                      metavar='output', help='Output fastq table name')
+
+    (options, args) = parser.parse_args()
+    if options.output == None:
+        options.output = 'Fastq_table.txt'
+    return options.input, options.output
+
+def main():
+    Input, Output = GetOptions()
+    MakeFastqTable(Input, Output)
+
+
+if __name__ == '__main__':
+    main()
 
 def ParseName(fpath):
     fname = fpath.split('\t')[-1]
@@ -30,11 +110,6 @@ def ParseName(fpath):
     _ID = ID.search(fname).group(1) # Read Group ID
     RF = PAIR.search(fname).group(1) # Pair end #
     return _ID, _SM, LB, PL, CN, RF
-
-def get_name(path):
-    return path.split('/')[-1]
-
-
 def MakePair_2(fq_list):
     while len(fq_list) > 0:
         fq_path = fq_list[0]
@@ -69,8 +144,6 @@ def search_mate_2(fq_name, fq_list):
                 exit()
     # Didn't find a mate:
     return '_'.join(fq_name), None, None
-
-
 def MakePair(fq_list):
     count = 0
     while len(fq_list) > 0:
@@ -85,7 +158,6 @@ def MakePair(fq_list):
         else:
             yield R1 + '\t' + RG + '\t' + '\n'
             fq_list.pop(0)
-
 def search_mate(fq_name, fq_list):
     fq_path_1 = "/".join(fq_list[0].split('/')[:-1])
     fq_name = fq_name.rstrip('.fastq.gz').rstrip('.fq.gz')
@@ -107,38 +179,13 @@ def search_mate(fq_name, fq_list):
                 exit()
     # Didn't find a mate:
     return fq_list[0], None, None
-
 def get_RG(fq_name):
     fq_name = get_name(fq_name).split('.')[0]
     ID, SM, LB, PL, CN, RF = ParseName(fq_name)
     return '{}\\t{}\\t{}\\t{}\\t{}\\t{}'.format('@RG', 'ID:' + ID, 'SM:' + SM, 'LB:' + LB, 'PL:' + PL, 'CN:' + CN)
-
-
-def MakeFastqTable(Input, Output):
+def MakeFastqTable_2(Input, Output):
     fq_list = [tmp.strip() for tmp in open(Input, 'rb').readlines()]
     fout = open(Output, 'wb')
     for record in MakePair(fq_list):
         fout.write(record)
     fout.close()
-
-
-def GetOptions():
-    parser = OptionParser()
-    parser.add_option('-i', '--input', dest='input',
-                      metavar='input', help='Input fastq file listSRA')
-    parser.add_option('-o', '--output', dest='output',
-                      metavar='output', help='Output fastq table name')
-
-    (options, args) = parser.parse_args()
-    if options.output == None:
-        options.output = 'Fastq_table.txt'
-    return options.input, options.output
-
-
-def main():
-    Input, Output = GetOptions()
-    MakeFastqTable(Input, Output)
-
-
-if __name__ == '__main__':
-    main()
