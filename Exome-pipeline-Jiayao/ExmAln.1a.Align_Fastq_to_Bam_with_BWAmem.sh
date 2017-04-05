@@ -90,8 +90,12 @@ else
     fastq2=""
 fi
 rgheader=$(tail -n+$ArrNum $InpFil | head -n 1 | cut -f2) #RG header from second column
-BamNam=$(basename $fastq1 | sed s/_P1// | sed s/_R1// | sed s/.fq.gz// | sed s/.fastq.gz//) # a name for the output files - basically the original file name
-
+#BamNam=$(basename $fastq1 | sed s/_P1// | sed s/_R1// | sed s/.fq.gz// | sed s/.fastq.gz//) # a name for the output files - basically the original file name
+echo $rgheader
+SM=$(echo $rgheader|grep -P -o "SM:([0-9a-zA-Z-_]+)"|sed s/SM://g)
+ID=$(echo $rgheader|grep -P -o "ID:([0-9]+)"|sed s/ID://g)
+BamNam="$SM"_"$ID"
+echo $BamNam
 
 if [[ -z "$LogFil" ]]; then LogFil=$BamNam.FqB.log; fi # a name for the log file
 AlnDir=$BamNam.align; mkdir -p $AlnDir; cd $AlnDir # create working and move into a working directory
@@ -147,12 +151,12 @@ rm $SrtFil ${SrtFil/bam/bai} #remove the "Sorted bam"
 #Get flagstat
 StepName="Output flag stats using Samtools"
 StepCmd="samtools flagstat $DdpFil > $FlgStat"
-funcRunStep
+#funcRunStep
 
 #get index stats
 StepName="Output idx stats using Samtools"
 StepCmd="samtools idxstats $DdpFil > $IdxStat"
-funcRunStep
+#funcRunStep
 
 
 #End Log

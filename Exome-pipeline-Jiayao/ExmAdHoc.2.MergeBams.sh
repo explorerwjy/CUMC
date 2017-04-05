@@ -3,7 +3,7 @@
 #$ -j y
 #$ -N MergeBam 
 #$ -l h_rt=24:00:00
-#$ -l h_vmem=10G
+#$ -l h_vmem=16G
 #$ -cwd
 
 # This script takes a a list of bam files and merges them into a single bam file. It is primarily for use in merging bams from a single sample that are from different read groups (e.g. have been sequenced on different lanes and aligned separately)
@@ -71,14 +71,15 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func"
 #set local variables
 InpFil=`readlink -f $InpFil` #resolve absolute path to bam
 echo $InpFil
-BamNam=`basename $InpFil | sed s/.list//` # a name for the output files
+BamNam=`basename $InpFil | sed s/.list//g | sed s/.bam//g` # a name for the output files
 echo $BamNam
 if [[ -z "$LogFil" ]]; then LogFil=$BamNam.MrgBam.log; fi # a name for the log file
 MrgDir=wd.$BamNam.merge # directory in which processing will be done
 MrgFil=$BamNam.merged.bam #filename for bwa-mem aligned file
 SrtFil=$BamNam.merged.sorted.bam #filename for bwa-mem aligned file
-FlgStat=$BamNam.merged.flagstat #output file for bam flag stats
-IdxStat=$BamNam.merged.idxstats #output file for bam index stats
+BamFil=$BamNam.bam
+FlgStat=$BamNam.flagstat #output file for bam flag stats
+IdxStat=$BamNam.idxstats #output file for bam index stats
 mkdir -p $MrgDir # create working directory
 cd $MrgDir # move into working directory
 TmpLog=$BamNam.MrgBam.temp.log #temporary log file
@@ -97,7 +98,7 @@ funcRunStep
 
 #Sort the bam file by coordinate
 StepName="Sort Bam using PICARD"
-StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar  $PICARD SortSam
+StepCmd="java -Xmx8G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar  $PICARD SortSam
  INPUT=$MrgFil
  OUTPUT=$SrtFil
  SORT_ORDER=coordinate
@@ -106,15 +107,16 @@ StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar  $PIC
 funcRunStep
 echo $StepCmd
 rm $MrgFil #removed the "Aligned bam"
+mv $SrtFil $BamFil
 
 #Get flagstat
 StepName="Output flag stats using Samtools"
-StepCmd="samtools flagstat $SrtFil > $FlgStat"
+StepCmd="samtools flagstat $BamFil > $FlgStat"
 funcRunStep
 
 #get index stats
 StepName="Output idx stats using Samtools"
-StepCmd="samtools idxstats $SrtFil > $IdxStat"
+StepCmd="samtools idxstats $BamFil > $IdxStat"
 funcRunStep
 
 #Call next steps of pipeline if requested

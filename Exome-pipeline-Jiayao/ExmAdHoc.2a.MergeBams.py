@@ -9,7 +9,7 @@ import argparse
 import re
 import os 
 
-SampleID = re.compile('CARE[MFmf\d-]+') # Need to be Modified each time according to BamName convention.
+SampleID = re.compile('(OMG[A-Za-z0-9-]+)') # Need to be Modified each time according to BamName convention.
 REF = '/home/yufengshen/CUMC/Exome-pipeline-Jiayao/WES_Pipeline_References.b38.biocluster.sh'
 CMD = '/home/yufengshen/CUMC/Exome-pipeline-Jiayao/ExmAdHoc.2.MergeBams.sh'
 Metrix = 'false'
@@ -51,7 +51,8 @@ def ManipulateBamList(bamlist, outname):
     for sample,bams in samples.items():
         print sample, bams
         if len(bams) == 1:
-            fout.write('mv {}* {} \n'.format(bams[0].FilPath.rstrip('bam'), cwd+'/'+bams[0].FilName))
+            fout.write('mv {}.bam {}.bam \n'.format(bams[0].FilPath.rstrip('.bam'), cwd+'/'+bams[0].SampleID))
+            fout.write('mv {}.bai {}.bai \n'.format(bams[0].FilPath.rstrip('.bam'), cwd+'/'+bams[0].SampleID))
         else:
             TmpInput = '{}.bam.list'.format(bams[0].SampleID)
             with open(TmpInput,'wb') as tmpfout:

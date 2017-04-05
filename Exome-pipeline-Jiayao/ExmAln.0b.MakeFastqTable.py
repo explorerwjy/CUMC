@@ -22,7 +22,8 @@ PAIR = 'Paired(1|2)'
 CN = 'OMG'
 #=========================================================================
 SM = re.compile(SM)
-ID = re.compile(ID)
+#ID = re.compile(ID)
+LB_extra = re.compile(LB_extra)
 PAIR = re.compile(PAIR)
 
 class FastqTableRecord:
@@ -34,9 +35,11 @@ class FastqTableRecord:
         self.SM = SM.search(self.Fname1).group(1) # Sample Name
         self.ID = 1
         if 'Project_Clinical_WES' in self.Path1:
-            LB = LB_extra.search(self.Path1).group(1)
-        self.LB = LB
-        self.CN
+            self.LB = LB_extra.search(self.Path1).group(0)
+        else:
+            self.LB = LB
+        self.CN = CN
+        self.PL = PL
         self.RF1 = PAIR.search(self.Fname1).group(1) # Pair end #
     def checkRepeat(self, Sample_Dict):
         if self.SM in Sample_Dict:
@@ -46,9 +49,10 @@ class FastqTableRecord:
             Sample_Dict[self.SM] = self.ID
     def search_mate(self, fq_list):
         for j in xrange(1, len(fq_list)):
-            fq_path_2 = "/".join(fq_list[j].split('/')[:-1])
+            fq_path_2 = fq_list[j].strip()
             Marker = fq_path_2.rstrip('.gz').rstrip('.fq').rstrip('.fastq').rstrip('Paired1').rstrip('Paired2')
             if self.Marker == Marker:  # Find Mate
+                print Marker
                 self.Path2 = fq_path_2
                 self.Fname2 = self.Path2.split('\t')[-1]
                 self.RF2 = PAIR.search(self.Fname2).group(1)
@@ -56,16 +60,19 @@ class FastqTableRecord:
                     self.FR, self.RE = self.Path1, self.Path2
                     fq_list.pop(j)
                     fq_list.pop(0)
+                    return
                 elif self.RF1 == '2' and self.RF2 == '1':
                     self.FR, self.RE = self.Path2, self.Path1
                     fq_list.pop(j)
                     fq_list.pop(0)
+                    return 
                 else:
                     print 'Error with File Name', fq_name, mate_name
                     exit()
         # Didn't find a mate:
         self.FR, self.RE = self.Path1, ""
         fq_list.pop(0)
+        return
     def Format(self):
         RG = '{}\\t{}\\t{}\\t{}\\t{}\\t{}'.format('@RG', 'ID:' + str(self.ID), 'SM:' + self.SM, 'LB:' + self.LB, 'PL:' + self.PL, 'CN:' + self.CN)
         return '{}\t{}\t{}\n'.format(self.FR, RG, self.RE)
@@ -75,11 +82,11 @@ def MakeFastqTable(Input, Output):
     fout = open(Output, 'wb')
     Sample_Dict = {}
     while len(fq_list) != 0:
-        record = FastqTableRecord(l.strip('\n'))
+        record = FastqTableRecord(fq_list[0].strip('\n'))
         record.ParseName()
         record.checkRepeat(Sample_Dict)
         record.search_mate(fq_list)
-        fout.write(record.format())
+        fout.write(record.Format())
     fout.close()
 
 
