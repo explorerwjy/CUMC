@@ -3,7 +3,7 @@
 #$ -j y
 #$ -N FastQC 
 #$ -l h_rt=12:00:00
-#$ -l h_vmem=8G
+#$ -l h_vmem=10G
 #$ -cwd
 
 

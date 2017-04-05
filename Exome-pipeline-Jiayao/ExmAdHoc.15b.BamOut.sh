@@ -3,7 +3,7 @@
 #$ -j y
 #$ -N BamOut 
 #$ -l h_rt=120:00:00
-#$ -l h_vmem=3G
+#$ -l h_vmem=15G
 #$ -cwd
 
 #This script takes a bam file or a list of bam files (filename must end ".list") and runs variant calling using the HaplotypeCaller in gVCF mode
@@ -75,7 +75,7 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions
 #Set local Variables
 funcGetTargetFile
 InpFil=`readlink -f $InpFil` #resolve absolute path to bam
-BamFil=$(tail -n+$ArrNum $InpFil | head -n 1) 
+BamFil=$InpFil
 BamNam=`basename $BamFil | sed s/.bam//`
 BamNam=${BamNam/.bam/} # a name for the output files
 if [[ -z $LogFil ]]; then LogFil=$BamNam.HCgVCF.log; fi # a name for the log file
@@ -93,10 +93,10 @@ funcWriteStartLog
 
 ##Run genomic VCF generation
 StepName="gVCF generation with GATK HaplotypeCaller"
-StepCmd="java -Xmx2G -XX:ParallelGCThreads=16 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx10G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T HaplotypeCaller
  -R $REF
- -L $TgtBed
+ $TgtBed
  -I $BamFil
  -bamout $BamNam.bamout.bam
  -forceActive -disableOptimizations
@@ -116,17 +116,18 @@ StepCmd="java -Xmx2G -XX:ParallelGCThreads=16 -Djava.io.tmpdir=$TmpDir -jar $GAT
  --interval_padding 100
  -log $GatkLog" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
+#echo $StepCmd
 funcRunStep
 
 #--dontUseSoftClippedBases 
 
 
 ##gzip and index the gVCF
-StepName="gzip and index the gVCF"
-StepCmd="bgzip -f $VcfFil; tabix -f -p vcf $VcfFil.gz"
-funcRunStep
-rm $VcfFil.idx
-
+#StepName="gzip and index the gVCF"
+#StepCmd="bgzip -f $VcfFil; tabix -f -p vcf $VcfFil.gz"
+#funcRunStep
+rm $VcfFil*
+rm $GatkLog
 #End Log
 funcWriteEndLog
 

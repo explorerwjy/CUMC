@@ -1,5 +1,10 @@
 #!/bin/bash
-#$ -l mem=4G,time=4:: -N CatFastq -S /bin/bash -cwd 
+#$ -S /bin/bash
+#$ -j y
+#$ -N ConcatFastq 
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=10G
+#$ -cwd
 
 # This script concatenates fastq.gz files into a single file using zcat
 # The main input it is directory containing fastq files
@@ -14,7 +19,7 @@
 #    Help - H - (flag) - get usage information
 
 #Required Variable:
-EXOMPPLN="/home/local/ARCS/ads2202/scripts/ExomePipelineScripts"
+EXOMPPLN="/home/yufengshen/CUMC/Exome-pipeline-Jiayao"
 
 #list of required tools:
 # standard linux library
@@ -36,15 +41,17 @@ usage="
 "
 
 #get arguments
-while getopts i:t:o:r:H opt; do
+while getopts i:t:f:r:H opt; do
     case "$opt" in
         i) FqDir="$OPTARG";;
-        t) Type="$OPTARG";; 
-        o) OutNam="$OPTARG";;
+        t) Type="$OPTARG";;
+        f) OutNam="$OPTARG";;
         r) ReadEnd="$OPTARG";;
         H) echo "$usage"; exit;;
     esac
 done
+
+echo $FqDir $Type $OutNam $ReadEnd
 
 #Load script library
 source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
@@ -65,7 +72,8 @@ fi
 
 if [[ -z "$OutNam" ]]; then OutNam=$FqDir; fi #Set output file name if not provided
 
-echo $ReadEnd
+echo "$OutNam, $ReadEnd"
+
 if [[ "$Type" == "SE" ]]; then
     echo "Single End"
     #If single end concatenate all fastq
@@ -88,9 +96,10 @@ elif [[ "$Type" == "PE" ]] && [[ "$ReadEnd" == "R2" ]]; then
     echo "$FqFils"
     zcat $FqFils | gzip > $OutNam"_R2.fastq.gz"
     echo "Done R2"
-elif [[ "$Type" == "PE" ]] && [[ ! $ReadEnd ]]; then
-    ThisScript=`readlink -f $0`
-    echo "Paired End - sending new jobs"
-    nohup $ThisScript -i $FqDir -t "PE" -o $OutNam -r "R1" > Concate$OutNam.R1.o 2> Concate$OutNam.R1.e &
-    nohup $ThisScript -i $FqDir -t "PE" -o $OutNam -r "R2" > Concate$OutNam.R2.o 2> Concate$OutNam.R2.e &
+#elif [[ "$Type" == "PE" ]] && [[ ! $ReadEnd ]]; then
+#    ThisScript=`readlink -f $0`
+#    echo "Paired End - sending new jobs"
+#	echo "nohup $ThisScript -i $FqDir -t "PE" -f $OutNam -r "R1" > Concate$OutNam.R1.o 2> Concate$OutNam.R1.e &"
+#	nohup $ThisScript -i $FqDir -t "PE" -f $OutNam -r "R1" > $OutNam.R1.o 2> $OutNam.R1.e &
+#    nohup $ThisScript -i $FqDir -t "PE" -f $OutNam -r "R2" > $OutNam.R2.o 2> $OutNam.R2.e &
 fi

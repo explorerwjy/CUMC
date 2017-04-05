@@ -6,6 +6,7 @@ export EXOMRES="$HOME/resources" # Directory containing resources/references for
 GATKJAR="$HOME/bin/GenomeAnalysisTK.jar" #Current GATK jar file
 PICARD="$HOME/bin/picard.jar" #directory containing Picard jar files
 SNPEFF="$HOME/bin/snpEff.jar" # Current snpEff jar file
+Trimmomatic="$HOME//software_pkg/Trimmomatic-0.36/trimmomatic-0.36.jar" # Current snpEff jar file
 
 ## References
 export BUILD="b38" # shorthand for build
@@ -22,4 +23,5 @@ export ANNHDB="/share/archive/yufengshen/ANNOVAR_DATA/humandb" #Location of anno
 
 #Capture Kit Target Files
 export TGTCODES="AgtV2:AgtV4:AgtV5:AgtV5UTR:NbgV2:NbgV3:IllTS:BigTgt:RefSeq:VCRv2"
-
+export Adapter_TruSeq3_PE="/home/yufengshen/software_pkg/Trimmomatic-0.36/adapters/TruSeq3-PE-2.fa"
+export Adapter_TruSeq3_SE="/home/yufengshen/software_pkg/Trimmomatic-0.36/adapters/TruSeq3-SE.fa"

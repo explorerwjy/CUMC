@@ -1,4 +1,11 @@
 #!/bin/bash
+#$ -S /bin/bash
+#$ -j y
+#$ -N VQSR 
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=30G
+#$ -cwd
+
 #This script takes a raw VCF file and performs GATK's variant quality score recalibration
 #    InpFil - (required) - Path to VCF file to be recalibrated
 #    RefFil - (required) - shell file containing variables with locations of reference files, jar files, and resource directories; see list below for required variables
@@ -80,11 +87,13 @@ funcWriteStartLog
 # https://software.broadinstitute.org/gatk/guide/article?id=1259 # no MQ for indels
 #InfoFields="-an QD -an ReadPosRankSum -an FS -an SOR -an DP -an MQRankSum  -an MQ" 
 
-InfoFields="-an QD -an ReadPosRankSum -an FS  -an SOR -an MQ -an MQRankSum"
-InfoFields_INDELS="-an QD -an ReadPosRankSum -an FS  -an SOR -an MQRankSum"
+#InfoFields="-an QD -an ReadPosRankSum -an FS-an SOR -an MQ -an MQRankSum"
+#InfoFields_INDELS="-an QD -an ReadPosRankSum -an FS -an SOR -an MQRankSum"
 
-InfoFields="-an QD -an ReadPosRankSum -an FS -an DP -an MQ"
-InfoFields_INDELS="-an QD -an ReadPosRankSum -an FS -an DP -an MQ"
+InfoFields="-an QD -an ReadPosRankSum -an FS -an SOR -an MQ -an MQRankSum -an DP"
+InfoFields="-an QD -an ReadPosRankSum -an FS -an SOR -an MQ -an DP"
+InfoFields="-an QD -an ReadPosRankSum -an FS -an MQ -an DP"
+InfoFields_INDELS="-an QD -an ReadPosRankSum -an FS -an SOR -an MQRankSum -an MQ -an DP"
 
 StepName="Build the SNP recalibration model with GATK VariantRecalibrator" # Description of this step - used in log
 StepCmd="java -Xmx20G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
