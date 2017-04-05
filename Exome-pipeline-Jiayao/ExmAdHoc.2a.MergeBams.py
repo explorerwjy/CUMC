@@ -53,7 +53,7 @@ def ManipulateBamList(bamlist, outname):
         if len(bams) == 1:
             fout.write('mv {}* {} \n'.format(bams[0].FilPath.rstrip('bam'), cwd+'/'+bams[0].FilName))
         else:
-            TmpInput = 'Tmp.{}.bam.list'.format(bams[0].SampleID)
+            TmpInput = '{}.bam.list'.format(bams[0].SampleID)
             with open(TmpInput,'wb') as tmpfout:
                 for bam in bams:
                     tmpfout.write(bam.FilPath+'\n')
