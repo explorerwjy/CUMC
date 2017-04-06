@@ -40,8 +40,8 @@ class GENE_ANNOTATION:
 		Header = fin.readline().strip().split('\t')
 		idx_symbol = Header.index('symbol')
 		idx_name = Header.index('name')
-		self.GeneName = {}
 		for row in fin:
+			row = row.strip().split('\t')
 			gene, geneName = row[idx_symbol], row[idx_name]
 			if gene not in self.Genes:
 				self.Genes[gene] = GENE(gene)
@@ -466,7 +466,7 @@ class Variant():
 		print '\t'.join(self.List)
 
 	def getSampleGenotypes(self):
-		return self.List[10:]
+		return self.List[9:]
 
 	def GetVarType(self, GeneFunc, ExonicFunc, MetaSVM, CADD, PP2):
 		if GeneFunc in ['splicing', 'exonic_splicing']:
@@ -476,7 +476,7 @@ class Variant():
 		elif GeneFunc == "exonic":
 			if MetaSVM == 'D':
 				return "D-mis"
-			elif MetaSVM == 'T' and PP2 == 'D' and int(CADD) >= 15:
+			elif MetaSVM == 'T' and PP2 == 'D' and float(CADD) >= 15:
 				return "PD-mis"
 			else:
 				return "B-mis"
