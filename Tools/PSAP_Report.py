@@ -14,14 +14,9 @@ import os
 import pprint
 from MyVCF import *
 
-#CSV_HEADER = ['Chrom', 'Pos', 'Ref', 'Alt', 'AC', 'Gene', 'GeneName', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC', 'gnomAD_genome', 'VariantType', 'MetaSVM', 'CADD',
-#		'PP2', 'MCAP', '1KG', 'mis_z', 'lof_z', 'pLI', 'pRec', 'HeartRank', 'LungRank', 'BrainRank', 'Filter', 'QUAL']
-
-#header = ['CHROM', 'POS', 'REF', 'ALT', 'Gene', 'GeneName', 'GeneFunc', 'ExonicFunc', 'AAchange', 'gnomAD_genome', 'ExACfreq', '1KGfreq', 'VariantType', 'MetaSVM', 'CADD', 'Polyphen2', 'Gene pLI',
-#			'Gene mis-Z', 'Gene lof-Z', 'Gene pRec', 'HeartExpressionRank', 'LungExpressionRank', 'MouseBrianRank', Proband + '(Proband)', Father + '(Father)', Mother + '(Mother)', 'Dz.Model', 'PSAP p-value', 'Flag']
-
-HEADERS_PSAP_TO_BE_POP = ['Gene.wgEncodeGencodeBasicV19', 'Func.wgEncodeGencodeBasicV19', 'ExonicFunc.wgEncodeGencodeBasicV19','AAChange.wgEncodeGencodeBasicV19','mac63kFreq_ALL','1000g2014sep_all','esp6500si_all']
-CSV_HEADER = ['Gene', 'GeneName', 'Allele Count', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC_ALL', 'gnomAD_genome_ALL', '_1KG', 'VarType', 'MetaSVM', 'CADD13', 'PP2', 'MCAP', 'mis_z', 'lof_z', 'pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank']
+HEADERS_PSAP_TO_BE_POP = ['Chr','Start','Ref','Alt','Gene.wgEncodeGencodeBasicV19', 'Func.wgEncodeGencodeBasicV19', 'ExonicFunc.wgEncodeGencodeBasicV19','AAChange.wgEncodeGencodeBasicV19','mac63kFreq_ALL','1000g2014sep_all','esp6500si_all']
+HeaderFromVCF_P1 = ['Chrom', 'Pos', 'Ref', 'Alt']
+CSV_HEADER = ['Gene', 'GeneName', 'Allele Count', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC_ALL', 'gnomAD_genome_ALL', '1KG', 'VarType', 'MetaSVM', 'CADD13', 'PP2', 'MCAP', 'mis_z', 'lof_z', 'pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank']
 
 def GetOptions():
 	parser = argparse.ArgumentParser()
@@ -37,7 +32,6 @@ def GetOptions():
 class PSAP_REPORT(object):
 	"""docstring for PSAP_REPORT"""
 	def __init__(self, PsapReportTxT, VarDict, Genes, OUT):
-		#super(PSAP_REPORT, self).__init__()
 		self.VarDict = VarDict
 		self.Genes = Genes.Genes
 		self.fin = open(PsapReportTxT, 'rb')
@@ -50,7 +44,7 @@ class PSAP_REPORT(object):
 		self.pop_idxes = pop_idxes
 		self.Pop_non_display(TmpHeader)
 		print TmpHeader
-		self.Header = TmpHeader
+		self.Header = HeaderFromVCF_P1 + TmpHeader
 		self.Header += CSV_HEADER
 		self.Header += self.VarDict.values()[0].headers[9:]
 		self.OutFil = open(OUT+'PSAP.csv','wb')
@@ -64,8 +58,9 @@ class PSAP_REPORT(object):
 			record = Record()
 			record.read_PsapReport(row, self.Header)
 			record.fetch_VCF(self.VarDict)
+			P1 = [record.VCF.Chrom, record.VCF.Pos, record.VCF.Ref, Ref.Alt]
 			others = record.FormRecord(self.Genes)
-			res = row + others
+			res = P1 + row + others
 			self.Writer.writerow(res)
 		self.OutFil.close()
 		
