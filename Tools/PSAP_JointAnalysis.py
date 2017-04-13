@@ -15,11 +15,15 @@ def GetOptions():
 	parser.add_argument('-o','--out', type=str, help = 'OutPut Name')
 	parser.add_argument('-p','--pvalue', type=str, help = 'PSAP Pvalue to cutoff')
 	args = parser.parse_args()
-	
-	return args.
+	if args.pvalue == None:
+		args.pvalue = 0.05
+	if args.out == None:
+		args.out = args.pvalue + '.csv'
+	return args.dir, args.out, args.pvalue
 
 def main():
-
+	Dir, Out, Pvalue = GetOptions()
+	
 	return
 
 if __name__=='__main__':
