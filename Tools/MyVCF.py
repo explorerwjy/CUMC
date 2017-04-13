@@ -473,14 +473,17 @@ class Variant():
 			return "LGD"
 		elif ExonicFunc in ['stoploss', 'stopgain', 'frameshift_insertion', 'frameshift_deletion', 'frameshift_block_substitution']:
 			return "LGD"
-		elif GeneFunc == "exonic":
+		elif GeneFunc == "exonic" and ExonicFunc in ['nonsynonymous_SNV','unknown']:
 			if MetaSVM == 'D':
 				return "D-mis"
 			elif MetaSVM == 'T' and PP2 == 'D' and float(CADD) >= 15:
 				return "PD-mis"
 			else:
-				return "B-mis"
+				return "mis"
+		elif GeneFunc == "exonic" and ExonicFunc == 'synonymous_SNV':
+			return 'slient'
 		else:
+			print GeneFunc, ExonicFunc, MetaSVM, CADD, PP2
 			return '.'
 		if GeneFunc not in ['exonic', 'splicing', 'exonic_splicing']:
 			return 'NC'

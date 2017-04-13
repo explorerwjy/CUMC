@@ -14,9 +14,10 @@ import os
 import pprint
 from MyVCF import *
 
-HEADERS_PSAP_TO_BE_POP = ['Chr','Start','Ref','Alt','Gene.wgEncodeGencodeBasicV19', 'Func.wgEncodeGencodeBasicV19', 'ExonicFunc.wgEncodeGencodeBasicV19','AAChange.wgEncodeGencodeBasicV19','mac63kFreq_ALL','1000g2014sep_all','esp6500si_all']
+#HEADERS_PSAP_TO_BE_POP = ['Chr','Start','Ref','Alt','Gene.wgEncodeGencodeBasicV19', 'Func.wgEncodeGencodeBasicV19', 'ExonicFunc.wgEncodeGencodeBasicV19','AAChange.wgEncodeGencodeBasicV19','mac63kFreq_ALL','1000g2014sep_all','esp6500si_all']
+HEADERS_PSAP_TO_BE_POP = ['Gene.wgEncodeGencodeBasicV19', 'Func.wgEncodeGencodeBasicV19', 'ExonicFunc.wgEncodeGencodeBasicV19','AAChange.wgEncodeGencodeBasicV19','mac63kFreq_ALL','1000g2014sep_all','esp6500si_all']
 HeaderFromVCF_P1 = ['Chrom', 'Pos', 'Ref', 'Alt']
-CSV_HEADER = ['Gene', 'GeneName', 'Allele Count', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC_ALL', 'gnomAD_genome_ALL', '1KG', 'VarType', 'MetaSVM', 'CADD13', 'PP2', 'MCAP', 'mis_z', 'lof_z', 'pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank']
+CSV_HEADER = ['Gene', 'GeneName', 'Allele Count', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC_ALL', 'gnomAD_genome_ALL', '1KG', 'VarType', 'MetaSVM', 'CADD13', 'PP2', 'MCAP', 'mis_z', 'lof_z', 'pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank', 'Filter']
 
 def GetOptions():
 	parser = argparse.ArgumentParser()
@@ -44,7 +45,7 @@ class PSAP_REPORT(object):
 		self.pop_idxes = pop_idxes
 		self.Pop_non_display(TmpHeader)
 		print TmpHeader
-		self.Header = HeaderFromVCF_P1 + TmpHeader
+		self.Header = HeaderFromVCF_P1 + TmpHeader[4:]
 		self.Header += CSV_HEADER
 		self.Header += self.VarDict.values()[0].headers[9:]
 		self.OutFil = open(OUT+'PSAP.csv','wb')
@@ -58,9 +59,9 @@ class PSAP_REPORT(object):
 			record = Record()
 			record.read_PsapReport(row, self.Header)
 			record.fetch_VCF(self.VarDict)
-			P1 = [record.VCF.Chrom, record.VCF.Pos, record.VCF.Ref, Ref.Alt]
+			P1 = [record.VCF.Chrom, record.VCF.Pos, record.VCF.Ref, record.VCF.Alt]
 			others = record.FormRecord(self.Genes)
-			res = P1 + row + others
+			res = P1 + row[4:] + others
 			self.Writer.writerow(res)
 		self.OutFil.close()
 		
@@ -73,10 +74,10 @@ class Record():
 		pass
 
 	def read_PsapReport(self, row, header):
-		self.CHROM = row[header.index('Chr')]
-		self.POS = row[header.index('Start')]
-		self.REF = row[header.index('Ref')]
-		self.ALT = row[header.index('Alt')]
+		self.CHROM = row[0]
+		self.POS = row[1]
+		self.REF = row[2]
+		self.ALT = row[3]
 
 
 	def fetch_VCF(self, vcf_dict):
@@ -98,14 +99,17 @@ class Record():
 		AC = ','.join(self.VCF.Info['AC'])
 		GeneFunc = ','.join(self.VCF.Info['Func.refGene'])
 		ExonicFunc = ','.join(self.VCF.Info['ExonicFunc.refGene'])
-		AAchange = ','.join(self.VCF.Info['AAChange'])
+		AAchange = ','.join(self.VCF.Info['AAChange.refGene'])
 		ExAC_ALL = ','.join(str(AF(x)) for x in self.VCF.Info['ExAC_ALL'])
 		gnomAD_genome_ALL = ','.join(str(AF(x)) for x in self.VCF.Info['gnomAD_genome_ALL'])
 		MCAP = ','.join(self.VCF.Info['MCAP'])
 		MetaSVM = ','.join(self.VCF.Info['MetaSVM_pred'])
 		CADD = ','.join(self.VCF.Info['CADD_phred'])
 		PP2 = ','.join(self.VCF.Info['Polyphen2_HDIV_pred'])
-		VarType = self.VCF.GetVarType(GeneFunc, ExonicFunc, MetaSVM, CADD, PP2)
+		VarType = []
+		for a,b,c,d,e in zip(GeneFunc.split(','), ExonicFunc.split(','), MetaSVM.split(','), CADD.split(','), PP2.split(',')):
+			VarType.append(self.VCF.GetVarType(a,b,c,d,e))
+		VarType = ','.join(VarType)
 		_1KG = ','.join(str(AF(x)) for x in self.VCF.Info['1000g2015aug_all'])
 		mis_z = genesocre[Gene].Mis_z
 		lof_z = genesocre[Gene].Lof_z
@@ -118,7 +122,7 @@ class Record():
 		#return '\t'.join([self.CHROM, self.POS, self.REF, self.ALT, self.Gene, self.GeneName, self.GeneFunc, self.ExonicFunc, self.AAchange, self.ExACfreq, self.gnomAD_genome, self._1KGfreq, self.MetaSVM, self.CADD, self.PolyPhen2, self.pLI, self.misZ, self.lofZ, self.pREC, self.HRank, self.LRank, self.BRank, self.Proband, self.Father, self.Mother, self.DzModel, self.Pval, self.Flag])
 		INFO = [Gene, GeneName, AC, GeneFunc, ExonicFunc, AAchange, ExAC_ALL, gnomAD_genome_ALL, _1KG, VarType, MetaSVM, CADD, PP2, MCAP, mis_z, lof_z, pLI, pRec, HeartRank, LungRank, BrainRank]
 		GTs = self.VCF.getSampleGenotypes()
-		return INFO + GTs
+		return INFO + [self.VCF.Filter] + GTs
 
 def FixGene(GeneName):
 	if GeneName == 'BIVM-ERCC5-ERCC5':
@@ -151,9 +155,9 @@ def GetVCF(f_vcf, Ped, gene_score, OUT):
 		else:
 			var = Variant(l, vcf_header)
 			Add_var(var, res)
-			_pass, Proband, Father, Mother= var.ProbandisINDEL(Ped, Filters)
-			if _pass:
-				Writer.writerow(var.OutAsCSV(Proband, Father, Mother, Ped, gene_score))
+			#_pass, Proband, Father, Mother= var.ProbandisINDEL(Ped, Filters)
+			#if _pass:
+			#	Writer.writerow(var.OutAsCSV(Proband, Father, Mother, Ped, gene_score))
 
 	print 'Finished Reading VCF %.3f' % -(stime - time.time())
 	return res

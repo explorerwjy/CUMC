@@ -1,4 +1,4 @@
-#!/home/yufengshen/anaconda2/bin/python
+#!/home/local/users/jw/anaconda2/bin/python
 # Author: jywang	explorerwjy@gmail.com
 
 #=========================================================================
@@ -57,20 +57,20 @@ def Filter(VCFin, VCFout, Filters):
         #	fout.write(l)
         #	Count_Pass += 1
 
-        if F_Filter(llist[6], 99.70):
+        #if F_Filter(llist[6], 99.70):
+        #    fout.write(l)
+        #   Count_Pass += 1
+
+        #CodingRegion = ['exonic','splicing']
+        CodingRegion = ['exonic', 'splicing', 'exonic-splicing']
+        if F_ExAC_Coding(llist[7], 1e-2, CodingRegion):
             fout.write(l)
             Count_Pass += 1
 
-        #CodingRegion = ['exonic','splicing']
-        #CodingRegion = ['exonic', 'splicing', 'exonic-splicing']
-        # if F_ExAC_Coding(llist[7], 0.005, CodingRegion):
-        #    fout.write(l)
-        #    Count_Pass += 1
-
-        #CodingRegion = ['exonic','splicing','exonic-splicing']
-        # if F_Coding(llist[7],CodingRegion):
-        #	fout.write(l)
-        #	Count_Pass += 1
+       # CodingRegion = ['exonic','splicing','exonic-splicing']
+       # if F_Coding(llist[7],CodingRegion):
+       # 	fout.write(l)
+       # 	Count_Pass += 1
 
         # if F_ExAC(llist[7],0.001):
         #	fout.write(l)
