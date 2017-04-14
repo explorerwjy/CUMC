@@ -35,7 +35,7 @@ DIR=$BamNam'_snapshot' ## figure output folder
 mkdir -p $DIR
 
 ###=========================================================
-ADDRESS="/home/yufengshen/software_pkg/IGV_2.3.92/"
+ADDRESS="/home/local/ARCS/hq2130/src/IGV_2.3.68/"
 IGVR=$ADDRESS"igv.sh" ## igv 
 SCRF=$INDELS.txt
 rm -rf $SCRF
@@ -57,7 +57,7 @@ do
 	i=1
 	for ONE in $SAMS;
  	do	
- 		ONEBAM=`grep $ONE "$BAM"` # `grep $ONE "$BAM" | cut -f1`
+ 		ONEBAM=`cat $BAM| grep $ONE$ ` # `grep $ONE "$BAM" | cut -f1`
  		#echo $ONE, $BAM, $ONEBAM
 		if [[ "$ONEBAM" != "" ]]
 		then
@@ -73,7 +73,8 @@ do
 	
 	if [[  "$BAMS0" != "$BAMS" ]];then
 		printf "new\n" >> $SCRF
-		printf "genome hg19\n"  >> $SCRF
+		#printf "genome hg19\n"  >> $SCRF
+		printf "genome hg38\n"  >> $SCRF
 		printf "load  $BAMS\n" >> $SCRF
 		printf "snapshotDirectory $DIR \n" >>  $SCRF
 	fi
@@ -92,14 +93,18 @@ do
 
 	else
 		#printf "collapse \n" >> $SCRF
-		printf "squish \n" >> $SCRF
+		printf "collapse \n" >> $SCRF
 		
 
 	fi
 
 
-	printf "maxPanelHeight 300 \n" >> $SCRF
-	printf "snapshot $SAMPLE.$NAME.$VALUE.png \n" >> $SCRF
+	printf "maxPanelHeight 400 \n" >> $SCRF
+	#printf "snapshot $SAMPLE.$NAME.$VALUE.png \n" >> $SCRF
+	SAMPLENAME=`basename $SAMPLE|grep -P -o '[a-zA-Z0-9-]+'`
+	SAMPLENAME=`echo $SAMS|cut -d ' ' -f1 `
+	#echo $SAMPLENAME
+	printf "snapshot $SAMPLENAME.$NAME.$VALUE.png \n" >> $SCRF
 	printf "\n" >> $SCRF
 	
 	let kk+=1

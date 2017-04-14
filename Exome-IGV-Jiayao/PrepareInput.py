@@ -57,8 +57,10 @@ class BamLocation:
         fin = open(bamlocationfile, 'rb')
         self.Bams = {}
         for l in fin:
-            bam = BAM(l)
-            self.Bams[bam.BamName] = bam
+			if 'bamout' in l:
+				continue
+			bam = BAM(l)
+			self.Bams[bam.BamName] = bam
 
 class Variant:
     def __init__(self, header, row):
@@ -87,6 +89,8 @@ class Variant:
        #         exit()
     def OutVar(self):
         return '{}\t{}\t{}\n'.format(self.Chrom, self.Pos, ','.join([self.SampleBam.BamName, self.SampleBamout, self.FatherBam.BamName, self.FatherBamout, self.MotherBam.BamName, self.MotherBamout]))
+        #return '{}\t{}\t{}\n'.format(self.Chrom, self.Pos, ','.join([self.SampleBam.BamName, self.FatherBam.BamName, self.MotherBam.BamName]))
+        #return '{}\t{}\t{}\n'.format(self.Chrom, self.Pos, ','.join([self.SampleBam.BamName, self.SampleBamout, self.FatherBam.BamName, self.FatherBamout, self.MotherBam.BamName, self.MotherBamout]))
 
 class Sample:
     def __init__(self, variant):
