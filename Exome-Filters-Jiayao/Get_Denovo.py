@@ -9,7 +9,7 @@ import yaml
 import csv
 import pprint
 
-CSV_HEADER = ['Sample', 'Phenotype', 'Chrom', 'Pos', 'Ref', 'Alt', 'AC', 'Gene', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC', 'gnomAD', 'MCAP', 'MetaSVM', 'CADD', 'PP2', 'ESP', '1KG', 'mis_z', 'lof_z','pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank','Filter', 'QUAL', 'ProbandGT', 'FatherGT', 'MotherGT', 'Relateness']
+CSV_HEADER = ['Sample', 'Phenotype', 'Chrom', 'Pos', 'Ref', 'Alt', 'AC', 'Gene', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC', 'gnomAD', 'VarType', 'MCAP', 'MetaSVM', 'CADD', 'PP2', '1KG', 'mis_z', 'lof_z','pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank','Filter', 'QUAL', 'ProbandGT', 'FatherGT', 'MotherGT', 'Relateness']
 VQSR = re.compile('([\d.]+)')
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -17,6 +17,11 @@ EXAC_GENE_SCORE = '/home/yufengshen/resources/ExAC/fordist_cleaned_exac_r03_marc
 DIAPHRAGM_EXP = '/home/yufengshen/resources/GeneRanks/diaphragm_rank.csv'
 LUNG_EXP = '/home/yufengshen/resources/GeneRanks/Lung_rank_RNAseq_Asselin-Labat-GPL13112_human.csv'
 MOUSEBRAIN_EXP = '/home/yufengshen/resources/GeneRanks/mousebrain.csv'
+
+EXAC_GENE_SCORE = 
+DIAPHRAGM_EXP = 
+LUNG_EXP = 
+MOUSEBRAIN_EXP = 
 
 class GeneScore():
     def __init__(self, ExAC=True, Diaphragm=False, Lung=False, MouseBrain=False):
@@ -293,7 +298,9 @@ class Variant():
         print '\t'.join(self.List)
 
     def OutAsCSV(self, Proband, Father, Mother, Pedigree, genescore):
+        idx = Proband.GT[1]-1
         Gene = self.Info['Gene.refGene'][Proband.GT[1]-1]
+        VarType = self.GetVarType(self.Info['Func.refGene'][idx],self.Info['ExonicFunc.refGene'][idx],self.Info['MetaSVM_pred'][idx],self.Info['CADD_phred'][idx],self.Info['Polyphen2_HDIV_pred'][idx])
         try:    
             mis_z = genescore.ExAC[Gene]['mis_z']
             lof_z = genescore.ExAC[Gene]['lof_z']
@@ -321,8 +328,22 @@ class Variant():
         Indi = Pedigree.GetIndi(Proband.name)
         Phenotype = Indi.PhenotypeDetail
         Relateness = Indi.Relateness
-        return [Proband.name, Phenotype, self.Chrom, self.Pos, self.Ref, self.Alt, ','.join(str(x) for x in self.Info['AC']),','.join( self.Info['Gene.refGene']),','.join( self.Info['Func.refGene']), ','.join(self.Info['ExonicFunc.refGene']), ','.join(self.Info['AAChange.refGene']),','.join(str(AF(x)) for x in self.Info['ExAC_ALL']), ','.join(str(AF(x)) for x in self.Info['gnomAD_genome_ALL']), ','.join(self.Info['MCAP']), ','.join(self.Info['MetaSVM_pred']),','.join(self.Info['CADD_phred']),','.join(self.Info['Polyphen2_HDIV_pred']) , ','.join(str(AF(x)) for x in self.Info['esp6500siv2_all']), ','.join(str(AF(x)) for x in self.Info['1000g2015aug_all']), mis_z, lof_z, pLI, pRec, HeartRank, LungRank, BrainRank, self.Filter, self.Qual, Proband.Format, Father.Format, Mother.Format ,Relateness   ]
+        return [Proband.name, Phenotype, self.Chrom, self.Pos, self.Ref, self.Alt, ','.join(str(x) for x in self.Info['AC']),','.join( self.Info['Gene.refGene']),','.join( self.Info['Func.refGene']), ','.join(self.Info['ExonicFunc.refGene']), ','.join(self.Info['AAChange.refGene']),','.join(str(AF(x)) for x in self.Info['ExAC_ALL']), ','.join(str(AF(x)) for x in self.Info['gnomAD_genome_ALL']), VarType, ','.join(self.Info['MCAP']), ','.join(self.Info['MetaSVM_pred']),','.join(self.Info['CADD_phred']),','.join(self.Info['Polyphen2_HDIV_pred']) , ','.join(str(AF(x)) for x in self.Info['1000g2015aug_all']), mis_z, lof_z, pLI, pRec, HeartRank, LungRank, BrainRank, self.Filter, self.Qual, Proband.Format, Father.Format, Mother.Format ,Relateness   ]
 
+    def GetVarType(self,GeneFunc,ExonicFunc,MetaSVM,CADD,PP2):
+        VariantType = '.'
+        if GeneFunc == 'splicing':
+            VariantType = 'LGD'
+        elif ExonicFunc in ['frameshift_insertion','frameshift_deletion','stoploss','stopgain']:
+            VariantType = 'LGD'
+        elif MetaSVM == 'D':
+            VariantType = 'D-Mis'
+        elif MetaSVM == 'T' and PP2 == 'D' and float(CADD) >= 15:
+            VariantType = 'PD-mis'
+        elif ExonicFunc == 'synonymous_SNV':
+            VariantType = 'Silent'
+        else:
+            VariantType = 'mis'
 
 class Individual():
     def __init__(self, List, Header):
