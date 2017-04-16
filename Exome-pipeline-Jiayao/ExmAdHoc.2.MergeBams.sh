@@ -100,24 +100,24 @@ funcRunStep
 StepName="Sort Bam using PICARD"
 StepCmd="java -Xmx8G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar  $PICARD SortSam
  INPUT=$MrgFil
- OUTPUT=$SrtFil
+ OUTPUT=$BamFil
  SORT_ORDER=coordinate
  CREATE_INDEX=TRUE
   2>>$TmpLog"
 funcRunStep
 echo $StepCmd
 rm $MrgFil #removed the "Aligned bam"
-mv $SrtFil $BamFil
+#mv $SrtFil $BamFil
 
 #Get flagstat
 StepName="Output flag stats using Samtools"
 StepCmd="samtools flagstat $BamFil > $FlgStat"
-funcRunStep
+#funcRunStep
 
 #get index stats
 StepName="Output idx stats using Samtools"
 StepCmd="samtools idxstats $BamFil > $IdxStat"
-funcRunStep
+#funcRunStep
 
 #Call next steps of pipeline if requested
 NextJob="Run Genotype VCF"

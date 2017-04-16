@@ -31,7 +31,7 @@ done
 
 #some variables
 EXOMFILT=$HOME/CUMC/Filtering_scripts/
-HapMapReference=$HOME/resources/1000Gneome_2013/plink/1KG.XGEN.SNP   #/home/local/ARCS/hq2130/Exome_Seq/resources/hapmap31_pop/hg19/All_HapMap
+HapMapReference=$HOME/resources/1000Gneome_2013_B38/plink/plink   #/home/local/ARCS/hq2130/Exome_Seq/resources/hapmap31_pop/hg19/All_HapMap
 
 
 InpFil=`readlink -f $InpFil`
@@ -175,7 +175,7 @@ CMD="smartpca.perl -i $OutNam.eigenstratgeno -a $OutNam.snp -b $OutNam.ind -k 10
 echo $CMD
 eval $CMD
 if [ -f "$folder/$OutNam.plus.HapMap.eval" ] && [ -f "$folder/$OutNam.plus.HapMap.pca.evec"  ]; then
-	Rscript /home/local/ARCS/nz2274/Pipeline/scripts/PCA_plot.R "${folder}/"  "$OutNam.plus.HapMap"
+	Rscript $HOME/CUMC/PCA_plot.R "${folder}/"  "$OutNam.plus.HapMap"
 fi
 
 if [[ -e $BbfNam.fam.pcabkp ]]; then mv $BbfNam.fam.pcabkp $BbfNam.fam; fi

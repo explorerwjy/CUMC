@@ -13,13 +13,17 @@ name = re.compile('(OMG\d+-\d+)-') #PIPseq ID
 
 #=========================================================================
 # Modify this part each time run. Customized by different Batch of Data
-SM = '(OMG\d+-\d+-[A-Za-z0-9-]+)'
+#SM = '(OMG\d+-\d+-[A-Za-z0-9-]+)'
+#ID = 1
+#PL = 'Illumina'
+#LB = 'Lib'
+#LB_extra = '[A-Za-z0-9]+_[A-Za-z0-9]+_[A-Za-z0-9]+_[A-Za-z0-9]+' #160729_D00437_0328_BC9JMUANXX
+#PAIR = 'Paired(1|2)'
+#CN = 'OMG'
+SM = '(CARE[a-zA-Z0-9]+)_'
 ID = 1
 PL = 'Illumina'
-LB = 'Lib'
-LB_extra = '[A-Za-z0-9]+_[A-Za-z0-9]+_[A-Za-z0-9]+_[A-Za-z0-9]+' #160729_D00437_0328_BC9JMUANXX
-PAIR = 'Paired(1|2)'
-CN = 'OMG'
+LB_extra = '(_DHE[a-zA-Z0-9]+)_'
 #=========================================================================
 SM = re.compile(SM)
 #ID = re.compile(ID)

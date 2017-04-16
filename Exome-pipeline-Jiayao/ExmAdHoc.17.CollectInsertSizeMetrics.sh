@@ -54,7 +54,8 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func"
 InpFil=`readlink -f $InpFil`  # resolve input file path
 BAM=`readlink -f $(tail -n+$ArrNum $InpFil | head -n 1 | cut -f1)`
 BamNam=$(basename $BAM | sed s/.bam// ) # a name for the output files - basically the original file name
-
+FlgStat=$BamNam.flagstat #output file for bam flag stats
+IdxStat=$BamNam.idxstats #output file for bam index stats
 if [[ -z "$LogFil" ]]; then LogFil=$BamNam.FqB.log; fi # a name for the log file
 TmpLog=$BamNam.FqB.temp.log #temporary log file
 TmpDir=$BamNam.FqB.tempdir; mkdir -p $TmpDir #temporary directory
@@ -64,6 +65,16 @@ ProcessName="CollectInsertSizeMetrics with Picard"
 funcWriteStartLog
 echo " Build of reference files: "$BUILD >> $TmpLog
 echo "----------------------------------------------------------------" >> $TmpLog
+
+#Get flagstat
+StepName="Output flag stats using Samtools"
+StepCmd="samtools flagstat $BAM > $FlgStat"
+funcRunStep
+
+#get index stats
+StepName="Output idx stats using Samtools"
+StepCmd="samtools idxstats $BAM > $IdxStat"
+funcRunStep
 
 StepName="Add Read Groups with Picard"
 StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD CollectInsertSizeMetrics 
