@@ -58,6 +58,10 @@ done
 #check all required paramaters present
 if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
 
+if [[ ! -e "$Threads" ]]; then
+	Threads=1
+fi
+
 #Call the RefFil to load variables
 RefFil=`readlink -f $RefFil`
 source $RefFil
@@ -122,7 +126,7 @@ sed -i -e 's/\\x3d/:/g' $VcfFilOut
 sed -i -e 's/\\x3b/-/g' $VcfFilOut
 bgzip -f $VcfFilOut
 tabix -f -p vcf $VcfFilOut.gz
-rm *.avinput
+rm $VcfFil.avinput
 #
 StepName="Chenge invalid char"
 StepCmd="sed -i -e 's/\x3d/:/g' $VcfFilOut;

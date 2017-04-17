@@ -18,10 +18,12 @@ DIAPHRAGM_EXP = '/home/yufengshen/resources/GeneRanks/diaphragm_rank.csv'
 LUNG_EXP = '/home/yufengshen/resources/GeneRanks/Lung_rank_RNAseq_Asselin-Labat-GPL13112_human.csv'
 MOUSEBRAIN_EXP = '/home/yufengshen/resources/GeneRanks/mousebrain.csv'
 
-EXAC_GENE_SCORE = 
-DIAPHRAGM_EXP = 
-LUNG_EXP = 
-MOUSEBRAIN_EXP = 
+EXAC_GENE_SCORE = '/home/local/users/jw/resources/Annotations/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt'
+DIAPHRAGM_EXP = '/home/local/users/jw/resources/Annotations/diaphragm_rank.csv'
+LUNG_EXP = '/home/local/users/jw/resources/Annotations/Lung_rank_RNAseq_Asselin-Labat-GPL13112_human.csv'
+MOUSEBRAIN_EXP = '/home/local/users/jw/resources/Annotations/mousebrain.csv'
+
+Default_Denovo_YMAL = '/home/local/users/jw/CUMC/Exome-Filters-Jiayao/DENOVO_FILTER.yml'
 
 class GeneScore():
     def __init__(self, ExAC=True, Diaphragm=False, Lung=False, MouseBrain=False):
@@ -328,7 +330,7 @@ class Variant():
         Indi = Pedigree.GetIndi(Proband.name)
         Phenotype = Indi.PhenotypeDetail
         Relateness = Indi.Relateness
-        return [Proband.name, Phenotype, self.Chrom, self.Pos, self.Ref, self.Alt, ','.join(str(x) for x in self.Info['AC']),','.join( self.Info['Gene.refGene']),','.join( self.Info['Func.refGene']), ','.join(self.Info['ExonicFunc.refGene']), ','.join(self.Info['AAChange.refGene']),','.join(str(AF(x)) for x in self.Info['ExAC_ALL']), ','.join(str(AF(x)) for x in self.Info['gnomAD_genome_ALL']), VarType, ','.join(self.Info['MCAP']), ','.join(self.Info['MetaSVM_pred']),','.join(self.Info['CADD_phred']),','.join(self.Info['Polyphen2_HDIV_pred']) , ','.join(str(AF(x)) for x in self.Info['1000g2015aug_all']), mis_z, lof_z, pLI, pRec, HeartRank, LungRank, BrainRank, self.Filter, self.Qual, Proband.Format, Father.Format, Mother.Format ,Relateness   ]
+        return [Proband.name, Phenotype, self.Chrom, self.Pos, self.Ref, self.Alt, ','.join(str(x) for x in self.Info['AC']),','.join( self.Info['Gene.refGene']),self.Info['CHD.Tier'],','.join( self.Info['Func.refGene']), ','.join(self.Info['ExonicFunc.refGene']), ','.join(self.Info['AAChange.refGene']),','.join(str(AF(x)) for x in self.Info['ExAC_ALL']), ','.join(str(AF(x)) for x in self.Info['gnomAD_genome_ALL']), VarType, ','.join(self.Info['MCAP']), ','.join(self.Info['MetaSVM_pred']),','.join(self.Info['CADD_phred']),','.join(self.Info['Polyphen2_HDIV_pred']) , ','.join(str(AF(x)) for x in self.Info['1000g2015aug_all']), mis_z, lof_z, pLI, pRec, HeartRank, LungRank, BrainRank, self.Filter, self.Qual, Proband.Format, Father.Format, Mother.Format ,Relateness   ]
 
     def GetVarType(self,GeneFunc,ExonicFunc,MetaSVM,CADD,PP2):
         VariantType = '.'
@@ -348,7 +350,8 @@ class Variant():
 class Individual():
     def __init__(self, List, Header):
         self.Fam, self.Sample, self.Father, self.Mother, self.Gender, self.Pheno = List[:6]
-        self.PhenotypeDetail = List[Header.index('PhenotypeDetail')]
+        self.Relationship = List[Header.index('Relationship')]
+        self.PhenotypeDetail = List[Header.index('Disease')] + '/' + List[Header.index('DistinguishingFeatures')]
         self.Relateness = List[Header.index('Relateness')]
         self.SexCheck = List[Header.index('SexCheck')]
     def show(self):
@@ -367,7 +370,7 @@ class Pedigree():
             self.individuals.append(indi)
         self.Proband, self.Father, self.Mother = None, None, None
         for ind in self.individuals:
-            if ind.Fam == ind.Sample:
+            if ind.Relationship == 'Proband':
                 self.Proband = ind
         for ind in self.individuals:
             if self.Proband.Father == ind.Sample:
@@ -385,8 +388,10 @@ class Pedigree():
 def GetOptions():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dir", type=str, required=True, help="<Required> Dir contains family Ped and VCF files")
-    parser.add_argument("-f", "--filter", type=str, required=True, help="<Required> ymal file contains filter criteria")
+    parser.add_argument("-f", "--filter", type=str, help="<Required> ymal file contains filter criteria")
     args = parser.parse_args()
+	if args.filter == None:
+		args.filter = Default_Denovo_YMAL
     return args.dir, args.filter
 
 def MatchVcfPed(vcfs, peds):

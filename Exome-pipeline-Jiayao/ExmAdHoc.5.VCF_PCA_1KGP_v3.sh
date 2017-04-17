@@ -21,9 +21,10 @@ ExmAdHoc.5.VCF_PCA.sh -i <InputFile> -l <logfile> -H
 "
 
 SamOnly="false"
-while getopts i:o:H opt; do
+while getopts i:r:o:H opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
+        r) RefFil="$OPTARG";;
         o) OutNam="$OPTARG";;
         H) echo "$usage"; exit;;
   esac
@@ -31,7 +32,9 @@ done
 
 #some variables
 EXOMFILT=$HOME/CUMC/Filtering_scripts/
-HapMapReference=$HOME/resources/1000Gneome_2013_B38/plink/plink   #/home/local/ARCS/hq2130/Exome_Seq/resources/hapmap31_pop/hg19/All_HapMap
+#HapMapReference=$HOME/resources/1000Gneome_2013_B38/plink/plink   #/home/local/ARCS/hq2130/Exome_Seq/resources/hapmap31_pop/hg19/All_HapMap
+source $RefFil
+echo $HapMapReference
 
 
 InpFil=`readlink -f $InpFil`
