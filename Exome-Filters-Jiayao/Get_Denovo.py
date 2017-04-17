@@ -9,7 +9,7 @@ import yaml
 import csv
 import pprint
 
-CSV_HEADER = ['Sample', 'Phenotype', 'Chrom', 'Pos', 'Ref', 'Alt', 'AC', 'Gene', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC', 'gnomAD', 'VarType', 'MCAP', 'MetaSVM', 'CADD', 'PP2', '1KG', 'mis_z', 'lof_z','pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank','Filter', 'QUAL', 'ProbandGT', 'FatherGT', 'MotherGT', 'Relateness']
+CSV_HEADER = ['Sample', 'Phenotype', 'Chrom', 'Pos', 'Ref', 'Alt', 'AC', 'Gene', 'GeneName', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC', 'gnomAD', 'VarType', 'MCAP', 'MetaSVM', 'CADD', 'PP2', '1KG', 'mis_z', 'lof_z','pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank','Filter', 'QUAL', 'ProbandGT', 'FatherGT', 'MotherGT', 'Relateness']
 VQSR = re.compile('([\d.]+)')
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -18,16 +18,22 @@ DIAPHRAGM_EXP = '/home/yufengshen/resources/GeneRanks/diaphragm_rank.csv'
 LUNG_EXP = '/home/yufengshen/resources/GeneRanks/Lung_rank_RNAseq_Asselin-Labat-GPL13112_human.csv'
 MOUSEBRAIN_EXP = '/home/yufengshen/resources/GeneRanks/mousebrain.csv'
 
-EXAC_GENE_SCORE = '/home/local/users/jw/resources/Annotations/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt'
-DIAPHRAGM_EXP = '/home/local/users/jw/resources/Annotations/diaphragm_rank.csv'
-LUNG_EXP = '/home/local/users/jw/resources/Annotations/Lung_rank_RNAseq_Asselin-Labat-GPL13112_human.csv'
-MOUSEBRAIN_EXP = '/home/local/users/jw/resources/Annotations/mousebrain.csv'
+GENENAME = '/home/local/users/jw/resources/Annotations/protein-coding_gene.txt'
+EXACSCORE = '/home/local/users/jw/resources/Annotations/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt'
+HEARTRANK = '/home/local/users/jw/resources/Annotations/diaphragm_rank.csv'
+LUNGRANK = '/home/local/users/jw/resources/Annotations/Lung_rank_RNAseq_Asselin-Labat-GPL13112_human.csv'
+MOUSEBRIANRANK = '/home/local/users/jw/resources/Annotations/mousebrain.csv'
 
-Default_Denovo_YMAL = '/home/local/users/jw/CUMC/Exome-Filters-Jiayao/DENOVO_FILTER.yml'
+ALL_FILTER='/home/local/users/jw/CUMC/Tools/ALL_FILTER.yml'
+DENOVO_FILTER='/home/local/users/jw/CUMC/Tools/DENOVO_FILTER.yml'
 
-class GeneScore():
-    def __init__(self, ExAC=True, Diaphragm=False, Lung=False, MouseBrain=False):
-        self.ExAC, self.Diaphram, self.Lung, self.MouseBrain = None, None, None, None
+
+
+class GENE_ANNOTATION:
+    def __init__(self, GeneName=True, ExAC=True, Diaphragm=True, Lung=True, MouseBrain=True):
+        self.Genes = {}
+        if GeneName == True:
+            self.Load_GeneName()
         if ExAC == True:
             self.Load_ExAC()
         if Diaphragm == True:
@@ -36,48 +42,93 @@ class GeneScore():
             self.Load_Lung()
         if MouseBrain == True:
             self.Load_MouseBrain()
+
+    def Load_GeneName(self):
+        stime = time.time()
+        fin = open(GENENAME, 'rb')
+        Header = fin.readline().strip().split('\t')
+        idx_symbol = Header.index('symbol')
+        idx_name = Header.index('name')
+        for row in fin:
+            row = row.strip().split('\t')
+            gene, geneName = row[idx_symbol], row[idx_name]
+            if gene not in self.Genes:
+                self.Genes[gene] = GENE(gene)
+            self.Genes[gene].Name = geneName
+        print 'Finished Reading Gene Score MouseBrain %.3f' % (time.time() - stime)
+
     def Load_ExAC(self):
         stime = time.time()
-        fin = open(EXAC_GENE_SCORE,'rb')
-        header = fin.readline().strip().split('\t')
-        self.ExAC = {}
+        fin = open(EXACSCORE, 'rb')
+        Header = fin.readline().strip().split('\t')
+        idx_gene = Header.index('gene')
+        idx_Mis_z, idx_Lof_z, idx_pLI, idx_pRec = Header.index(
+                'mis_z'), Header.index('lof_z'), Header.index('pLI'), Header.index('pRec')
         for l in fin:
             llist = l.strip().split('\t')
-            tmp = {}
-            for k,v in zip(header, llist):
-                tmp[k] = v
-            self.ExAC[tmp['gene']] = tmp
-        print 'Finished Reading Gene Score ExAC %.3f'%-(stime - time.time())
+            Gene, Mis_z, Lof_z, pLI, pRec = llist[idx_gene], llist[
+                    idx_Mis_z], llist[idx_Lof_z], llist[idx_pLI], llist[idx_pRec]
+            if Gene not in self.Genes:
+                self.Genes[Gene] = GENE(Gene)
+            self.Genes[Gene].Mis_z = Mis_z
+            self.Genes[Gene].Lof_z = Lof_z
+            self.Genes[Gene].pLI = pLI
+            self.Genes[Gene].pRec = pRec
+        print 'Finished Reading Gene Score ExAC %.3f' % -(stime - time.time())
+
     def Load_Diaphragm(self):
         stime = time.time()
-        Heart = open(DIAPHRAGM_EXP,'rb')
+        Heart = open(HEARTRANK, 'rb')
         Reader = csv.reader(Heart)
-        Heart_head = Reader.next()
-        heart = Heart_head.index('rank')
-        self.Diaphragm = {}
+        Header = Reader.next()
+        idx_heart = Header.index('rank')
         for row in Reader:
-            self.Diaphragm[row[0]]=str(100 - float(row[heart]))
-        print 'Finished Reading Gene Score Diaphragm %.3f'%(time.time() - stime) 
+            Gene, Rank = row[0], row[idx_heart]
+            if Gene not in self.Genes:
+                self.Genes[Gene] = GENE(Gene)
+            self.Genes[Gene].DiaphragmRank = str(100 - float(Rank))
+        print 'Finished Reading Gene Score Diaphragm %.3f' % (time.time() - stime)
+
     def Load_Lung(self):
         stime = time.time()
-        fin = open(LUNG_EXP,'rb')
+        fin = open(LUNGRANK, 'rb')
         Reader = csv.reader(fin)
-        head = Reader.next()
-        lung = head.index('Control-Stroma rank')
+        Header = Reader.next()
+        idx_rank = Header.index('Control-Stroma rank')
         self.Lung = {}
         for row in Reader:
-            self.Lung[row[1]]= row[lung]
-        print 'Finished Reading Gene Score Lung %.3f'%(time.time() - stime) 
+            Gene = row[1]
+            Rank = row[idx_rank]
+            if Gene not in self.Genes:
+                self.Genes[Gene] = GENE(Gene)
+            self.Genes[Gene].LungRank = Rank
+        print 'Finished Reading Gene Score Lung %.3f' % (time.time() - stime)
+
     def Load_MouseBrain(self):
         stime = time.time()
-        Brain = open(MOUSEBRAIN_EXP,'rb')
+        Brain = open(MOUSEBRIANRANK, 'rb')
         Reader = csv.reader(Brain)
         Header = Reader.next()
-        Brain = Header.index('brain_rank')
+        idx_Brain = Header.index('brain_rank')
         self.MouseBrain = {}
         for row in Reader:
-            self.MouseBrain[row[0]] = row[Brain] 
-        print 'Finished Reading Gene Score MouseBrain %.3f'%(time.time() - stime) 
+            Gene, Rank = row[0], row[idx_Brain]
+            if Gene not in self.Genes:
+                self.Genes[Gene] = GENE(Gene)
+            self.Genes[Gene].MouseBrainRank = Rank
+        print 'Finished Reading Gene Score MouseBrain %.3f' % (time.time() - stime)
+
+class GENE:
+    def __init__(self, symbol):
+        self.Symbol = symbol
+        self.Name = '.'
+        self.pLI = '.'
+        self.Mis_z = '.'
+        self.Lof_z = '.'
+        self.pRec = '.'
+        self.DiaphragmRank = '.'
+        self.LungRank = '.'
+        self.MouseBrainRank = '.'
 
 class YML_Filter():
     def __init__(self, yml_dict):
@@ -87,6 +138,7 @@ class YML_Filter():
         self.FILTER = yml_dict['FILTER']
         self.SNP = yml_dict['SNP']
         self.INDEL = yml_dict['INDEL']
+
     def show(self):
         pp.pprint(self.INFO)
         pp.pprint(self.READS)
@@ -302,50 +354,46 @@ class Variant():
     def OutAsCSV(self, Proband, Father, Mother, Pedigree, genescore):
         idx = Proband.GT[1]-1
         Gene = self.Info['Gene.refGene'][Proband.GT[1]-1]
+        try:
+            GeneName = genesocre[Gene].Name
+        except:
+            GeneName = '.'
+            tmp = GENE(Gene)
+            genesocre[tmp.Symbol] = tmp
         VarType = self.GetVarType(self.Info['Func.refGene'][idx],self.Info['ExonicFunc.refGene'][idx],self.Info['MetaSVM_pred'][idx],self.Info['CADD_phred'][idx],self.Info['Polyphen2_HDIV_pred'][idx])
-        try:    
-            mis_z = genescore.ExAC[Gene]['mis_z']
-            lof_z = genescore.ExAC[Gene]['lof_z']
-            pLI = genescore.ExAC[Gene]['pLI']
-            pRec = genescore.ExAC[Gene]['pRec']
-        except:
-            print 'None ExAC find'
-            mis_z ,lof_z ,pLI ,pRec = ['NA'] * 4
-        try:
-            LungRank = genescore.Lung[Gene]
-        except:
-            print 'None LungRank find'
-            LungRank = 'NA'
-        try:
-            HeartRank = genescore.Diaphragm[Gene]
-        except:
-            print 'None HeartRank find'
-            HeartRank = 'NA'
-        try:
-            BrainRank = genescore.MouseBrain[Gene]
-        except:
-            print 'None BrainRank find'
-            BrainRank = 'NA'
+        GeneFullName = genescore.[Gene].Name
+        mis_z = genescore.[Gene].Mis_z
+        lof_z = genescore.[Gene].Lof_z
+        pLI = genescore.[Gene].pLI
+        pRec = genescore.[Gene].pRec
+        LungRank = genescore.[Gene].LungRank
+        HeartRank = genescore.[Gene].DiaphragmRank
+        BrainRank = genescore.[Gene].MouseBrainRank
+
         #print Proband
         Indi = Pedigree.GetIndi(Proband.name)
         Phenotype = Indi.PhenotypeDetail
         Relateness = Indi.Relateness
-        return [Proband.name, Phenotype, self.Chrom, self.Pos, self.Ref, self.Alt, ','.join(str(x) for x in self.Info['AC']),','.join( self.Info['Gene.refGene']),self.Info['CHD.Tier'],','.join( self.Info['Func.refGene']), ','.join(self.Info['ExonicFunc.refGene']), ','.join(self.Info['AAChange.refGene']),','.join(str(AF(x)) for x in self.Info['ExAC_ALL']), ','.join(str(AF(x)) for x in self.Info['gnomAD_genome_ALL']), VarType, ','.join(self.Info['MCAP']), ','.join(self.Info['MetaSVM_pred']),','.join(self.Info['CADD_phred']),','.join(self.Info['Polyphen2_HDIV_pred']) , ','.join(str(AF(x)) for x in self.Info['1000g2015aug_all']), mis_z, lof_z, pLI, pRec, HeartRank, LungRank, BrainRank, self.Filter, self.Qual, Proband.Format, Father.Format, Mother.Format ,Relateness   ]
+        return [Proband.name, Phenotype, self.Chrom, self.Pos, self.Ref, self.Alt, ','.join(str(x) for x in self.Info['AC']), GeneName, GeneFullName,','.join( self.Info['Func.refGene']), ','.join(self.Info['ExonicFunc.refGene']), ','.join(self.Info['AAChange.refGene']),','.join(str(AF(x)) for x in self.Info['ExAC_ALL']), ','.join(str(AF(x)) for x in self.Info['gnomAD_genome_ALL']), VarType, ','.join(self.Info['MCAP']), ','.join(self.Info['MetaSVM_pred']),','.join(self.Info['CADD_phred']),','.join(self.Info['Polyphen2_HDIV_pred']) , ','.join(str(AF(x)) for x in self.Info['1000g2015aug_all']), mis_z, lof_z, pLI, pRec, HeartRank, LungRank, BrainRank, self.Filter, self.Qual, Proband.Format, Father.Format, Mother.Format ,Relateness   ]
 
-    def GetVarType(self,GeneFunc,ExonicFunc,MetaSVM,CADD,PP2):
-        VariantType = '.'
-        if GeneFunc == 'splicing':
-            VariantType = 'LGD'
-        elif ExonicFunc in ['frameshift_insertion','frameshift_deletion','stoploss','stopgain']:
-            VariantType = 'LGD'
-        elif MetaSVM == 'D':
-            VariantType = 'D-Mis'
-        elif MetaSVM == 'T' and PP2 == 'D' and float(CADD) >= 15:
-            VariantType = 'PD-mis'
-        elif ExonicFunc == 'synonymous_SNV':
-            VariantType = 'Silent'
+    def GetVarType(self, GeneFunc, ExonicFunc, MetaSVM, CADD, PP2):
+        if GeneFunc in ['splicing', 'exonic_splicing']:
+            return "LGD"
+        elif ExonicFunc in ['stoploss', 'stopgain', 'frameshift_insertion', 'frameshift_deletion', 'frameshift_block_substitution']:
+            return "LGD"
+        elif GeneFunc == "exonic" and ExonicFunc in ['nonsynonymous_SNV','unknown']:
+            if MetaSVM == 'D':
+                return "D-mis"
+            elif MetaSVM == 'T' and PP2 == 'D' and float(CADD) >= 15:
+                return "PD-mis"
+            else:
+                return "mis"
+        elif GeneFunc == "exonic" and ExonicFunc == 'synonymous_SNV':
+            return 'slient'
         else:
-            VariantType = 'mis'
+            print GeneFunc, ExonicFunc, MetaSVM, CADD, PP2
+            return '.'
+
 
 class Individual():
     def __init__(self, List, Header):
@@ -391,7 +439,7 @@ def GetOptions():
     parser.add_argument("-f", "--filter", type=str, help="<Required> ymal file contains filter criteria")
     args = parser.parse_args()
 	if args.filter == None:
-		args.filter = Default_Denovo_YMAL
+		args.filter = DENOVO_FILTER
     return args.dir, args.filter
 
 def MatchVcfPed(vcfs, peds):
@@ -432,7 +480,9 @@ def For_one_vcf(VCF, Ped, Writer, Filters, CSV_HEADER, gene_score):
                 #var.show()
                 Writer.writerow(var.OutAsCSV(Proband, Father, Mother, Ped, gene_score))
 
-def Call_DeNovo(InpDir, Filters):
+def Call_DeNovo(InpDir, yaml_fname):
+    Filters = YML_Filter(yaml_fname)
+    genescore = GENE_ANNOTATION()
     vcfs = utils.get_files(InpDir, '.vcf')
     peds = utils.get_files(InpDir, '.ped')
     vcf_peds = MatchVcfPed(vcfs, peds)
@@ -440,22 +490,14 @@ def Call_DeNovo(InpDir, Filters):
     Writer = csv.writer(OutFil, delimiter=',')
     #CSV_HEADER[0] = '#'+CSV_HEADER[0]
     Writer.writerow(CSV_HEADER)
-    gene_score = GeneScore(ExAC=True, Diaphragm=True, Lung=True, MouseBrain=True)
-    print gene_score
     for vcf, ped in vcf_peds:
         print "Processing vcf: %s\tpedigree: %s" % (vcf, ped)
         s_time = time.time()
         #if not vcf.endswith('CARE19.vcf'):
         #    continue
-        For_one_vcf(vcf, ped, Writer, Filters, CSV_HEADER, gene_score)
+        For_one_vcf(vcf, ped, Writer, Filters, CSV_HEADER, genescore)
         print "%s Finished, used %.3fs"%(vcf, time.time()-s_time)
 
-def Parse_YAML(yaml_fname):
-    with open(yaml_fname, 'rb') as ymlfile:
-        cfg = yaml.load(ymlfile)
-        Filters = YML_Filter(cfg)
-    Filters.show()
-    return Filters
 
 def main():
     dirc, yaml_fname = GetOptions()
