@@ -48,8 +48,9 @@ def Filter(VCFin, VCFout, Filters):
             fout.write(l)
             continue
         elif l.startswith('#'):
-            fout.write(l)
-            continue
+			fout.write('##FiltersByRareCoing. ExAC_ALL:1e-2. RefGene.Func:exonic,splicing,exonic-splicing\n')
+			fout.write(l)
+			continue
         llist = l.strip().split('\t')
         Count_All += 1
 

@@ -39,3 +39,6 @@ export RefSeq="$EXOMRES/CaptureKitBeds/Target_RefSeq_Exon_UCSC.bed"
 export VCRv2="$EXOMRES/CaptureKitBeds/Nimblegen_VCRome_v2.hg19.bed"
 export TGTCODES="AgtV2:AgtV4:AgtV5:AgtV5UTR:NbgV2:NbgV3:IllTS:BigTgt:RefSeq:VCRv2"
 
+#Other resources
+export HapMapReference=/home/local/ARCS/nz2274/Resources/1000Gneome_2013/plink/1KG.XGEN.SNP
+

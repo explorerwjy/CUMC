@@ -128,7 +128,7 @@ def seperate_by_fam(work_dir, vcf_file, fams, filters=None):
                 s_time = time.time()
             var = Variant(line, header)
             for fam_i, fam in enumerate(fams):
-                # If on this site, proban have an un-wild genotype and parients have a clear genotype, write file
+                # If on this site, proband have an un-wild genotype and parients have a clear genotype, write file
                 # print fam.proband
                 flag = False
                 for k, v in fam.individuals:
