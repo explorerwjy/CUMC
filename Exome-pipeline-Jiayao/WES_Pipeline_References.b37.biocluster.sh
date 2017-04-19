@@ -16,14 +16,12 @@ export TGVCF="$EXOMRES/references/b37/1000G_omni2.5.b37.sites.vcf"
 export INDEL1KG="$EXOMRES/references/b37/1000G_phase1.indels.b37.vcf" # INDEL reference from 1000 genomes
 export DBSNP="$EXOMRES/references/b37/dbsnp_138.b37.vcf" # dbSNP vcf from GATK
 export ONEKG="$EXOMRES/references/b37/1000G_phase1.snps.high_confidence.b37.vcf" # 1000 genome SNPs vcf
-export ANNOVAR='/home/local/ARCS/hq2130/src/annovar'
-export ANNHDB='/home/local/ARCS/hz2408/resources/humandb/' #Location of annovar databases
-export HUMANREF="$EXOMRES/human_g1k_v37.fasta" # human 1000 genome assembly from GATK
+export ANNOVAR="$HOME/software_pkg/annovar"
+export ANNHDB="/share/archive/yufengshen/ANNOVAR_DATA/humandb"
 
 export STHSH="$EXOMRES/references/b37/stampy_b37" # hash file for Stampy - omit ".sthash" extension for compatibility with Stampy
 export STIDX="$EXOMRES/references/b37/stampy_b37" # genome index file for Stampy - omit ".stidx" extension for compatibility with Stampy
 #GATK no-phone-home key
-export ETKEY="$EXOMRES/ads2202_c2b2.columbia.edu.key"
 
 #Capture Kit Target Files
 export xgen="/home/yufengshen/resources/references/b37/CaptureKitBeds/xgen-exome-research-panel-targets.bed"
