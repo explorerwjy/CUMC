@@ -11,8 +11,10 @@ import csv
 import re
 
 SampleName = re.compile('CARE[A-Za-z0-9-]+')
-EXM_REF = '/home/yufengshen/CUMC/Exome-pipeline-Jiayao/WES_Pipeline_References.b38.biocluster.sh'
+EXM_REF = '/home/yufengshen/CUMC/Exome-pipeline-Jiayao/WES_Pipeline_References.b37.biocluster.sh'
 BAMOUT_CMD = '/home/yufengshen/CUMC/Exome-pipeline-Jiayao/ExmAdHoc.15b.BamOut.sh'
+RUN = 'qsub'
+
 def GetOptions():
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--csv', type=str, required=True, help='csv file contains variants to be IGV. Must have column "Sample", "Chrom", "Pos". ')
@@ -112,9 +114,14 @@ class Sample:
         self.Intervals.append('{}:{}-{}'.format(str(chrom), str(start), str(end))) 
     def FlushBamout(self):
         #SampleCMD =  ''.format(self.SampleBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
-        SampleCMD =  'qsub $CMD -r {} -i {} -t \"{}\"\n'.format('$REF', self.SampleBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
-        FatherCMD =  'qsub $CMD -r {} -i {} -t \"{}\"\n'.format('$REF', self.FatherBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
-        MotherCMD =  'qsub $CMD -r {} -i {} -t \"{}\"\n'.format('$REF', self.MotherBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
+        if RUN == 'qsub':
+            SampleCMD =  'qsub $CMD -r {} -i {} -t \"{}\"\n'.format('$REF', self.SampleBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
+            FatherCMD =  'qsub $CMD -r {} -i {} -t \"{}\"\n'.format('$REF', self.FatherBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
+            MotherCMD =  'qsub $CMD -r {} -i {} -t \"{}\"\n'.format('$REF', self.MotherBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
+        else:
+            SampleCMD =  'nohup $CMD -r {} -i {} -t \"{}\" &\n'.format('$REF', self.SampleBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
+            FatherCMD =  'nohup $CMD -r {} -i {} -t \"{}\" &\n'.format('$REF', self.FatherBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
+            MotherCMD =  'nohup $CMD -r {} -i {} -t \"{}\" &\n'.format('$REF', self.MotherBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
         return SampleCMD, FatherCMD, MotherCMD
 
 def LoadCSV(_csv, ped, bam, output):
