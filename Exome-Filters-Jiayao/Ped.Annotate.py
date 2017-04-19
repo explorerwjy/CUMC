@@ -52,8 +52,7 @@ def GetSex(SexFil):
         #pp.pprint(res)
     return res
 
-def Annotate(PedFil, RelateDict, SexDict, OutFil):
-    
+def Annotate_2(PedFil, RelateDict, SexDict, OutFil):
     fin = open(PedFil, 'rb')
     fout = open(OutFil, 'wb')
     for l in fin:
@@ -72,6 +71,27 @@ def Annotate(PedFil, RelateDict, SexDict, OutFil):
             re = RelateDict[fam][_id]
             sex = SexDict[_id]
             fout.write(l.strip()+'\t{}\t{}\n'.format(re, ':'.join(sex)))
+    return
+
+def Annotate(PedFil, RelateDict, SexDict, OutFil):
+    fin = open(PedFil, 'rb')
+    fout = open(OutFil, 'wb')
+    for l in fin:
+        if l.startswith('#'):
+            fout.write(l.strip()+'\tRelateness\tSexCheck\n')
+            continue
+        fam, _id, fa, mo, sex, pheno = l.strip().split('\t')[:6]
+        #print fam, _id, fa, mo, sex, pheno
+		if fa != '0':
+			re_fa = RelateDict[_id][fa]
+		else:
+			re_fa = '.'
+		if mo != '0':
+			re_mo = RelateDict[_id][mo]
+		else:
+			re_mo = '.'
+			sex = SexDict[_id]
+			fout.write(l.strip()+'\t{}\t{}\n'.format(re_fa+'/'+re_mo, ':'.join(sex)))
     return
 
 def main():
