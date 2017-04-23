@@ -168,7 +168,7 @@ class Variant():
 						return False
 		except:
 			pass
-			# print self.Info['Gene.refGene'][idx], AF(self.Info['ExAC_ALL'][idx]),
+		# print self.Info['Gene.refGene'][idx], AF(self.Info['ExAC_ALL'][idx]),
 		# VarFunc, self.Info['AC'][idx], Proband.show(), Father.show(),
 		# Mother.show(), segdupScore
 		return True
@@ -291,6 +291,8 @@ def FilterInherited(VCF, OUT):
 			var = Variant(l, Header)
 			if var.CheckInherited(Filters):
 				fout.write(l)
+			elif len(var.Ref) != len(var.Alt):
+				print l.strip()
 	fin.close()
 	fout.close()
 

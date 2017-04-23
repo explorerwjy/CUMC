@@ -38,14 +38,14 @@ class OnePSAPReport:
 		self.proband, self.father, self.mother, self.phenotpyeDetail = self.ped.GetProband()
 		print self.proband, self.father, self.mother, self.phenotpyeDetail
 		self.idxproband = self.header.index(self.proband+'.GT')
-		self.header2keep = HeaderToKeep + ['Dz.Model.'+proband, 'popScore.'proband, proband+'.GT', father+'.GT', mother+'.GT']
+		self.header2keep = HeaderToKeep + ['Dz.Model.'+proband, 'popScore.'+proband, proband+'.GT', father+'.GT', mother+'.GT']
 		self.idx2keep = []
 		for i in range(len(self.header)):
 			if self.header[i] in self.header2keep:
 				self.idx2keep.append(i)
-		self.idx.extend(range(len(self.header)-3:len(self.header)))
+		self.idx.extend(range(len(self.header)-3 , len(self.header)))
 		self.idx_VarType = self.header.index('VarType')
-		self.idx_Pvalue = self.header.index('popScore.'proband)
+		self.idx_Pvalue = self.header.index('popScore.' + proband)
 	def GetRecords(self):
 		for row in self.reader:
 			if self.Pass(row):

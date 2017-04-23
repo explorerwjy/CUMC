@@ -7,9 +7,9 @@ INFO:
   - 'exonic'
   - 'exonic,splicing'
   max_AC: 30
-  max_1KG: 0.001
-  max_gnomAD: 0.001
-  max_ExAC: 0.001
+  max_1KG: 0.01
+  max_gnomAD: 0.01
+  max_ExAC: 0.01
   excluded_gene:
   - MUC
   - HLA

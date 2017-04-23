@@ -47,7 +47,8 @@ class PSAP_REPORT(object):
 		print TmpHeader
 		self.Header = HeaderFromVCF_P1 + TmpHeader[4:]
 		self.Header += CSV_HEADER
-		self.Header += self.VarDict.values()[0].headers[9:]
+		self.Header += [x+'.GT' for x in self.VarDict.values()[0].headers[9:]]
+
 		self.OutFil = open(OUT+'PSAP.csv','wb')
 		self.Writer = csv.writer(self.OutFil)
 
@@ -99,6 +100,7 @@ class Record():
 		AC = ','.join(self.VCF.Info['AC'])
 		GeneFunc = ','.join(self.VCF.Info['Func.refGene'])
 		ExonicFunc = ','.join(self.VCF.Info['ExonicFunc.refGene'])
+		#AAchange = ','.join(self.VCF.Info['AAChange'])
 		AAchange = ','.join(self.VCF.Info['AAChange.refGene'])
 		ExAC_ALL = ','.join(str(AF(x)) for x in self.VCF.Info['ExAC_ALL'])
 		gnomAD_genome_ALL = ','.join(str(AF(x)) for x in self.VCF.Info['gnomAD_genome_ALL'])
@@ -133,7 +135,8 @@ def FixGene(GeneName):
 def GenerateReport(psap_report, vcf, ped, OUT):
 	f_psap = open(psap_report, 'rb')
 	f_vcf = open(vcf, 'rb')
-	Ped = Pedigree(ped)
+	#Ped = Pedigree(ped)
+	Ped = None
 	genescore = GENE_ANNOTATION()
 	vcf_dict = GetVCF(f_vcf, Ped, genescore, OUT)
 	Report = PSAP_REPORT(psap_report, vcf_dict, genescore, OUT)
@@ -143,10 +146,10 @@ def GetVCF(f_vcf, Ped, gene_score, OUT):
 	print 'Reading VCF'
 	stime = time.time()
 	res = {}
-	INDEL_OUT = open(OUT + 'INDEL.csv', 'wb')
-	Writer = csv.writer(INDEL_OUT, delimiter=',')
-	Writer.writerow(CSV_HEADER)
-	Filters = Parse_YAML(ALL_FILTER)
+	#INDEL_OUT = open(OUT + 'INDEL.csv', 'wb')
+	#Writer = csv.writer(INDEL_OUT, delimiter=',')
+	#Writer.writerow(CSV_HEADER)
+	#Filters = Parse_YAML(ALL_FILTER)
 	for l in f_vcf:
 		if l.startswith('##'):
 			continue

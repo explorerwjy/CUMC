@@ -26,6 +26,7 @@ done
 
 echo $ExpandMode
 
+HG=hg19
 
 ### input information
 INDELS=`readlink -f $INDELS` 
@@ -74,7 +75,7 @@ do
 	if [[  "$BAMS0" != "$BAMS" ]];then
 		printf "new\n" >> $SCRF
 		#printf "genome hg19\n"  >> $SCRF
-		printf "genome hg38\n"  >> $SCRF
+		printf "genome $HG\n"  >> $SCRF
 		printf "load  $BAMS\n" >> $SCRF
 		printf "snapshotDirectory $DIR \n" >>  $SCRF
 	fi
@@ -112,6 +113,6 @@ done < "$INDELS"
 
 printf "exit \n" >> $SCRF
 ## run IGV
-$IGVR  -g hg38 -b $SCRF	
+$IGVR  -g $HG -b $SCRF	
 #rm $SCRF	
 	
