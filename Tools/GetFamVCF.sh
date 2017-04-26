@@ -11,7 +11,8 @@ $step1
 step2="python /home/local/users/jw/CUMC/Exome-Filters-Jiayao/Clean.py -v $OutName.recode.vcf -o $OutName.vcf"
 echo $step2
 $step2
-
-step3="python /home/local/users/jw/CUMC/Exome-Filters-Jiayao/Filters.py -v $OutName.vcf -o $OutName.RareCoding.vcf"
+rm $OutName.recode.vcf
+step3="python /home/local/users/jw/CUMC/Exome-Filters-Jiayao/InheritedFilters.py -v $OutName.vcf -o $OutName.RareCoding.vcf"
 echo $step3
 $step3
+rm $OutName.vcf
