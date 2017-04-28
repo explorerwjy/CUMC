@@ -65,7 +65,7 @@ class PSAP_REPORT(object):
 			res = P1 + row[4:] + others
 			self.Writer.writerow(res)
 		self.OutFil.close()
-		
+
 	def Pop_non_display(self, row):
 		for idx in self.pop_idxes:
 			row.pop(idx)
@@ -96,7 +96,12 @@ class Record():
 	def FormRecord(self, genesocre):
 		Gene = self.VCF.Info['Gene.refGene'][0]
 		Gene = FixGene(Gene)
-		GeneName = genesocre[Gene].Name
+		try:
+			GeneName = genesocre[Gene].Name
+		except:
+			GeneName = '.'
+			tmp = GENE(Gene)
+			genesocre[tmp.Symbol] = tmp
 		AC = ','.join(self.VCF.Info['AC'])
 		GeneFunc = ','.join(self.VCF.Info['Func.refGene'])
 		ExonicFunc = ','.join(self.VCF.Info['ExonicFunc.refGene'])
