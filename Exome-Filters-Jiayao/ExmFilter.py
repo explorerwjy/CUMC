@@ -70,7 +70,45 @@ class YML_Filter():
         pp.pprint(self.SNP)
         pp.pprint(self.INDEL)
 
-class Sample():
+class INDIVIDUAL:
+    def __init__(self, line):
+        self.llist = line.strip().split('\t')
+        self.FamID, self.SampleID, self.FatherID, self.MotherID, self.Gender, self.Affected = self.llist[0:6]
+
+class PEDIGREE():
+    def __init__(self, PedFil):
+        self.fin = open(PedFil,'rb')
+        self.Header = self.fin.readline().strip().split('\t')
+        self.individuals = []
+        for l in self.fin:
+            indi = INDIVIDUAL(indi)
+            self.individuals.append(indi)
+    def isTrio():
+        self.Proband, self.Father, self.Mother = None, None, None
+        # Search for Proband.
+        try:
+            for indi in self.individuals:
+                if indi.llist(self.Header.index('Relationship')) == 'Proband':
+                    self.Proband = indi.SampleID
+                    self.Father = indi.FatherID
+                    self.Mother = indi.MotherID
+        except ValueError:
+            print "Proband not int header, Try to infer Proband by Affected"
+            Candidates = {}
+            for indi in self.individuals:
+                if indi.Affected == '2':
+                    
+
+        for ind in individuals:
+            if ind.Fam in ind.Sample:
+                self.Proband = ind
+        for ind in individuals:
+            if self.Proband.Father == ind.Sample :
+                self.Father = ind
+            if self.Proband.Mother == ind.Sample :
+                self.Mother = ind
+
+class GENOTYPE():
     # GT:AD:DP:GQ:PL    0/0:7,0:7:18:0,18,270
     def __init__(self, Format, Genotype):
         self.Format = Format.split(':')
@@ -84,7 +122,7 @@ class Sample():
         for i, item in enumerate(self.Format):
             self.Dict[item] = self.Genotype[i]
 
-class Variant():
+class VARIANT():
     def __init__(self, record, headers):
         record = record.strip().split('\t')
         self.Chrom, self.Pos, self.Id, self.Ref, self.Alt, self.Qual, self.Filter, self.Info_str, self.Format = record[0:9]
