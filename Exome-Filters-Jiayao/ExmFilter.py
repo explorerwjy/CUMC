@@ -42,10 +42,11 @@ class ExmFilter:
                 self.Header = l.strip().split('\t')
             else:
                 var = Variant(l)
-                if var.FilterByCriteria(self.Filter, self.Pedigree):
+                FLAG =  var.FilterByCriteria(self.Filter, self.Pedigree)
+                if FLAG:
                     fout.write(l)
                 elif self.Debug:
-                    ferr.write(var.out())
+                    ferr.write(var.DebugOut(FLAG))
         fin.close()
         fout.close()
         if self.Debug:
@@ -92,21 +93,42 @@ class PEDIGREE():
                     self.Proband = indi.SampleID
                     self.Father = indi.FatherID
                     self.Mother = indi.MotherID
+                    if self.Father != '0' and self.Mother != '0':
+                        return True
+                    else:
+                        return False
         except ValueError:
             print "Proband not int header, Try to infer Proband by Affected"
-            Candidates = {}
+            Max = 0
+            Max_Candidate = None
+            Tmp = 0
             for indi in self.individuals:
-                if indi.Affected == '2':
-                    
+                if indi.Affected == '2': #Maybe a Proband
+                    if indi.FatherID != '0':
+                        Tmp += 1
+                    if indi.MotherID != '0':
+                        Tmp += 1
+                    if Tmp == 2: # If have father, mother and is affected, assume this is proband.
+                        self.Proband = indi.SampleID
+                        self.Father = indi.FatherID
+                        self.Mother = indi.MotherID
+                        return True
+                    else: 
+                        if Tmp > Max:
+                            Max = Tmp
+                            Max_Candidate = indi
+            if Max_Candidate != None:
+                self.Proband = Max_Candidate.SampleID
+                self.Father = Max_Candidate.FatherID
+                self.Mother = Max_Candidate.MotherID
+            else:
+                self.Proband = None
+                self.Father = None
+                self.Mother = None
+                print "This Pedigree don't have Proband."
+                exit()
+            return False
 
-        for ind in individuals:
-            if ind.Fam in ind.Sample:
-                self.Proband = ind
-        for ind in individuals:
-            if self.Proband.Father == ind.Sample :
-                self.Father = ind
-            if self.Proband.Mother == ind.Sample :
-                self.Mother = ind
 
 class GENOTYPE():
     # GT:AD:DP:GQ:PL    0/0:7,0:7:18:0,18,270
@@ -271,7 +293,17 @@ class VARIANT():
         else:
             return True
 
-    def FindAllele(self):
+    # Find the Allele Index
+    # Need: Pedigree Proband, 
+    def FindAllele(self, Header):
+        if self.Pedigree.Proband != None:
+            idx_Genotype = Header.index(self.Pedigree.Proband) - 9
+            Genotype = GENOTYPE(self.Genotypes[idx_Genotype])
+            return int(Genotypes.GT[1])
+        else:
+            return 1
+
+
         Samples = []
         AllelePool = []
         for item in self.List[9:]:
@@ -283,7 +315,8 @@ class VARIANT():
             return None, Samples
         return sorted(list(AllelePool))[1], Samples
 
-    def FilterByCriteria(self, Filters):
+    def FilterByCriteria(self, Filters, Header):
+        idxAllele = FindAllele(Header)
         FLAG_INFO = self.CheckInfo(idxAllele, Filters)
         if FLAG_INFO != True:
             return FLAG_INFO
@@ -310,6 +343,10 @@ class VARIANT():
             return 0
         else:
             return float(Freq)
+
+    def DebugOut(self, FLAG):
+        Filter = '{},{}'.format(self.Filter, FLAG)
+        return '\t'.join(self.Chrom, self.Pos, self.Id, self.Ref, self.Alt, self.Qual, Filter, self.Info_str, self.Format, '\t'.join(self.Genotypes)) + '\n'
 
 def GetVCF(VCFin):
     if VCFin.endswith('.gz'):
