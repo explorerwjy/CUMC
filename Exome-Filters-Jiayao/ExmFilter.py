@@ -169,33 +169,18 @@ class VARIANT():
 			except:
 				pass
 
-	def CheckGT(self, idxAllele, Samples, Filters):
-		for sample in Samples:
-			if sample.info[0] == './.':
-				continue
-			if sample.AD[0] != 0:
-				AVGAD[0] += float(sample.AD[0])
-				AD1 += 1
-			if sample.AD[1] != 0:
-				AVGAD[1] += float(sample.AD[1])
-				AD2 += 1
-			AVGPL += float(sample.fmt['GQ'])
-			Total += 1
-		try:
-			AVGAD[0] = AVGAD[0] / AD1 
-		except:
-			AVGAD[0] = 10
-		try:
-			AVGAD[1] = AVGAD[1] / AD2 
-		except:
-			AVGAD[1] = 10
-		AVGPL = AVGPL / Total
+	def CheckGT(self, Genotype, Filters):
+		if not Genotype.iscalled:
+			return "NotCall"
+		GT1, GT2 = Genotype.GT
+		AD1, AD2 = Genotype.Dict('AD')[GT1], Genotype.Dict('AD')[GT2]
+		PL_NotRef = Genotype.Dict('PL').split(',')[0]
 		if Filters.READS['min_proband_AD'] != None:
-			if (AVGAD[0] < Filters.READS['min_proband_AD'] and AVGAD[1] < Filters.READS['min_proband_AD']):
-				return False
+			if (AD1 < Filters.READS['min_proband_AD'] and AD2 < Filters.READS['min_proband_AD']):
+				return "min_proband_AD"
 		if Filters.READS['min_proband_PL'] != None:
-			if AVGPL < Filters.READS['min_proband_PL']:
-				return False
+			if PL_NotRef < Filters.READS['min_proband_PL']:
+				return "min_proband_PL"
 		return True
 
 	def CheckInfo(self, idx, Filters):
@@ -299,19 +284,20 @@ class VARIANT():
 			idx_Genotype = Header.index(Pedigree.Proband) - 9
 			Genotype = GENOTYPE(self.Format, self.Genotypes[idx_Genotype])
 			if Genotype.isCalled:
-				return int(Genotype.GT[1])
+				return int(Genotype.GT[1]), Genotype
 			else:
-				return None
+				return None, Genotype
 		else:
-			return 1
+			Genotype = GENOTYPE(self.Format, self.Genotypes[9])
+			return 1, Genotype
 
 	def FilterByCriteria(self, Filters, Pedigree, Header):
-		idxAllele = self.FindAllele(Pedigree, Header)
+		idxAllele, Genotype = self.FindAllele(Pedigree, Header)
 		if idxAllele == None:
 			return 'NotCalled'
 		else:
 			idxAllele -= 1
-		FLAG_INFO = self.CheckInfo(idxAllele, Filters)
+		FLAG_INFO = self.CheckInfo(Genotype, Filters)
 		if FLAG_INFO != True:
 			return FLAG_INFO
 		FLAG_GT = self.CheckGT(idxAllele, Samples, Filters)
