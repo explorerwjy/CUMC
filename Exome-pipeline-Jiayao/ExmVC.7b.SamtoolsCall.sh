@@ -3,7 +3,7 @@
 #$ -j y
 #$ -N SamtoolsVariantCalling 
 #$ -l h_rt=12:00:00
-#$ -l h_vmem=30G
+#$ -l h_vmem=20G
 #$ -cwd
 
 

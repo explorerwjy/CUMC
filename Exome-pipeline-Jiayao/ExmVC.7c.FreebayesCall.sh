@@ -1,7 +1,7 @@
 #!/bin/bash
 #$ -S /bin/bash
 #$ -j y
-#$ -N JointGenotyping 
+#$ -N Freebayes 
 #$ -l h_rt=12:00:00
 #$ -l h_vmem=30G
 #$ -cwd
@@ -137,7 +137,7 @@ echo "Target file line range: $SttLn - $(( $SttLn + $DivLen - 1 ))" >> $TmpLog
 
 ##Run Joint Variant Calling
 StepName="Joint call Variants with Freebayes"
-StepCmd="$FREEBAYES -f $REF -t $TgtFil -L $InpFil 2>GatkLog > freebayes.' + $VcfFil" #command to be run
+StepCmd="$FREEBAYES -f $REF -t $TgtFil -L $InpFil 2>$GatkLog > $VcfFil" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep
 

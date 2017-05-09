@@ -1,7 +1,7 @@
 #!/bin/bash
 #$ -S /bin/bash
 #$ -j y
-#$ -N JointGenotyping 
+#$ -N Platypus 
 #$ -l h_rt=12:00:00
 #$ -l h_vmem=30G
 #$ -cwd

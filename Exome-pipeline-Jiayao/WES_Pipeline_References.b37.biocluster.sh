@@ -6,6 +6,10 @@ export EXOMRES="/home/yufengshen/resources" # Directory containing resources/ref
 GATKJAR="/home/yufengshen/bin/GenomeAnalysisTK.jar" #Current GATK jar file
 PICARD="/home/yufengshen/bin/picard.jar" #directory containing Picard jar files
 SNPEFF="/home/yufengshen/bin/snpEff.jar" # Current snpEff jar file
+FREEBAYES="/home/yufengshen/software_pkg/freebayes/bin/freebayes"
+SAMTOOLS="/home/yufengshen/bin/samtools"
+BCFTOOLS="/home/yufengshen/bin/bcftools"
+PLATYPUS="/home/yufengshen/software_pkg/Platypus/bin/Platypus.py"
 
 ## References
 export BUILD="b37" # shorthand for build
