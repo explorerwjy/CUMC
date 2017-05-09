@@ -126,9 +126,6 @@ TmpLog=$VcfNam.GgVCF.temp.log #temporary log file
 TmpDir=$VcfNam.GgVCF.tempdir; mkdir -p $TmpDir #temporary directory
 TgtFil=$TmpDir/Range.$VcfNam.bed #exome capture range
 tail -n+$SttLn $TgtBed | head -n $DivLen > $TgtFil #get exome capture range
-infofields="-A AlleleBalance -A BaseQualityRankSumTest -A Coverage -A MappingQualityRankSumTest -A MappingQualityZero -A QualByDepth -A RMSMappingQuality -A FisherStrand -A InbreedingCoeff -A QualByDepth -A ChromosomeCounts -A GenotypeSummaries -A StrandOddsRatio -A DepthPerSampleHC"
-# -A HomopolymerRun
-# -A SpanningDeletions 
 
 #Start Log File
 ProcessName="Running Samtools/bcftools Calling Variants on Give Bam List" # Description of the script - used in log
@@ -137,8 +134,7 @@ echo "Target file line range: $SttLn - $(( $SttLn + $DivLen - 1 ))" >> $TmpLog
 
 ##Run Joint Variant Calling
 StepName="Joint call Variants with Samtools/bcftools"
-StepCmd="$SAMTOOLS
- -log $GatkLog" #command to be run
+StepCmd="$SAMTOOLS mpileup -u -t DP,AD,ADF,ADR,SP,INFO/AD,INFO/ADF,INFO/ADR -f $REF -l $TgtFil -b $InpFil 2>GatkLog | $BCFTOOLS call - -c -v 2>GatkLog > $VcfFil" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep
 

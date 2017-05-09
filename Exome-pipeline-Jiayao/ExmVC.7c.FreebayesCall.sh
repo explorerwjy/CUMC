@@ -121,9 +121,9 @@ PrgFil=$VcfNam.genotypingcomplete
 VcfFil=$VcfDir/$VcfNam.vcf #Output File
 VcfAnnFil=$VcfDir/$VcfNam.ann.vcf
 VcfLeftAlnFil=$VcfDir/$VcfNam.LA.vcf
-GatkLog=$VcfNam.GgVCF.gatklog #a log for GATK to output to, this is then trimmed and added to the script log
-TmpLog=$VcfNam.GgVCF.temp.log #temporary log file
-TmpDir=$VcfNam.GgVCF.tempdir; mkdir -p $TmpDir #temporary directory
+GatkLog=$VcfNam.FBVCF.gatklog #a log for GATK to output to, this is then trimmed and added to the script log
+TmpLog=$VcfNam.FBVCF.temp.log #temporary log file
+TmpDir=$VcfNam.FBVCF.tempdir; mkdir -p $TmpDir #temporary directory
 TgtFil=$TmpDir/Range.$VcfNam.bed #exome capture range
 tail -n+$SttLn $TgtBed | head -n $DivLen > $TgtFil #get exome capture range
 infofields="-A AlleleBalance -A BaseQualityRankSumTest -A Coverage -A MappingQualityRankSumTest -A MappingQualityZero -A QualByDepth -A RMSMappingQuality -A FisherStrand -A InbreedingCoeff -A QualByDepth -A ChromosomeCounts -A GenotypeSummaries -A StrandOddsRatio -A DepthPerSampleHC"
@@ -131,14 +131,13 @@ infofields="-A AlleleBalance -A BaseQualityRankSumTest -A Coverage -A MappingQua
 # -A SpanningDeletions 
 
 #Start Log File
-ProcessName="Running Platypus Calling Variants on Give Bam List" # Description of the script - used in log
+ProcessName="Running Freebayes Calling Variants on Give Bam List" # Description of the script - used in log
 funcWriteStartLog
 echo "Target file line range: $SttLn - $(( $SttLn + $DivLen - 1 ))" >> $TmpLog
 
 ##Run Joint Variant Calling
 StepName="Joint call Variants with Freebayes"
-StepCmd="$FREEBAYES
- -log $GatkLog" #command to be run
+StepCmd="$FREEBAYES -f $REF -t $TgtFil -L $InpFil 2>GatkLog > freebayes.' + $VcfFil" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep
 
