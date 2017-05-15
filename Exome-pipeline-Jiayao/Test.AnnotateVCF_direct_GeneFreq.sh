@@ -41,11 +41,12 @@ PipeLine="false"
 FullCadd="false"
 NoRecal="false"
 
-while getopts i:r:l:CXFPBH opt; do
+while getopts i:r:t:l:CXFPBH opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
         r) RefFil="$OPTARG";; 
         l) LogFil="$OPTARG";;
+        t) Threads="$OPTARG";;
         C) FullCadd="true";;
         P) PipeLine="true";;
         X) NoRecal="true";;
@@ -56,6 +57,10 @@ done
 
 #check all required paramaters present
 if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
+
+if [[ ! -e "$Threads" ]]; then
+	Threads=1
+fi
 
 #Call the RefFil to load variables
 RefFil=`readlink -f $RefFil`
@@ -91,24 +96,10 @@ FilTyp=${VcfFil##*.}
 ProcessName="Annotate VCF" # Description of the script - used in log
 funcWriteStartLog
 
-##Convert VCF to ANNOVAR input file using ANNOVAR - use a trimmed vcf to all possible alternate alleles using the withfreq flag (using all samples slows this down considerably as annovar calculated the allele frequencies)
-StepName="Convert VCF to ANNOVAR input file using ANNOVAR"
-OneSam=`less $VcfFil | grep -m 1 ^#CHROM | cut -f 10`
-echo $OneSam
-
-StepCmd="vcftools --vcf $VcfFil --indv $OneSam --recode --out TEMP.$VcfFil;
- convert2annovar.pl -includeinfo -allsample -withfreq -format vcf4 TEMP.$VcfFil.recode.vcf -outfile $TmpVar;
- cut -f 1-5,9-13 $TmpVar > $TmpVar.2;
- mv $TmpVar.2 $TmpVar"
-if [[ $FilTyp == "gz" ]]; then StepCmd=`echo $StepCmd | sed s/--vcf/--gzvcf/g`; fi
-echo $StepCmd
-
-#funcRunStep
-rm -f TEMP.$VcfFil.recode.vcf
 
 ##Run Annovar to Annotate VCF file
 StepName="Build Annotation table using ANNOVAR"
-StepCmd="table_annovar.pl $VcfFil $ANNHDB --buildver hg19 --remove -protocol refGene,esp6500siv2_all,esp6500siv2_aa,esp6500siv2_ea,1000g2015aug_all,1000g2015aug_eur,1000g2015aug_amr,1000g2015aug_eas,1000g2015aug_afr,1000g2015aug_sas,exac03,genomicSuperDups,avsnp147 -operation g,f,f,f,f,f,f,f,f,f,f,r,f -otherinfo  -nastring .  -vcfinput --thread 16"
+StepCmd="table_annovar.pl $VcfFil $ANNHDB --buildver hg19 --remove -protocol refGene,gnomad_genome,exac03,genomicSuperDups,avsnp147 -operation g,f,f,r,f -otherinfo  -nastring .  -vcfinput --tempdir $TmpDir"
 if [[ "$FullCadd" == "true" ]]; then 
     StepCmd=${StepCmd/cadd13gt10/cadd13}
     echo "  Using full CADD database..." >> $TmpLog
@@ -116,13 +107,16 @@ fi
 funcRunStep
 #mv $VcfFil.hg19_multianno.vcf $basename.hg19_multianno.vcf
 VcfFilOut=$VcfFil.hg19_multianno.vcf
+
 sed -i -e 's/\\x3d/:/g' $VcfFilOut
 sed -i -e 's/\\x3b/-/g' $VcfFilOut
+bgzip -f $VcfFilOut
+tabix -f -p vcf $VcfFilOut.gz
 #
 StepName="Chenge invalid char"
 StepCmd="sed -i -e 's/\x3d/:/g' $VcfFilOut;
 	     sed -i -e 's/\x3b/-/g' $VcfFilOut;
-		 bgzip $VcfFilOut;
+		 bgzip -f $VcfFilOut;
 		 tabix -f -p vcf $VcfFilOut.gz;"
 
 #End Log
