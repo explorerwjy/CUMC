@@ -8,6 +8,8 @@ INFO:
   - 'exonic,splicing'
   - 'exonic-splicing'
   - 'exonic_splicing'
+  excluded_ExonicFunc:
+      - 'synonymous_SNV'
   max_AC: 30
   max_1KG: 0.01
   max_gnomAD: 0.01

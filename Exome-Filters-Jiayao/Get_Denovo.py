@@ -300,7 +300,7 @@ class Variant():
 				return False
 		if Filters.INDEL['min_ReadPosRankSum'] != None:
 			try:
-				if float(self.Info['ReadPosRankSum'][0]) > Filters.INDEL['min_ReadPosRankSum']:
+				if float(self.Info['ReadPosRankSum'][0]) < Filters.INDEL['min_ReadPosRankSum']:
 					return False
 			except KeyError:
 				pass
@@ -397,7 +397,7 @@ class Individual():
 		self.Fam, self.Sample, self.Father, self.Mother, self.Gender, self.Pheno = List[:6]
 		self.Relationship = List[Header.index('Relationship')]
 		#self.PhenotypeDetail = List[Header.index('Disease')] + '/' + List[Header.index('DistinguishingFeatures')]
-		self.PhenotypeDetail = List[Header.index('PhenotpyeDetail')] 
+		self.PhenotypeDetail = List[Header.index('PhenotypeDetail')] 
 		self.Relateness = List[Header.index('Relateness')]
 		self.SexCheck = List[Header.index('SexCheck')]
 	def show(self):

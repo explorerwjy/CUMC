@@ -7,6 +7,7 @@
 #=========================================================================
 
 import time
+import gzip
 import argparse
 import yaml
 import csv
@@ -25,6 +26,9 @@ class ExmFilter:
 			self.OutName = re.sub('\.gz$', '', self.VCFName)
 			self.OutName = re.sub('\.vcf$', '', self.OutName)
 			self.OutName = self.OutName + '.RareCoding.vcf'
+		else:
+			self.OutName = OutName
+		print self.OutName
 		self.Filter = YMLFilters
 		self.Pedigree = Ped
 		self.isTrio = self.Pedigree.isTrio()
@@ -33,18 +37,23 @@ class ExmFilter:
 		fin = GetVCF(self.VCFName)
 		fout = open(self.OutName, 'wb')
 		if self.Debug:
-			ferr = open('FilterdOut.'+self.OutName, 'wb')
+			ferr = open('FilteredOut.'+self.OutName, 'wb')
 		for l in fin:
 			if l.startswith('##'):
 				fout.write(l)
+				if self.Debug:
+					ferr.write(l)
 			elif l.startswith('#'):
 				fout.write(PGLINE)
 				fout.write(l)
+				if self.Debug:
+					ferr.write(PGLINE)
+					ferr.write(l)
 				self.Header = l.strip().split('\t')
 			else:
 				var = VARIANT(l)
 				FLAG =  var.FilterByCriteria(self.Filter, self.Pedigree, self.Header)
-				if FLAG:
+				if FLAG == True:
 					fout.write(l)
 				elif self.Debug:
 					ferr.write(var.DebugOut(FLAG))
@@ -132,7 +141,6 @@ class PEDIGREE():
 				exit()
 			return False
 
-
 class GENOTYPE():
 	# GT:AD:DP:GQ:PL    0/0:7,0:7:18:0,18,270
 	def __init__(self, Format, Genotype):
@@ -170,11 +178,12 @@ class VARIANT():
 				pass
 
 	def CheckGT(self, Genotype, Filters):
-		if not Genotype.iscalled:
+		if not Genotype.isCalled:
 			return "NotCall"
 		GT1, GT2 = Genotype.GT
-		AD1, AD2 = Genotype.Dict('AD')[GT1], Genotype.Dict('AD')[GT2]
-		PL_NotRef = Genotype.Dict('PL').split(',')[0]
+		ADs =  Genotype.Dict['AD'].split(',')
+		AD1, AD2 = ADs[GT1], ADs[GT2]
+		PL_NotRef = Genotype.Dict['PL'].split(',')[0]
 		if Filters.READS['min_proband_AD'] != None:
 			if (AD1 < Filters.READS['min_proband_AD'] and AD2 < Filters.READS['min_proband_AD']):
 				return "min_proband_AD"
@@ -191,6 +200,10 @@ class VARIANT():
 				VarFunc = self.Info.get('Func.refGene',[None]*(len(self.Alts)+1))[idx]
 				if VarFunc not in Filters.INFO['exon_flag']:
 					return 'exon_flag'
+			if Filters.INFO.get('excluded_ExonicFunc', None) != None:
+				VarClass = self.Info.get('ExonicFunc.refGene',[None]*(len(self.Alts)+1))[idx]
+				if VarClass in Filters.INFO['excluded_ExonicFunc']:
+					return 'excluded_ExonicFunc'
 		# =============================================================================
 		# =============================================================================
 		# Filter on AC
@@ -288,7 +301,8 @@ class VARIANT():
 			else:
 				return None, Genotype
 		else:
-			Genotype = GENOTYPE(self.Format, self.Genotypes[9])
+			print "No Proband Find, use First one as ref" 
+			Genotype = GENOTYPE(self.Format, self.Genotypes[1])
 			return 1, Genotype
 
 	def FilterByCriteria(self, Filters, Pedigree, Header):
@@ -297,10 +311,10 @@ class VARIANT():
 			return 'NotCalled'
 		else:
 			idxAllele -= 1
-		FLAG_INFO = self.CheckInfo(Genotype, Filters)
+		FLAG_INFO = self.CheckInfo(idxAllele, Filters)
 		if FLAG_INFO != True:
 			return FLAG_INFO
-		FLAG_GT = self.CheckGT(idxAllele, Samples, Filters)
+		FLAG_GT = self.CheckGT(Genotype, Filters)
 		if FLAG_GT != True:
 			return FLAG_GT
 		FLAG_FILTER = self.CheckFilter(Filters)
@@ -309,11 +323,11 @@ class VARIANT():
 		FLAG_ = self.CheckFilter(Filters)
 
 		if self.isINDEL(idxAllele):
-			FLAG_INDEL = self.CheckINDEL(idxAllele, Filters)
+			FLAG_INDEL = self.CheckINDEL(Filters)
 			if FLAG_INDEL != True:
 				return FLAG_INDEL
 		else:
-			FLAG_SNP = self.CheckSNP(idxAllele, Filters)
+			FLAG_SNP = self.CheckSNP(Filters)
 			if FLAG_SNP != True:
 				return FLAG_SNP            
 		return True
@@ -325,8 +339,11 @@ class VARIANT():
 			return float(Freq)
 
 	def DebugOut(self, FLAG):
-		Filter = '{},{}'.format(self.Filter, FLAG)
-		return '\t'.join(self.Chrom, self.Pos, self.Id, self.Ref, self.Alt, self.Qual, Filter, self.Info_str, self.Format, '\t'.join(self.Genotypes)) + '\n'
+		if self.Filter == '.':
+			Filter = FLAG
+		else:
+			Filter = '{},{}'.format(self.Filter, FLAG)
+		return '\t'.join([self.Chrom, self.Pos, self.Id, self.Ref, self.Alt, self.Qual, Filter, self.Info_str, self.Format, '\t'.join(self.Genotypes)]) + '\n'
 
 def GetVCF(VCFin):
 	if VCFin.endswith('.gz'):
@@ -348,7 +365,7 @@ def main():
 	VCFin, VCFout, Filters, PedFil, Debug = GetOptions()
 	YMLFilters = YML_Filter(Filters)
 	Ped = PEDIGREE(PedFil)
-	instance = ExmFilter(VCFin, YMLFilters, OutName=None, Ped=Ped, Debug=Debug)
+	instance = ExmFilter(VCFin, YMLFilters, Ped=Ped, OutName=VCFout, Debug=Debug)
 	instance.run()
 
 if __name__ == '__main__':

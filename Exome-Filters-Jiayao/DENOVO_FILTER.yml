@@ -6,6 +6,8 @@ INFO:
   - 'splicing'
   - 'exonic'
   - 'exonic,splicing'
+  - 'exonic_splicing'
+  - 'exonic-splicing'
   max_AC: 6
   max_ESP: 1
   max_1KG: 1
