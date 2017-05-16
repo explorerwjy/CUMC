@@ -10,17 +10,15 @@ import argparse
 import os
 import subprocess
 
-PrepareVCF = '/home/local/users/jw/CUMC/Tools/GetFamVCF.sh'
-PED = '/home/local/users/jw/CARE/hg19/CARE.hg19.Annotated.ped'
-IDMapper = ''
-VCF = '/home/local/users/jw/CARE/hg19/CARE.hg19.RareCoding.vcf'
+PrepareVCF = '/home/local/users/jw/CUMC/Tools/PSAP_Family.sh'
 
 def GetOptions():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-','--', type=str, help = '')
+	parser.add_argument('-v','--vcf', type=str, help = 'VCF File')
+	parser.add_argument('-p','--ped', type=str, help = 'Pedigree File')
 	args = parser.parse_args()
 	
-	return
+	return args.vcf, args.ped
 
 def CleanPed():
 	fin = open(TXT,'rb')
@@ -31,7 +29,16 @@ def CleanPed():
 	fin.close()
 	fout.close()
 
-def ParsePed(Ped):
+def GetIndividualList(Path):
+	with open(Path) as fin:
+		for l in fin:
+			if l.startswith('##'):
+				continue
+			elif l.startswith('#'):
+				return l.strip().split('\t')[9:]
+
+def ParsePed(Ped, Path):
+	Samples = GetIndividualList(Path)
 	WorkDir = os.getcwd()
 	fin = open(Ped, 'rb')
 	NewFam = 'None'
@@ -45,26 +52,7 @@ def ParsePed(Ped):
 			if NewFam != 'None':
 				#print NewFam
 				#showFam(Fam)
-				subdir = WorkDir + '/' + NewFam
-				if not os.path.isdir(subdir):
-					os.mkdir(subdir)
-				os.chdir(subdir)
-				fout = open('{}.ped'.format(NewFam), 'wb')	
-				for item in Fam:
-					fout.write(item)
-				fout.close()
-				fout = open('{}.list'.format(NewFam), 'wb')	
-				for item in printSample(Fam):
-					fout.write(item+'\n')
-				fout.close()
-				#Path = CheckAndSeperate('{}.list'.format(NewFam), Mapper)		
-				Path = VCF
-				SampleList = '{}.list'.format(NewFam)
-				if Path != None:
-					cmd = 'nohup {} {} {} &'.format(PrepareVCF, Path, SampleList)
-					process = subprocess.Popen(cmd, shell=True)
-				os.chdir(WorkDir)
-
+				ProcessOneFam(WorkDir, Samples, NewFam, Fam, Path)
 				NewFam = FamID
 				Fam = [header]
 				Fam.append(l)
@@ -74,7 +62,17 @@ def ParsePed(Ped):
 				Fam.append(l)
 		else:
 			Fam.append(l)
-	
+	ProcessOneFam(WorkDir, Samples, NewFam, Fam, Path)
+	#CheckAndSeperate('{}.list'.format(NewFam), Mapper)		
+	fin.close()
+
+def ProcessOneFam(WorkDir, SampleList, NewFam, Fam, Path):
+	for item in printSample(Fam):
+		if item not in SampleList:
+			os.chdir(WorkDir)
+			return
+	print NewFam
+	Path = WorkDir + '/' + Path
 	subdir = WorkDir + '/' + NewFam
 	if not os.path.isdir(subdir):
 		os.mkdir(subdir)
@@ -87,15 +85,12 @@ def ParsePed(Ped):
 	for item in printSample(Fam):
 		fout.write(item+'\n')
 	fout.close()
-	Path = VCF
 	SampleList = '{}.list'.format(NewFam)
 	if Path != None:
 		cmd = 'nohup {} {} {} &'.format(PrepareVCF, Path, SampleList)
+		print cmd
 		process = subprocess.Popen(cmd, shell=True)
 	os.chdir(WorkDir)
-	#CheckAndSeperate('{}.list'.format(NewFam), Mapper)		
-	fout.close()
-	fin.close()
 
 def showFam(Fam):
 	for l in Fam:
@@ -123,12 +118,13 @@ def CheckAndSeperate(LIST, Mapper):
 		print 'No {} Sample Here {}'.format(item, LIST)
 			
 
-def SeperatePedMkdir():
-	Peds = ParsePed(PED)
+def SeperatePedMkdir(PED, VCF):
+	Peds = ParsePed(PED, VCF)
 
 def main():
 	#CleanPed()
-	SeperatePedMkdir()
+	VCF, PED = GetOptions()
+	SeperatePedMkdir(PED, VCF)
 	return
 
 if __name__=='__main__':
