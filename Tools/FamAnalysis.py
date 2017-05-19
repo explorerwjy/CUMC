@@ -3,7 +3,8 @@
 
 #========================================================================================================
 # FamAnalysis.py
-# 
+# Given A Cohort Pedigree file and Cohort VCF file, Generate Scripts for Family analysis, such as PSAP 
+# And De novo Calling.
 #========================================================================================================
 
 import argparse
@@ -21,7 +22,7 @@ def GetOptions():
 	
 	return args.vcf, args.ped, args.dir
 
-class PedigreeIndi:
+class PedigreeIndv:
 	def __init__(self,FamID, SampleID, FatherID, MotherID, Sex, Affected, Relationship):
 		self.FamID = FamID
 		self.SampleID = SampleID
@@ -30,7 +31,6 @@ class PedigreeIndi:
 		self.Sex = Sex
 		self.Affected = Affected
 		self.Relationship = Relationship
-
 
 
 class Pedigree:
@@ -43,6 +43,8 @@ class FamAnalysis:
 		self.VCFname = os.path.abspath(VCFname)
 		self.PEDname = PEDname
 		self.RESdir = os.path.abspath(RESdir)
+		self.foutArr = open('Arr.Pedigree','wb')
+		self.foutCmd = open('Cmd.Pedigree','wb')
 
 	def ParsePed(self):
 		Samples = self.GetIndividualList()
@@ -57,7 +59,7 @@ class FamAnalysis:
 			FamID = llist[0]
 			if FamID != NewFam:
 				if NewFam != 'None':
-					ProcessOneFam(WorkDir, Samples, NewFam, Fam, Path)
+					ProcessOneFam(WorkDir, Samples, NewFam, Fam, self.VCFname)
 					NewFam = FamID
 					Fam = [header]
 					Fam.append(l)
@@ -67,9 +69,10 @@ class FamAnalysis:
 					Fam.append(l)
 			else:
 				Fam.append(l)
-		ProcessOneFam(WorkDir, Samples, NewFam, Fam, Path)
+		self.ProcessOneFam(WorkDir, Samples, NewFam, Fam, self.VCFname)
 		#CheckAndSeperate('{}.list'.format(NewFam), Mapper)		
 		fin.close()
+		self.WriteScript()
 
 	def GetIndividualList(self):
 		with open(Path) as fin:
@@ -78,6 +81,43 @@ class FamAnalysis:
 					continue
 				elif l.startswith('#'):
 					return l.strip().split('\t')[9:]
+
+	def ProcessOneFam(WorkDir, Samples, NewFam, Fam, VCF):
+		for item in printSample(Fam):
+			if item not in SampleList:
+				os.chdir(WorkDir)
+				return
+		print NewFam
+		subdir = WorkDir + '/' + NewFam
+		if not os.path.isdir(subdir):
+			os.mkdir(subdir)
+		fout = open('{}.ped'.format(NewFam), 'wb')	
+		for item in Fam:
+			fout.write(item)
+		fout.close()
+		fout = open('{}.list'.format(NewFam), 'wb')	
+		for item in printSample(Fam):
+			fout.write(item+'\n')
+		fout.close()
+		SampleList = '{}.list'.format(NewFam)
+		if VCF != None:
+			#cmd = 'nohup {} {} {} {} &'.format(PrepareVCF, VCF, SampleList, subdir)
+			cmd = '{}\t{}\n'.format(SampleList, subdir)
+			#print cmd
+			#process = subprocess.Popen(cmd, shell=True)
+			self.foutArr.write(cmd)
+
+	def printSample(self, Fam):
+		for l in Fam:
+			if l.startswith('#'):
+				continue
+			else:
+				yield l.strip().split('\t')[1]
+
+	def WriteScript(self):
+		self.foutCmd.write('#/bin/bash\n\n')
+		self.foutCmd.write('{}={}\n'.format('CMD',PrepareVCF))
+		self.foutCmd.write(''.format())
 
 def CleanPed():
 	fin = open(TXT,'rb')
@@ -152,6 +192,7 @@ def ProcessOneFam(WorkDir, SampleList, NewFam, Fam, Path):
 def showFam(Fam):
 	for l in Fam:
 		print l.split('\t')[0:2]
+
 def printSample(Fam):
 	for l in Fam:
 		if l.startswith('#'):
