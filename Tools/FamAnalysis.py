@@ -14,11 +14,70 @@ PrepareVCF = '/home/local/users/jw/CUMC/Tools/PSAP_Family.sh'
 
 def GetOptions():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-v','--vcf', type=str, help = 'VCF File')
-	parser.add_argument('-p','--ped', type=str, help = 'Pedigree File')
+	parser.add_argument('-v','--vcf', type=str, required=True, help = 'VCF File')
+	parser.add_argument('-p','--ped', type=str, required=True, help = 'Pedigree File')
+	parser.add_argument('-d','--dir', type=str, help = 'work dir and dir to generate results')
 	args = parser.parse_args()
 	
-	return args.vcf, args.ped
+	return args.vcf, args.ped, args.dir
+
+class PedigreeIndi:
+	def __init__(self,FamID, SampleID, FatherID, MotherID, Sex, Affected, Relationship):
+		self.FamID = FamID
+		self.SampleID = SampleID
+		self.FatherID = FatherID
+		self.MotherID = MotherID
+		self.Sex = Sex
+		self.Affected = Affected
+		self.Relationship = Relationship
+
+
+
+class Pedigree:
+	def __init__(self):
+		self.Individuals = []
+		self.isTrio = False
+
+class FamAnalysis:
+	def __init__(self, VCFname, PEDname, RESdir):
+		self.VCFname = os.path.abspath(VCFname)
+		self.PEDname = PEDname
+		self.RESdir = os.path.abspath(RESdir)
+
+	def ParsePed(self):
+		Samples = self.GetIndividualList()
+		WorkDir = self.RESdir
+		fin = open(Ped, 'rb')
+		NewFam = 'None'
+		for l in fin:
+			if l.startswith('#'):
+				header = l
+				continue
+			llist = l.strip().split()
+			FamID = llist[0]
+			if FamID != NewFam:
+				if NewFam != 'None':
+					ProcessOneFam(WorkDir, Samples, NewFam, Fam, Path)
+					NewFam = FamID
+					Fam = [header]
+					Fam.append(l)
+				else:
+					NewFam = FamID
+					Fam = [header]
+					Fam.append(l)
+			else:
+				Fam.append(l)
+		ProcessOneFam(WorkDir, Samples, NewFam, Fam, Path)
+		#CheckAndSeperate('{}.list'.format(NewFam), Mapper)		
+		fin.close()
+
+	def GetIndividualList(self):
+		with open(Path) as fin:
+			for l in fin:
+				if l.startswith('##'):
+					continue
+				elif l.startswith('#'):
+					return l.strip().split('\t')[9:]
 
 def CleanPed():
 	fin = open(TXT,'rb')
@@ -50,8 +109,6 @@ def ParsePed(Ped, Path):
 		FamID = llist[0]
 		if FamID != NewFam:
 			if NewFam != 'None':
-				#print NewFam
-				#showFam(Fam)
 				ProcessOneFam(WorkDir, Samples, NewFam, Fam, Path)
 				NewFam = FamID
 				Fam = [header]
