@@ -69,11 +69,21 @@ class YML_Filter():
 		PGLINE = PGLINE + " YMLFilters: " +YML_FILTER_FILE + "\n"
 		with open(YML_FILTER_FILE, 'rb') as ymlfile:
 			self.cfg = yaml.load(ymlfile)
-		self.INFO = self.cfg['INFO']
-		self.READS = self.cfg['READS']
-		self.Filter = self.cfg['FILTER']
-		self.SNP = self.cfg['SNP']
-		self.INDEL = self.cfg['INDEL']
+		self.INFO = self.cfg.get('INFO', dict([]) )
+		if self.INFO == None:
+			self.INFO = dict([])
+		self.READS = self.cfg.get('READS', dict([]) )
+		if self.READS == None:
+			self.READS = dict([])
+		self.Filter = self.cfg.get('FILTER', dict([]) )
+		if self.Filter == None:
+			self.Filter = dict([])
+		self.SNP = self.cfg.get('SNP', dict([]) )
+		if self.SNP == None:
+			self.SNP = dict([])
+		self.INDEL = self.cfg.get('INDEL', dict([]) )
+		if self.INDEL == None:
+			self.INDEL = dict([])
 
 	def show(self):
 		pp.pprint(self.INFO)
@@ -124,6 +134,7 @@ class PEDIGREE():
 						self.Proband = indi.SampleID
 						self.Father = indi.FatherID
 						self.Mother = indi.MotherID
+						print "Proband should be", self.Proband
 						return True
 					else: 
 						if Tmp > Max:
@@ -139,6 +150,7 @@ class PEDIGREE():
 				self.Mother = None
 				print "This Pedigree don't have Proband."
 				exit()
+			print "Proband should be", self.Proband
 			return False
 
 class GENOTYPE():
@@ -184,11 +196,11 @@ class VARIANT():
 		ADs =  Genotype.Dict['AD'].split(',')
 		AD1, AD2 = ADs[GT1], ADs[GT2]
 		PL_NotRef = Genotype.Dict['PL'].split(',')[0]
-		if Filters.READS['min_proband_AD'] != None:
-			if (AD1 < Filters.READS['min_proband_AD'] and AD2 < Filters.READS['min_proband_AD']):
+		if Filters.READS.get('min_proband_AD',None) != None:
+			if (int(AD1) < int(Filters.READS['min_proband_AD'])) or (int(AD2) < int(Filters.READS['min_proband_AD'])):
 				return "min_proband_AD"
-		if Filters.READS['min_proband_PL'] != None:
-			if PL_NotRef < Filters.READS['min_proband_PL']:
+		if Filters.READS.get('min_proband_PL', None) != None:
+			if int(PL_NotRef) < Filters.READS['min_proband_PL']:
 				return "min_proband_PL"
 		return True
 
@@ -213,13 +225,13 @@ class VARIANT():
 		# =============================================================================
 		# =============================================================================
 		# Filter on Population MAF        
-		if Filters.INFO['max_ExAC'] != None:
+		if Filters.INFO.get('max_ExAC', None) != None:
 			if self.GetAF(self.Info['ExAC_ALL'][idx]) > Filters.INFO['max_ExAC']:
 				return 'max_ExAC'
-		if Filters.INFO['max_gnomAD'] != None:
+		if Filters.INFO.get('max_gnomAD', None) != None:
 			if self.GetAF(self.Info['gnomAD_genome_ALL'][idx]) > Filters.INFO['max_gnomAD']:
 				return 'max_gnomAD'
-		if Filters.INFO['max_1KG'] != None:
+		if Filters.INFO.get('max_1KG', None) != None:
 			if self.GetAF(self.Info['1000g2015aug_all'][idx]) > Filters.INFO['max_1KG']:
 				return 'max_1KG'
 		# =============================================================================
@@ -234,7 +246,7 @@ class VARIANT():
 				return 'excluded_chrom'
 		# =============================================================================
 		# Filter on GenomeRegion/Mappability        
-		if Filters.INFO['max_seqdup'] != None:
+		if Filters.INFO.get('max_seqdup', None) != None:
 			segdupScore = self.Info.get('genomicSuperDups',[0])[0]
 			if segdupScore != '.':
 				segdupScore = re.search(
@@ -279,16 +291,17 @@ class VARIANT():
 				return 'min_ReadPosRankSum'
 		return True
 
-	def CheckFilter(self, Filters):
+	def CheckFilter(self, Filters, idxAllele):
 		if self.Filter == 'PASS' or self.Filter == '.':
 			return True
 		v1, v2 = VQSR.findall(self.Filter)
-		if float(v2) > Filters.Filter['VQSRSNP']:
-			return 'VQSR'
-		elif float(v2) > Filters.Filter['VQSRINDEL']:
-			return 'VQSR'
-		else:
-			return True
+		if Filters.Filter.get('VQSRSNP', None) != None and self.isSNP(idxAllele):
+			if float(v2) > Filters.Filter.get('VQSRSNP', None):
+				return 'VQSR'
+		elif Filters.Filter.get('VQSRINDEL', None) != None:
+			if float(v2) > Filters.Filter.get('VQSRINDEL', None):
+				return 'VQSR'
+		return True
 
 	# Find the Allele Index
 	# Need: Pedigree Proband, 
@@ -317,11 +330,9 @@ class VARIANT():
 		FLAG_GT = self.CheckGT(Genotype, Filters)
 		if FLAG_GT != True:
 			return FLAG_GT
-		FLAG_FILTER = self.CheckFilter(Filters)
+		FLAG_FILTER = self.CheckFilter(Filters, idxAllele)
 		if FLAG_FILTER != True:
 			return FLAG_FILTER
-		FLAG_ = self.CheckFilter(Filters)
-
 		if self.isINDEL(idxAllele):
 			FLAG_INDEL = self.CheckINDEL(Filters)
 			if FLAG_INDEL != True:
@@ -367,6 +378,7 @@ def main():
 	Ped = PEDIGREE(PedFil)
 	instance = ExmFilter(VCFin, YMLFilters, Ped=Ped, OutName=VCFout, Debug=Debug)
 	instance.run()
+	print "Done"
 
 if __name__ == '__main__':
 	main()
