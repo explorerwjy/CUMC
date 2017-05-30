@@ -93,7 +93,7 @@ funcWriteStartLog
 
 ##Run genomic VCF generation
 StepName="gVCF generation with GATK HaplotypeCaller"
-StepCmd="java -Xmx2G -XX:ParallelGCThreads=16 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx2G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T HaplotypeCaller
  -R $REF
  -L $TgtBed
