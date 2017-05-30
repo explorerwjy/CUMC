@@ -63,7 +63,7 @@ while getopts i:r:a:n:l:t:BFH opt; do
 done
 
 #check all required paramaters present
-if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]] || [[ -z "$TgtBed" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
+if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
 
 #Call the RefFil to load variables
 RefFil=`readlink -f $RefFil`
@@ -75,9 +75,13 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions
 #Set local Variables
 funcGetTargetFile
 InpFil=`readlink -f $InpFil` #resolve absolute path to bam
-BamFil=$InpFil
+InpLine=$(tail -n+$ArrNum $InpFil | head -n 1)
+BamFil=$(echo $InpLine|cut -f1 -d ' ')
+TgtBed=$(echo $InpLine|cut -f2- -d ' ')
+
 BamNam=`basename $BamFil | sed s/.bam//`
 BamNam=${BamNam/.bam/} # a name for the output files
+
 if [[ -z $LogFil ]]; then LogFil=$BamNam.HCgVCF.log; fi # a name for the log file
 VcfFil=$BamNam.g.vcf #Output File
 GatkLog=$BamNam.HCgVCF.gatklog #a log for GATK to output to, this is then trimmed and added to the script log

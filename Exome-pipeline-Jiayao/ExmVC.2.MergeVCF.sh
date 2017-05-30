@@ -112,7 +112,6 @@ funcRunStep
 StepName="Output sample list"
 StepCmd="grep -m 1 ^#CHROM $VcfFil | cut -f 10- | tr '\t' '\n' > $VcfNam.vcfheaderline.txt"
 funcRunStep
-
 #gzip and index
 StepName="Gzip the vcf and index" # Description of this step - used in log
 StepCmd="bgzip $VcfFil; tabix -f -p vcf $VcfFil.gz"
