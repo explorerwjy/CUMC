@@ -37,9 +37,13 @@ while getopts i:r:a:g:l:t:PFH opt; do
         H) echo "$usage"; exit;;
     esac
 done
-
+echo "ReadGroup $ReadGroup "
+echo "InpFil $InpFil "
+echo "RefFil $RefFil "
 #check all required paramaters present
 if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
+
+
 
 #Call the RefFil to load variables
 RefFil=`readlink -f $RefFil`
@@ -54,11 +58,12 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func"
 InpFil=`readlink -f $InpFil`  # resolve input file path
 BAM=`readlink -f $(tail -n+$ArrNum $InpFil | head -n 1 | cut -f1)`
 BamNam=$(basename $BAM | sed s/.bam// ) # a name for the output files - basically the original file name
+
+
 if [[ ! -e "$ReadGroup" ]];then
-	ReadGroup=$BamNam
+	ReadGroup=$(basename $BamNam|cut -d '.' -f 1)
 fi
 echo $ReadGroup
-
 if [[ -z "$LogFil" ]]; then LogFil=$BamNam.FqB.log; fi # a name for the log file
 ADRFil=$BamNam.tmp.bam
 SrtFil=$BamNam.AddRG.bam #output file for sorted bam

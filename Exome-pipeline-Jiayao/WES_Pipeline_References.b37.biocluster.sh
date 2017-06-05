@@ -12,7 +12,7 @@ BCFTOOLS="/home/yufengshen/bin/bcftools"
 PLATYPUS="/home/yufengshen/software_pkg/Platypus/bin/Platypus.py"
 
 ## References
-export BUILD="b37" # shorthand for build
+export BUILD="hg19" # shorthand for build
 export REF="$EXOMRES/reference_genomes/hg19/hg19.fasta" # human 1000 genome assembly from GATK
 export HAPMAP="$EXOMRES/references/b37/hapmap_3.3.b37.vcf" # hapmap vcf from GATK
 export INDEL="$EXOMRES/references/b37/Mills_and_1000G_gold_standard.indels.b37.sites.vcf" # Gold standard INDEL reference from GATK
