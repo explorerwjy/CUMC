@@ -102,7 +102,10 @@ class Record():
 			GeneName = '.'
 			tmp = GENE(Gene)
 			genesocre[tmp.Symbol] = tmp
-		AC = ','.join(self.VCF.Info['AC'])
+		try:
+			AC = ','.join(self.VCF.Info['AC'])
+		except:
+			AC = ','.join(self.VCF.Info['MLEAC'])
 		GeneFunc = ','.join(self.VCF.Info['Func.refGene'])
 		ExonicFunc = ','.join(self.VCF.Info['ExonicFunc.refGene'])
 		#AAchange = ','.join(self.VCF.Info['AAChange'])
