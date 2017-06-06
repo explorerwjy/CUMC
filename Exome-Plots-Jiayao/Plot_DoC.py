@@ -7,9 +7,11 @@
 
 from optparse import OptionParser
 from utils import *
-import matplotlib
+import matplotlib as plt
+import matplotlib 
 matplotlib.use('qt5agg')
-#import matplotlib.pyplot as plt
+#plt.use('qt5agg')
+import matplotlib.pyplot as plt
 
 
 def GetOptions():
@@ -54,7 +56,6 @@ def Plot_D15(Table):
     Plot_scatter(Means, D10, D15)
 
 
-"""
 def Plot_scatter(Means, D10, D15):
     # print Means
     # print Means,D10,D15
@@ -71,7 +72,6 @@ def Plot_scatter(Means, D10, D15):
     plt.grid(True)
     #plt.show()
     savefig('foo.png')
-"""
 
 
 def main():
