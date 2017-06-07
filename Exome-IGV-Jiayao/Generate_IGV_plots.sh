@@ -15,10 +15,11 @@ usage="
 
 #get arguments
 ExpandMode="false"
-while getopts v:b:EH opt; do
+while getopts v:b:g:EH opt; do
     case "$opt" in
         v) INDELS="$OPTARG";;
         b) BAM="$OPTARG";; 
+		g) HG="$OPTARG";;
 		E) ExpandMode="true";;
         H) echo "$usage"; exit;;
     esac
