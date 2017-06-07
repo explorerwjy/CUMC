@@ -79,7 +79,6 @@ if [[ -z $LogFil ]]; then LogFil=$VcfNam.AnnVCF.log; fi # a name for the log fil
 TmpLog=$VcfNam.AnnVCF.temp.log #temporary log file
 TmpVar=$VcfNam.tempvar
 AnnFil=$VcfNam.annovar
-AnnModRscript=$VcfNam.ModifyAnnovarTable.rscript.r
 SnpEffFil=$VcfNam.SnpEff.vcf #SnEff annotations files
 VcfFilAnn=$VcfNam.Ann.vcf # annovar annotated VCF output file
 VcfFilSnF=$VcfNam.SnF.vcf # SnpEff annotated VCF output file
@@ -99,7 +98,7 @@ funcWriteStartLog
 
 ##Run Annovar to Annotate VCF file
 StepName="Build Annotation table using ANNOVAR"
-StepCmd="table_annovar.pl $VcfFil $ANNHDB --buildver hg19 --remove -protocol refGene,gnomad_genome,exac03,genomicSuperDups,avsnp147 -operation g,f,f,r,f -otherinfo  -nastring .  -vcfinput --tempdir $TmpDir"
+StepCmd="table_annovar.pl $VcfFil $ANNHDB --buildver $BUILD --remove -protocol refGene,gnomad_genome,exac03,genomicSuperDups,avsnp147 -operation g,f,f,r,f -otherinfo  -nastring .  -vcfinput --tempdir $TmpDir"
 if [[ "$FullCadd" == "true" ]]; then 
     StepCmd=${StepCmd/cadd13gt10/cadd13}
     echo "  Using full CADD database..." >> $TmpLog

@@ -1,5 +1,11 @@
 #!/bin/bash
-#$ -cwd  -l mem=10G,time=24:: -N HCgVCF
+#$ -S /bin/bash
+#$ -j y
+#$ -N HaplotypeCaller_GVCFmode
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=20G
+#$ -cwd
+
 
 #This script takes a bam file or a list of bam files (filename must end ".list") and runs variant calling using the HaplotypeCaller in gVCF mode
 #    InpFil - (required) - Path to Bam file to be aligned. Alternatively a file with a list of bams can be provided and the script run as an array job. List file name must end ".list"
@@ -104,6 +110,8 @@ StepCmd="java -Xmx5G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATK
  -pairHMM VECTOR_LOGLESS_CACHING
  -rf BadCigar
  $infofields
+ --dontUseSoftClippedBases
+ --min_base_quality_score 20
  --filter_mismatching_base_and_quals
  --interval_padding 100
  -log $GatkLog" #command to be run
