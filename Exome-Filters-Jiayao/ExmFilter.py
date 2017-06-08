@@ -193,12 +193,17 @@ class VARIANT():
 		if not Genotype.isCalled:
 			return "NotCall"
 		GT1, GT2 = Genotype.GT
+		DP = int(Genotype.Dict['DP'])
 		ADs =  Genotype.Dict['AD'].split(',')
 		AD1, AD2 = ADs[GT1], ADs[GT2]
 		PL_NotRef = Genotype.Dict['PL'].split(',')[0]
 		if Filters.READS.get('min_proband_AD',None) != None:
 			if (int(AD1) < int(Filters.READS['min_proband_AD'])) or (int(AD2) < int(Filters.READS['min_proband_AD'])):
 				return "min_proband_AD"
+		if Filters.READS.get('min_proband_alt_freq',None) != None:
+			Alt_freq = float(AD2)/(DP)
+			if (Alt_freq < float(Filters.READS['min_proband_alt_freq'])):
+				return "min_proband_alt_freq"
 		if Filters.READS.get('min_proband_PL', None) != None:
 			if int(PL_NotRef) < Filters.READS['min_proband_PL']:
 				return "min_proband_PL"
@@ -221,6 +226,8 @@ class VARIANT():
 		# Filter on AC
 		if Filters.INFO.get('max_AC', None) != None:
 			if int(self.Info.get('AC',[0]*(len(self.Alts)+1))[idx]) > int(Filters.INFO['max_AC']):
+				return 'max_AC'
+			if int(self.Info.get('MLEAC',[0]*(len(self.Alts)+1))[idx]) > int(Filters.INFO['max_AC']):
 				return 'max_AC'
 		# =============================================================================
 		# =============================================================================

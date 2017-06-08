@@ -397,9 +397,18 @@ class Individual():
 		self.Fam, self.Sample, self.Father, self.Mother, self.Gender, self.Pheno = List[:6]
 		self.Relationship = List[Header.index('Relationship')]
 		#self.PhenotypeDetail = List[Header.index('Disease')] + '/' + List[Header.index('DistinguishingFeatures')]
-		self.PhenotypeDetail = List[Header.index('PhenotypeDetail')] 
-		self.Relateness = List[Header.index('Relateness')]
-		self.SexCheck = List[Header.index('SexCheck')]
+		try:
+			self.PhenotypeDetail = List[Header.index('PhenotypeDetail')] 
+		except:
+			self.PhenotypeDetail = "."
+		try:
+			self.Relateness = List[Header.index('Relateness')]
+		except:
+			self.Relateness = "."
+		try:
+			self.SexCheck = List[Header.index('SexCheck')]
+		except:
+			self.SexCheck = "."
 	def show(self):
 		print self.Fam, self.Sample, self.Father, self.Mother
 
