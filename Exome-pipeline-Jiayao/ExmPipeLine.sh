@@ -1,5 +1,4 @@
 #!/bin/bash
-ProjectHome=`pwd`
 RefFil=$HOME/CUMC/Exome-pipeline-Jiayao/WES_Pipeline_References.b37.sh
 FastQC=
 BWA=
@@ -11,16 +10,19 @@ VCFMerge=/home/local/users/jw/CUMC/Exome-pipeline-Jiayao/ExmVC.2.MergeVCF.sh
 VQSR=/home/local/users/jw/CUMC/Exome-pipeline-Jiayao/ExmVC.4.RecalibrateVariantQuality.sh
 Annovar=/home/local/users/jw/CUMC/Exome-pipeline-Jiayao/Test.AnnotateVCF_direct.sh
 
+ProjectHome=/home/local/users/jw/Analysis/0613/
+ProjectName=PAH_16_393914
 BedFil=/home/local/users/jw/resources/references/b37/CaptureKitBeds/CCDS_hg19.bed
 FastQList=
 RawBamList=
-BamList=/home/local/users/jw/tmp/Jhe/bam.list
-GVCFList=
-SplitedDir=
-RawVCF=
-VQSRVCF=
-AnnovarVCF=
+BamList=${ProjectHome}/PAH.16_393914.bam.list 
+GVCFList=${ProjectHome}PAH.16_393914.g.vcf.list
+SplitedDir=${ProjectHome}/JointGenotyping/${ProjectName}.splitfiles
+RawVCF=${ProjectHome}/JointGenotyping/${ProjectName}.rawvariants.vcf.gz
+VQSRVCF=${ProjectHome}/JointGenotyping/${ProjectName}.rawvariants.recalibrated.vcf
+AnnovarVCF=${ProjectHome}/JointGenotyping/${ProjectName}.rawvariants.recalibrated.vcf.hg19_multianno.vcf.gz
 
+mkdir -p ${ProjectHome}/JointGenotyping
 
 #HaploytypeCaller
 #NJob=`wc -l $BamList|cut -f 1 -d ' '`
@@ -28,24 +30,22 @@ AnnovarVCF=
 #seq $NJob | parallel -j 20 --eta $HapCaller -i $BamList -r $RefFil -t $BedFil -a {}
 
 #Joint Genotyping
-#AC=/home/local/users/jw/tmp/Jhe/AC.gvcf.list
-#BD=/home/local/users/jw/tmp/Jhe/BD.gvcf.list
-#CUAC=/home/local/users/jw/tmp/Jhe/CUAC.gvcf.list
-#seq 20 | parallel -j 20 --eta sh $JointGT -i $AC -r $RefFil -a {} -j 20 -t $BedFil
-#seq 20 | parallel -j 20 --eta sh $JointGT -i $BD -r $RefFil -a {} -j 20 -t $BedFil
-#seq 20 | parallel -j 20 --eta sh $JointGT -i $CUAC -r $RefFil -a {} -j 20 -t $BedFil
+GVCFList=/home/local/users/jw/Analysis/0613/PAH.16_393914.g.vcf.list
+cd ${ProjectHome}/JointGenotyping
+#seq 20 | parallel -j 20 --eta sh $JointGT -i $GVCFList -r $RefFil -a {} -j 20 -t $BedFil -n $ProjectName
 
 #MergeVCF
-#SplitedDir=*.gvcf.splitfiles
 #echo $SplitedDir
-#parallel -j 3 --eta $VCFMerge -i {} -r $RefFil ::: $SplitedDir
+#$VCFMerge -i $SplitedDir -r $RefFil 
 
 #VQSR
-#RawVcf=*.rawvariants.vcf.gz 
-#RawVcf=CUAC.rawvariants.vcf.gz
 #echo $RawVcf
-#parallel -j 1 --eta $VQSR -i {} -r $RefFil ::: $RawVcf
+#$VQSR -i $RawVCF -r $RefFil 
 
 #Annovar
-InpFils=*recalibrated.vcf
-parallel -j 3 --eta $Annovar -i {} -r $RefFil ::: $InpFils
+if [ -e $VQSRVCF ]
+then
+	$Annovar -i $VQSRVCF -r $RefFil 
+else
+	$Annovar -i $RawVCF -r $RefFil 
+fi
