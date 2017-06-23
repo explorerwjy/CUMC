@@ -124,6 +124,10 @@ class PEDIGREE():
 			Max = 0
 			Max_Candidate = None
 			Tmp = 0
+			if len(self.individuals) == 1: # Only one individual, this is proband
+				self.Proband = self.individuals[0].SampleID
+				print "Proband should be", self.Proband
+				return
 			for indi in self.individuals:
 				if indi.Affected == '2': #Maybe a Proband
 					if indi.FatherID != '0':
@@ -301,14 +305,17 @@ class VARIANT():
 	def CheckFilter(self, Filters, idxAllele):
 		if self.Filter == 'PASS' or self.Filter == '.':
 			return True
-		v1, v2 = VQSR.findall(self.Filter)
-		if Filters.Filter.get('VQSRSNP', None) != None and self.isSNP(idxAllele):
-			if float(v2) > Filters.Filter.get('VQSRSNP', None):
-				return 'VQSR'
-		elif Filters.Filter.get('VQSRINDEL', None) != None:
-			if float(v2) > Filters.Filter.get('VQSRINDEL', None):
-				return 'VQSR'
-		return True
+		try:
+			v1, v2 = VQSR.findall(self.Filter)
+			if Filters.Filter.get('VQSRSNP', None) != None and self.isSNP(idxAllele):
+				if float(v2) > Filters.Filter.get('VQSRSNP', None):
+					return 'VQSR'
+			elif Filters.Filter.get('VQSRINDEL', None) != None:
+				if float(v2) > Filters.Filter.get('VQSRINDEL', None):
+					return 'VQSR'
+			return True
+		except:
+			print self.Filter
 
 	# Find the Allele Index
 	# Need: Pedigree Proband, 
