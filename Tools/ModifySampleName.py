@@ -8,7 +8,7 @@
 import argparse
 import re
 
-N0 = re.compile('COL-CHUNG_([A-Za-z0-9]+)_')
+N0 = re.compile('COL-CHUNG_([A-Za-z0-9-]+)_')
 N1 = re.compile('_([A-Za-z]+)')
 N2 = re.compile('([0-9]+)_')
 

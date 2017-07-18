@@ -92,7 +92,10 @@ class GENE_ANNOTATION:
 			Rank = row[idx_rank]
 			if Gene not in self.Genes:
 				self.Genes[Gene] = GENE(Gene)
-			self.Genes[Gene].LungRank = Rank
+			try:
+				self.Genes[Gene].LungRank = str(100 - float(Rank))
+			except:
+				self.Genes[Gene].LungRank = "."
 		print 'Finished Reading Gene Score Lung %.3f' % (time.time() - stime)
 
 	def Load_MouseBrain(self):
