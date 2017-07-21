@@ -22,12 +22,12 @@ step1="vcftools --gzvcf $VCFFil --recode --recode-INFO-all --out $OutName --keep
 echo $step1 >$LogFil
 $step1 >>$LogFil 2>>$LogFil
 
-step2="python /home/local/users/jw/CUMC/Exome-Filters-Jiayao/Clean.py -v $OutName.recode.vcf -o $OutName.vcf" 
+step2="python $HOME/CUMC/Exome-Filters-Jiayao/Clean.py -v $OutName.recode.vcf -o $OutName.vcf" 
 echo $step2 >>$LogFil
 $step2 >>$LogFil 2>>$LogFil
 rm $OutName.recode.vcf
 
-step3="python /home/local/users/jw/CUMC/Exome-Filters-Jiayao/ExmFilter.py -v $OutName.vcf -p $OutName.ped -o $OutName.RareCoding.vcf"
+step3="python $HOME/CUMC/Exome-Filters-Jiayao/ExmFilter.py -v $OutName.vcf -p $OutName.ped -o $OutName.RareCoding.vcf"
 $step3 >>$LogFil 2>>$LogFil
 Signal=`tail -n 1 $LogFil`
 if [ $Signal != "Done" ];
@@ -41,7 +41,7 @@ if [ -f $OutName.avinput ];
 then
 	rm -rf annotated $Outname.avinput
 fi
-step4="/home/local/users/jw/CUMC/psap/family_psap_pipeline.sh $OutName.RareCoding.vcf $OutName $OutName.ped"
+step4="$HOME/CUMC/psap/family_psap_pipeline.sh $OutName.RareCoding.vcf $OutName $OutName.ped"
 echo $step4 >>$LogFil
 $step4 >>$LogFil 2>>$LogFil
 
