@@ -17,7 +17,6 @@ import re
 import os
 
 
-POPSCORE_CUTOFF = 1e-3
 ProjectName = re.compile('\w+')
 SampleName = re.compile('(COL-CHUNG_[a-zA-z0-9]+_Diabetes_[\d]+)*.bam')
 EXM_REF = '$HOME/CUMC/Exome-pipeline-Jiayao/WES_Pipeline_References.b37.sh'
@@ -45,7 +44,7 @@ def GetOptions():
 		args.script2 = 'run_IGV.sh'
 	return args.dir, args.bam, args.list1, args.list2, args.script1, args.script2
 
-class PSAP_PrepareInput:
+class Denovo_Prepare_IGV_Input:
 	def __init__(self, Dir, BAMList, VarList1, VarList2, Script1, Script2):
 		self.Dir = os.path.abspath(Dir)
 		self.bampath = BamLocation(BAMList)
@@ -182,14 +181,29 @@ class Variant:
 		self.start = max(0, self.Pos - 150)
 		self.end = self.Pos + 150
 	# INDELs and Chet with top PopScore needs IGV comfirm.
-	def needIGV(self):
-		if float(self.PopScore) <= POPSCORE_CUTOFF:
-			if (len(self.Alt)) > 1 or (len(self.Ref) != len(self.Alt[0])):
-				return True
-			elif self.DModel == 'REC-chet':
-				return True
-		else:
-			return False
+    def addPed(self, pedigree):
+        self.Father = pedigree.Probands[self.Sample].Father
+        self.Mother = pedigree.Probands[self.Sample].Mother
+    def addBam(self, bamlocation ):
+    for bam in bamlocation.Bams.values():
+        if self.Sample == bam.Sample:
+            self.SampleBam = bam
+            self.SampleBamout = bam.BamName.rstrip('.bam')+'.bamout.bam'
+        if self.Father == bam.Sample:
+            self.FatherBam = bam
+            self.FatherBamout = bam.BamName.rstrip('.bam')+'.bamout.bam'
+        if self.Mother == bam.Sample:
+            self.MotherBam = bam
+            self.MotherBamout = bam.BamName.rstrip('.bam')+'.bamout.bam'
+	try:
+		for var in [self.SampleBam, self.SampleBamout, self.FatherBam, self.FatherBamout, self.MotherBam, self.MotherBamout ]:
+			if var not in locals():
+				print 'Cant find {} in locals.'.format(var)
+				exit()
+	except:
+		print self.Sample
+    def OutVar(self):
+        return '{}\t{}\t{}\n'.format(self.Chrom, self.Pos, ','.join([self.SampleBam.BamName, self.SampleBamout, self.FatherBam.BamName, self.FatherBamout, self.MotherBam.BamName, self.MotherBamout]))
 	def Out2L(self):
 		return "-L {}:{}-{}".format(self.Chrom, self.start, self.end)
 	def Out2I(self):
@@ -197,7 +211,7 @@ class Variant:
 
 def main():
 	Dir, Bam, List1, List2, script1, script2 = GetOptions()
-	instance = PSAP_PrepareInput(Dir, Bam, List1, List2, script1, script2)
+	instance = Denovo_Prepare_IGV_Input(Dir, Bam, List1, List2, script1, script2)
 	instance.run()
 	return
 

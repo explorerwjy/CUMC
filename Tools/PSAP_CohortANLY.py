@@ -11,17 +11,21 @@ import argparse
 import os
 import subprocess
 import gzip
-PrepareVCF = '/home/local/users/jw/CUMC/Tools/PSAP_Family.sh'
+PrepareVCF = '$HOME/CUMC/Tools/PSAP_Family.sh'
+COLLECT = '$HOME/CUMC/Tools/PSAP_CollectResults.py'
+PREPARE_IGV = '$HOME/CUMC/Tools/PSAP_PrepareIGVInput.py'
 
 def GetOptions():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-v','--vcf', type=str, required=True, help = 'VCF File')
 	parser.add_argument('-p','--ped', type=str, required=True, help = 'Pedigree File')
-	parser.add_argument('-d','--dir', type=str, help = 'work dir and dir to generate results')
+	parser.add_argument('-d','--dir', type=str, help = 'work dir to generate results')
+	parser.add_argument('-p', '--parallel', type=int, help='Number of Parallel to go. ')
 	args = parser.parse_args()
 	if args.dir == None:
-		args.dir="./"
-	return args.vcf, args.ped, args.dir
+		args.dir="./" + args.ped.rstrip(".ped") + ".PSAP"
+	#return args.vcf, args.ped, args.dir
+	return args
 
 class PedigreeIndv:
 	def __init__(self,FamID, SampleID, FatherID, MotherID, Sex, Affected, Relationship):
@@ -127,8 +131,12 @@ class FamAnalysis:
 		self.foutCmd.write('CMD={}\n'.format(PrepareVCF))
 		self.foutCmd.write('VCF={}\n'.format(self.VCFname))
 		self.foutCmd.write('InpFil={}\n'.format(os.getcwd() + '/' + self.ArrFil))
+		self.foutCmd.write('COLLECT={}\n'.format(COLLECT))
 		self.foutCmd.write("Num_Job=`wc -l $InpFil | awk '{print $1}'`\n\n")
-		self.foutCmd.write('seq $Num_Job | parallel -j 30 --ETA bash $CMD -i $InpFil -v $VCF -a {}')
+		self.foutCmd.write('seq $Num_Job | parallel -j {} --ETA bash $CMD -i $InpFil -v $VCF -a {}'.format(self.NParallel, "{}"))
+		self.foutCmd.write('python $COLLECT -d {} \n'.format(self.RESdir))
+		self.foutCmd.write('python $PREPAREIGV -d {} \n'.format(PREPARE_IGV))
+		self.foutCmd.close()
 
 def main():
 	VCF, PED, DIR = GetOptions()

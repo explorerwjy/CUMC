@@ -14,9 +14,9 @@ if [[ ! -e "$InpFil" ]] || [[ ! -e "$VCFFil" ]] ; then echo "Missing/Incorrect r
 InpFil=`readlink -f $InpFil` #resolve absolute path to bam
 Indv=$(tail -n+$ArrNum $InpFil | head -n 1)
 OutName=`basename $Indv | sed s/.list//`
-WorkDir=`dirname $Indv`
+#WorkDir=`dirname $Indv`
 LogFil=$OutName.log
-cd $WorkDir
+#cd $WorkDir
 
 step1="vcftools --gzvcf $VCFFil --recode --recode-INFO-all --out $OutName --keep $Indv"
 echo $step1 >$LogFil

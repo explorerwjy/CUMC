@@ -16,13 +16,11 @@ import csv
 import re
 import os
 
-
-POPSCORE_CUTOFF = 1e-3
+#SampleName = re.compile('(COL-CHUNG_[a-zA-z0-9-]+_Diabetes_[\d]+)*.bam') #Example for Sample name in RGN data
 ProjectName = re.compile('\w+')
-SampleName = re.compile('(COL-CHUNG_[a-zA-z0-9]+_Diabetes_[\d]+)*.bam')
 EXM_REF = '$HOME/CUMC/Exome-pipeline-Jiayao/WES_Pipeline_References.b37.sh'
 BAMOUT_CMD = '$HOME/CUMC/Exome-pipeline-Jiayao/ExmAdHoc.15b.BamOut.sh'
-RUN = 'nohup'
+IGV_GENERATE_CMD = '$HOME/CUMC/Exome-IGV-Jiayao/Generate_IGV_plots.sh'
 
 def GetOptions():
 	parser = argparse.ArgumentParser()
@@ -32,6 +30,10 @@ def GetOptions():
 	parser.add_argument('-l2', '--list2', type=str, help='list of variants and corresponding bam, For IGV')
 	parser.add_argument('-s1', '--script1', type=str, help='Script to run GATK Bamout. ')
 	parser.add_argument('-s2', '--script2', type=str, help='Script to run IGV. ')
+	parser.add_argument('-p', '--parallel', type=int, default=20, help='Number of Parallel to go. ')
+	parser.add_argument('--popscore', type=float, default=1e-3, help='popscore cutoff to generate. ')
+	parser.add_argument('--chet', type=bool, default=True, help='Whether to generate Chet candidates. ')
+	parser.add_argument('--snp', type=bool, default=False, help='Whether to generate snp candidates ')
 	args = parser.parse_args()
 	args.dir = os.path.abspath(args.dir)
 	print args.dir
@@ -43,18 +45,24 @@ def GetOptions():
 		args.script1 = 'run_bamout.sh'
 	if args.script2 == None:
 		args.script2 = 'run_IGV.sh'
-	return args.dir, args.bam, args.list1, args.list2, args.script1, args.script2
+	#return args.dir, args.bam, args.list1, args.list2, args.script1, args.script2
+	return args
 
-class PSAP_PrepareInput:
-	def __init__(self, Dir, BAMList, VarList1, VarList2, Script1, Script2):
-		self.Dir = os.path.abspath(Dir)
-		self.bampath = BamLocation(BAMList)
-		self.VarList1 = VarList1 
+class PSAP_PrepareIGVInput:
+	#def __init__(self, Dir, BAMList, VarList1, VarList2, Script1, Script2):
+	def __init__(self, args):
+		self.Dir = os.path.abspath(args.dir)
+		self.bampath = BamLocation(args.bam)
+		self.VarList1 = args.list1 
 		self.VarList1_hand = open(self.VarList1, 'wb')
-		self.VarList2 = VarList2
+		self.VarList2 = args.list2
 		self.VarList2_hand = open(self.VarList2, 'wb')
-		self.Script1 = open(Script1, 'wb')
-		self.Script2 = open(Script2, 'wb')
+		self.Script1 = open(args.script1, 'wb')
+		self.Script2 = open(args.script2, 'wb')
+		self.popScore = args.popscore
+		self.parallel = args.parallel
+		self.chet = args.chet
+		self.snp = args.snp 
 
 	def run(self):
 		dirList = [self.Dir + '/' + x for x in os.listdir(self.Dir)]
@@ -81,8 +89,10 @@ class PSAP_PrepareInput:
 
 	def ReadCSV(self, PSAPFil, ped):
 		pedigree = Pedigree(ped)
-		Proband = pedigree.GuessProband()
-		Bam = self.bampath.search(Proband)
+		Proband, Father, Mother = pedigree.GuessProband()
+		ProbandBam = self.bampath.search(Proband)
+		FatherBam = self.bampath.search(Father)
+		MotherBam = self.bampath.search(Mother)
 		res = []
 		with open(PSAPFil, 'rb') as csvfile:
 			reader = csv.reader(csvfile)
@@ -98,8 +108,10 @@ class PSAP_PrepareInput:
 				var = Variant(row, idx_Chr, idx_Pos, idx_Ref, idx_Alt, idx_Proband, idx_DModel, idx_PopScore)
 				if var.needIGV():
 					res.append(var.Out2L())
-					self.VarList2_hand.write("{}\t{},{}\n".format(var.Out2I(), Bam.BamName, Bam.BamOutName))
-			self.VarList1_hand.write("{}\t{}\n".format(Bam.FullPath, '\t'.join(res)))
+					self.VarList2_hand.write("{}\t{},{},{},{},{},{}\n".format(var.Out2I(), ProbandBam.BamName, ProbandBam.BamOutName, FatherBam.BamName, FatherBam.BamOutName, MotherBam.BamName, MotherBam.BamOutName))
+			self.VarList1_hand.write("{}\t{}\n".format(ProbandBam.FullPath, '\t'.join(res)))
+			self.VarList1_hand.write("{}\t{}\n".format(FatherBam.FullPath, '\t'.join(res)))
+			self.VarList1_hand.write("{}\t{}\n".format(MotherBam.FullPath, '\t'.join(res)))
 		return res
 
 	def FlushBamout(self):
@@ -108,12 +120,15 @@ class PSAP_PrepareInput:
 		fout.write('CMD={}\n'.format(BAMOUT_CMD)) 
 		fout.write('InpFil={}\n'.format(self.VarList1)) 
 		fout.write("NumJob=`wc -l $InpFil|cut -f1 -d ' '`\n\n")
-		fout.write("seq $NumJob| parallel -j 30 --eta $CMD -i $InpFil -a {} -r $REF\n\n")
-		fout.write("find `pwd` -name \"*.bamout.bam\" > Bamout.bam.list")
+		fout.write("seq $NumJob| parallel -j {} --eta $CMD -i $InpFil -a \{\} -r $REF\n\n".fomrat(self.parallel))
+		fout.write("find `pwd` -name \"*.bamout.bam\" > Bamout.bam.list\n")
+		fout.write("cat {} {} > ALL.bam.list\n".format(self.bampath, "Bamout.bam.list"))
 		fout.close()
+
 	def FlushIGV(self):
 		fout = self.Script2
-		fout.write(''.format())
+		fout.write('{} -b ALL.bam.list -v {}'.format(IGV_GENERATE_CMD, self.VarList2))
+		fout.close()
 
 class Indv:
 	def __init__(self,FamID, SampleID, FatherID, MotherID, Sex, Affected):
@@ -139,14 +154,25 @@ class Pedigree:
 			indv = Indv(FamID, SampleID, FatherID, MotherID, Sex, Affected)
 			self.Indvs.append(indv)
 		self.FamID = FamID
-	def GuessProband(self):
+	def GuessProband(self): # Proband should be affected and have max number of parents
+		ProbandCandidates = []
 		for Indv in self.Indvs:
-			Indv.show()
+			#Indv.show()
 			if Indv.Affected == '2':
-				return Indv.SampleID
-		print self.FamID, "Can't find a Proband"
-		exit()
+				NumParents = self.GetNumParents(Indv)
+				ProbandCandidates.append( (Indv, NumParents) )
+				#return Indv.SampleID
+		if len(ProbandCandidates) == 0:
+			print "Warning: Can't find a Proband at FAM: {}".format(self.FamID)
+		else:
+			Proband = sorted(ProbandCandidates, key=lambda x:x[1], reverse=True)[0][0]
+			return Proband.SampleID, Proband.FatherID, Proband.MotherID
+		
 		return self.Indvs[0].SampleID
+	def GetNumParents(self, Sample):
+		F = 1 if str(Sample.FatherID) != "0" else 0
+		M = 1 if str(Sample.MotherID) != "0" else 0
+		return sum([F, M])
 
 class BAM:
 	def __init__(self, fpath):
@@ -164,12 +190,10 @@ class BamLocation:
 			if 'bamout' in l:
 				continue
 			bam = BAM(l)
-			self.Bams[bam.BamName] = bam
+			self.Bams[bam.Sample] = bam
 	def search(self,sample):
-		for k,v in self.Bams.items():
-			if sample in v.FullPath:
-				return v
-		return None
+		return self.Bams.get(sample, 'NA')
+
 class Variant:
 	def __init__(self, row, idx_Chr, idx_Pos, idx_Ref, idx_Alt, idx_Proband, idx_DModel, idx_PopScore):
 		self.Chrom = row[idx_Chr]
@@ -183,21 +207,21 @@ class Variant:
 		self.end = self.Pos + 150
 	# INDELs and Chet with top PopScore needs IGV comfirm.
 	def needIGV(self):
-		if float(self.PopScore) <= POPSCORE_CUTOFF:
-			if (len(self.Alt)) > 1 or (len(self.Ref) != len(self.Alt[0])):
+		if float(self.PopScore) <= self.popscore:
+			if self.snp or (len(self.Alt)) > 1 or (len(self.Ref) != len(self.Alt[0])):
 				return True
-			elif self.DModel == 'REC-chet':
+			elif self.chet and (self.DModel == 'REC-chet'):
 				return True
 		else:
 			return False
-	def Out2L(self):
+	def Out2L(self): # To run_Bamout.sh
 		return "-L {}:{}-{}".format(self.Chrom, self.start, self.end)
-	def Out2I(self):
+	def Out2I(self): # To run_IGV.sh 
 		return "{}\t{}".format(self.Chrom, self.Pos)
 
 def main():
-	Dir, Bam, List1, List2, script1, script2 = GetOptions()
-	instance = PSAP_PrepareInput(Dir, Bam, List1, List2, script1, script2)
+	args = GetOptions()
+	instance = PSAP_PrepareIGVInput(args)
 	instance.run()
 	return
 
