@@ -60,8 +60,6 @@ def GetOptions():
         args.script1 = 'run_bamout.sh'
     if args.script2 == None:
         args.script2 = 'run_IGV.sh'
-    # return args.dir, args.bam, args.list1, args.list2, args.script1,
-    # args.script2
     return args
 
 

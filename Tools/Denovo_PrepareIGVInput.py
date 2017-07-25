@@ -24,36 +24,53 @@ BAMOUT_CMD = '$HOME/CUMC/Exome-pipeline-Jiayao/ExmAdHoc.15b.BamOut.sh'
 RUN = 'nohup'
 
 def GetOptions():
-	parser = argparse.ArgumentParser()
-	parser.add_argument('-d', '--dir', type=str, required=True, help='Directory contains PSAP by fam results, each subdir should have .csv and .ped')
-	parser.add_argument('-b', '--bam', type=str, required=True, help='File contains bam locations. ')
-	parser.add_argument('-l1', '--list1', type=str, help='list of sample and corresponding intervals, For Bamout')
-	parser.add_argument('-l2', '--list2', type=str, help='list of variants and corresponding bam, For IGV')
-	parser.add_argument('-s1', '--script1', type=str, help='Script to run GATK Bamout. ')
-	parser.add_argument('-s2', '--script2', type=str, help='Script to run IGV. ')
-	args = parser.parse_args()
-	args.dir = os.path.abspath(args.dir)
-	print args.dir
-	if args.list1 == None:
-		args.list1 = ProjectName.search(args.dir.split('/')[-1]).group(0) + '.samplelist'
-	if args.list2 == None:
-		args.list2 = ProjectName.search(args.dir.split('/')[-1]).group(0) + '.varlist'
-	if args.script1 == None:
-		args.script1 = 'run_bamout.sh'
-	if args.script2 == None:
-		args.script2 = 'run_IGV.sh'
-	return args.dir, args.bam, args.list1, args.list2, args.script1, args.script2
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--dir', type=str, required=True,
+                        help='Directory contains PSAP by fam results, each subdir should have .csv and .ped')
+    parser.add_argument('-b', '--bam', type=str, required=True,
+                        help='File contains bam locations. ')
+    parser.add_argument('-l1', '--list1', type=str,
+                        help='list of sample and corresponding intervals, For Bamout')
+    parser.add_argument('-l2', '--list2', type=str,
+                        help='list of variants and corresponding bam, For IGV')
+    parser.add_argument('-s1', '--script1', type=str,
+                        help='Script to run GATK Bamout. ')
+    parser.add_argument('-s2', '--script2', type=str,
+                        help='Script to run IGV. ')
+    parser.add_argument('-p', '--parallel', type=int,
+                        default=20, help='Number of Parallel to go. ')
+    parser.add_argument('--popscore', type=float, default=1e-3,
+                        help='popscore cutoff to generate. ')
+    parser.add_argument('--chet', type=bool, default=True,
+                        help='Whether to generate Chet candidates. ')
+    parser.add_argument('--snp', type=bool, default=False,
+                        help='Whether to generate snp candidates ')
+    args = parser.parse_args()
+    args.dir = os.path.abspath(args.dir)
+    print args.dir
+    if args.list1 == None:
+        args.list1 = ProjectName.search(
+            args.dir.split('/')[-1]).group(0) + '.samplelist'
+    if args.list2 == None:
+        args.list2 = ProjectName.search(
+            args.dir.split('/')[-1]).group(0) + '.varlist'
+    if args.script1 == None:
+        args.script1 = 'run_bamout.sh'
+    if args.script2 == None:
+        args.script2 = 'run_IGV.sh'
+    return args
 
 class Denovo_Prepare_IGV_Input:
-	def __init__(self, Dir, BAMList, VarList1, VarList2, Script1, Script2):
-		self.Dir = os.path.abspath(Dir)
-		self.bampath = BamLocation(BAMList)
-		self.VarList1 = VarList1 
+	#def __init__(self, Dir, BAMList, VarList1, VarList2, Script1, Script2):
+	def __init(self, args):
+		self.Dir = os.path.abspath(args.dir)
+		self.bampath = BamLocation(args.bam)
+		self.VarList1 = args.l1  
 		self.VarList1_hand = open(self.VarList1, 'wb')
-		self.VarList2 = VarList2
+		self.VarList2 = args.l2 
 		self.VarList2_hand = open(self.VarList2, 'wb')
-		self.Script1 = open(Script1, 'wb')
-		self.Script2 = open(Script2, 'wb')
+		self.Script1 = open(args.s1 , 'wb')
+		self.Script2 = open(args.s2 , 'wb')
 
 	def run(self):
 		dirList = [self.Dir + '/' + x for x in os.listdir(self.Dir)]
