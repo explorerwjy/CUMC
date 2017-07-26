@@ -96,7 +96,10 @@ class GENE_ANNOTATION:
 			Rank = row[idx_rank]
 			if Gene not in self.Genes:
 				self.Genes[Gene] = GENE(Gene)
-			self.Genes[Gene].LungRank = Rank
+			try:
+				self.Genes[Gene].LungRank = str(100 - float(Rank))
+			except:
+				self.Genes[Gene].LungRank = "0"
 		print 'Finished Reading Gene Score Lung %.3f' % (time.time() - stime)
 
 	def Load_MouseBrain(self):
@@ -395,7 +398,7 @@ class Variant():
 class Individual():
 	def __init__(self, List, Header):
 		self.Fam, self.Sample, self.Father, self.Mother, self.Gender, self.Pheno = List[:6]
-		self.Relationship = List[Header.index('Relationship')]
+		#self.Relationship = List[Header.index('Relationship')]
 		#self.PhenotypeDetail = List[Header.index('Disease')] + '/' + List[Header.index('DistinguishingFeatures')]
 		try:
 			self.PhenotypeDetail = List[Header.index('PhenotypeDetail')] 
@@ -425,7 +428,9 @@ class Pedigree():
 			self.individuals.append(indi)
 		self.Proband, self.Father, self.Mother = None, None, None
 		for ind in self.individuals:
-			if ind.Relationship == 'Proband':
+			#if ind.Relationship == 'Proband':
+			#	self.Proband = ind
+			if ind.Father != "0" and ind.Mother != "0":
 				self.Proband = ind
 		for ind in self.individuals:
 			if self.Proband.Father == ind.Sample:
