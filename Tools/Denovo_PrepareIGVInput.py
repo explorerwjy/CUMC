@@ -17,9 +17,7 @@ import re
 import os
 
 
-ProjectName = re.compile('\w+')
-SampleName = re.compile('(COL-CHUNG_[a-zA-z0-9]+_Diabetes_[\d]+)*.bam')
-SampleName = re.compile('(CARE[a-zA-Z0-9-]+).bam')
+SampleName = re.compile('([A-Za-z0-9-]+).bam')
 ProjectName = re.compile('\w+')
 EXM_REF = '$HOME/CUMC/Exome-pipeline-Jiayao/WES_Pipeline_References.b37.sh'
 BAMOUT_CMD = '$HOME/CUMC/Exome-pipeline-Jiayao/ExmAdHoc.15b.BamOut.sh'
@@ -27,110 +25,125 @@ IGV_GENERATE_CMD = '$HOME/CUMC/Exome-IGV-Jiayao/Generate_IGV_plots.sh'
 RUN = 'nohup'
 
 def GetOptions():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--dir', type=str, required=True,
-                        help='Directory contains PSAP by fam results, each subdir should have .csv and .ped')
-    parser.add_argument('-b', '--bam', type=str, required=True,
-                        help='File contains bam locations. ')
-    parser.add_argument('-l1', '--list1', type=str,
-                        help='list of sample and corresponding intervals, For Bamout')
-    parser.add_argument('-l2', '--list2', type=str,
-                        help='list of variants and corresponding bam, For IGV')
-    parser.add_argument('-s1', '--script1', type=str,
-                        help='Script to run GATK Bamout. ')
-    parser.add_argument('-s2', '--script2', type=str,
-                        help='Script to run IGV. ')
-    parser.add_argument('-p', '--parallel', type=int,
-                        default=20, help='Number of Parallel to go. ')
-    args = parser.parse_args()
-    args.dir = os.path.abspath(args.dir)
-    print args.dir
-    if args.list1 == None:
-        args.list1 = ProjectName.search(
-            args.dir.split('/')[-1]).group(0) + '.samplelist'
-    if args.list2 == None:
-        args.list2 = ProjectName.search(
-            args.dir.split('/')[-1]).group(0) + '.varlist'
-    if args.script1 == None:
-        args.script1 = 'run_bamout.sh'
-    if args.script2 == None:
-        args.script2 = 'run_IGV.sh'
-    return args
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-v', '--var', type=str, required=True,
+			help='denovo csv file')
+	parser.add_argument('-p', '--ped', type=str, required=True,
+			help='ped file')
+	parser.add_argument('-b', '--bam', type=str, required=True,
+			help='File contains bam locations. ')
+	parser.add_argument('-l1', '--list1', type=str,
+			help='list of sample and corresponding intervals, For Bamout')
+	parser.add_argument('-l2', '--list2', type=str,
+			help='list of variants and corresponding bam, For IGV')
+	parser.add_argument('-s1', '--script1', type=str,
+			help='Script to run GATK Bamout. ')
+	parser.add_argument('-s2', '--script2', type=str,
+			help='Script to run IGV. ')
+	parser.add_argument('--parallel', type=int,
+			default=20, help='Number of Parallel to go. ')
+	args = parser.parse_args()
+	if args.list1 == None:
+		args.list1 = 'Denovo.bamout.input'
+	if args.list2 == None:
+		args.list2 = 'Denovo.IGV.varlist'
+	if args.script1 == None:
+		args.script1 = 'run_bamout.sh'
+	if args.script2 == None:
+		args.script2 = 'run_IGV.sh'
+	return args
 
 class DNM_PrepareIGVInput:
-	#def __init__(self, Dir, BAMList, VarList1, VarList2, Script1, Script2):
-	def __init(self, args):
-		self.Dir = os.path.abspath(args.dir)
-		self.bampath = BamLocation(args.bam)
-		self.VarList1 = args.l1  
+	def __init__(self, args):
+		self.VARFil = os.path.abspath(args.var)
+		self.PEDFil = os.path.abspath(args.ped)
+		self.Bams = BamLocation(args.bam)
+		self.VarList1 = os.path.abspath(args.list1)
 		self.VarList1_hand = open(self.VarList1, 'wb')
-		self.VarList2 = args.l2 
+		self.VarList2 = os.path.abspath(args.list2)
 		self.VarList2_hand = open(self.VarList2, 'wb')
-		self.Script1 = open(args.s1 , 'wb')
-		self.Script2 = open(args.s2 , 'wb')
-
+		self.Script1 = open(args.script1 , 'wb')
+		self.Script2 = open(args.script2 , 'wb')
+		self.parallel = args.parallel
+	
 	def run(self):
-		pedigree = Pedigree(ped)
-		Bams = BamLocation(bam)
-		with open(_csv, 'rb') as csvfile:
+		pedigree = Pedigree(self.PEDFil)
+		self.variants = []
+		with open(self.VARFil, 'rb') as csvfile:
 			reader = csv.reader(csvfile)
 			header = reader.next()
 			for row in reader:
 				var = Variant(header, row)
 				var.addPed(pedigree)
-				var.addBam(Bams)
-				res.append(var)
-				fout.write(var.OutVar())
-		fout.close()
-		return res
+				var.addBam(self.Bams)
+				self.variants.append(var)
+				self.VarList2_hand.write(var.OutVar())
 		self.FlushBamout()
 		self.FlushIGV()
 
-	def LoadCSV(self, _csv, ped, bam, output):
-		pedigree = Pedigree(ped)
-		Bams = BamLocation(bam)
-		res = []
-		fout = open(output,'wb')
-		with open(_csv, 'rb') as csvfile:
-			reader = csv.reader(csvfile)
-			header = reader.next()
-			for row in reader:
-				var = Variant(header, row)
-				var.addPed(pedigree)
-				var.addBam(Bams)
-				res.append(var)
-				fout.write(var.OutVar())
-		fout.close()
-		return res
-
 	def ReduceVarian2Sample(self):
 		res = {}
-		for variant in variants:
+		for variant in self.variants:
 			if variant.Sample not in res:
 				res[variant.Sample] = Sample(variant)
 			else:
 				res[variant.Sample].AddVar(variant)
+		print res
+		print res.values()
 		return res.values()
 
 	def FlushBamout(self):
-        fout = self.Script1
-        fout.write('REF={}\n'.format(EXM_REF))
-        fout.write('CMD={}\n'.format(BAMOUT_CMD))
-        fout.write('InpFil={}\n'.format(self.VarList1))
-        fout.write("NumJob=`wc -l $InpFil|cut -f1 -d ' '`\n\n")
-        fout.write("mkdir -p Bamouts;cd Bamouts\n")
-        fout.write(
-            "seq $NumJob| parallel -j {} --eta $CMD -i $InpFil -a {} -r $REF\n\n".format(self.parallel, "{}"))
-        fout.write("cd ../;find `pwd`/Bamouts/ -name \"*.bamout.bam\" > Bamout.bam.list\n")
-        fout.write("cat {} {} > ALL.bam.list\n".format(
-            self.bampath.bamlocationfile, "Bamout.bam.list"))
-        fout.close()
+		# Write Bamout List	
+		Samples = self.ReduceVarian2Sample()
+		for sample in Samples:
+			for line in sample.FlushBamout():
+				self.VarList1_hand.write(line)
+		# Write Bamout Script	
+		fout = self.Script1
+		fout.write('REF={}\n'.format(EXM_REF))
+		fout.write('CMD={}\n'.format(BAMOUT_CMD))
+		fout.write('InpFil={}\n'.format(self.VarList1))
+		fout.write("NumJob=`wc -l $InpFil|cut -f1 -d ' '`\n\n")
+		fout.write("mkdir -p Bamouts;cd Bamouts\n")
+		fout.write(
+				"seq $NumJob| parallel -j {} --eta $CMD -i $InpFil -a {} -r $REF\n\n".format(self.parallel, "{}"))
+		fout.write("cd ../;find `pwd`/Bamouts/ -name \"*.bamout.bam\" > Bamout.bam.list\n")
+		fout.write("cat {} {} > ALL.bam.list\n".format(self.Bams.bamlocationfile, "Bamout.bam.list"))
+		fout.close()
 
 	def FlushIGV(self):
-        fout = self.Script2
-        fout.write(
-            '{} -b ALL.bam.list -v {}'.format(IGV_GENERATE_CMD, self.VarList2))
-        fout.close()
+		fout = self.Script2
+		fout.write(
+				'{} -b ALL.bam.list -v {}'.format(IGV_GENERATE_CMD, self.VarList2))
+		fout.close()
+
+
+class Sample:
+	def __init__(self, variant):
+		self.Sample = variant.Sample
+		self.Father = variant.Father
+		self.Mother = variant.Mother
+		self.SampleBam = variant.SampleBam
+		self.FatherBam = variant.FatherBam
+		self.MotherBam = variant.MotherBam
+		self.SampleBamout = variant.SampleBamout 
+		self.FatherBamout = variant.FatherBamout
+		self.MotherBamout = variant.MotherBamout
+		# self.variants = []
+		chrom, start, end = variant.Chrom, variant.start, variant.end 
+		self.Intervals = ['{}:{}-{}'.format(str(chrom), str(start), str(end))]
+	def AddVar(self, variant):
+		# self.vairants.append(variant)
+		chrom, start, end = variant.Chrom, variant.start, variant.end
+		self.Intervals.append('{}:{}-{}'.format(str(chrom), str(start), str(end))) 
+	def FlushBamout(self):
+		# Format is
+		# BAMPATH	-L	VAR1	-L VAR2	 .... -L VARN
+		# SampleCMD =  ''.format(self.SampleBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
+		SampleCMD =  '{}\t{} \n'.format(self.SampleBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
+		FatherCMD =  '{}\t{} \n'.format(self.FatherBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
+		MotherCMD =  '{}\t{} \n'.format(self.MotherBam.FullPath, '\t'.join(['-L '+L for L in self.Intervals]))
+		return SampleCMD, FatherCMD, MotherCMD
 
 class BAM:
 	def __init__(self, fpath):
@@ -138,10 +151,10 @@ class BAM:
 		self.BamName = self.FullPath.split('/')[-1]
 		self.BamOutName = '.'.join(self.BamName.split('.')[:-1]) + ".bamout.bam"
 		self.Sample = SampleName.search(self.BamName).group(1)
-		#self.Sample = self.BamName
- 
+
 class BamLocation:
 	def __init__(self, bamlocationfile):
+		self.bamlocationfile = os.path.abspath(bamlocationfile)
 		fin = open(bamlocationfile, 'rb')
 		self.Bams = {}
 		for l in fin:
@@ -168,7 +181,7 @@ class Variant:
 		self.Mother = pedigree.Probands[self.Sample].Mother
 
 	def addBam(self, bamlocation):
-		print self.Sample
+		#print self.Sample
 		for bam in bamlocation.Bams.values():
 			if self.Sample == bam.Sample:
 				self.SampleBam = bam
@@ -188,10 +201,30 @@ class Variant:
 			print self.Sample
 	def OutVar(self):
 		return '{}\t{}\t{}\n'.format(self.Chrom, self.Pos, ','.join([self.SampleBam.BamName, self.SampleBamout, self.FatherBam.BamName, self.FatherBamout, self.MotherBam.BamName, self.MotherBamout]))
-	def Out2L(self):
+	def Out2L(self):  # To run_Bamout.sh
 		return "-L {}:{}-{}".format(self.Chrom, self.start, self.end)
-	def Out2I(self):
+	def Out2I(self):  # To run_IGV.sh
 		return "{}\t{}".format(self.Chrom, self.Pos)
+
+class Proband:
+	def __init__(self, Sample, Father, Mother):
+		self.Sample = Sample
+		self.Father = Father
+		self.Mother = Mother
+
+
+class Pedigree:
+	def __init__(self, pedfile):
+		fin = open(pedfile, 'rb')
+		self.Probands = {}
+		for l in fin:
+			if l.startswith('#'):
+				continue
+			llist = l.strip().split('\t')
+			fam, sample, father, mother, sex, phenotype = llist[:6]
+			if father != "0" and mother != "0" and phenotype == "2":  # Proband
+				# print sample, father, mother
+				self.Probands[sample] = Proband(sample, father, mother)
 
 def main():
 	args = GetOptions()
