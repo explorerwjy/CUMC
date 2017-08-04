@@ -61,13 +61,14 @@ FixMisencoded="false"
 SplitReads="false"
 
 #get arguments
-while getopts i:r:l:t:a:s:PFH opt; do
+while getopts i:r:l:t:a:g:s:PFH opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
         r) RefFil="$OPTARG";; 
         l) LogFil="$OPTARG";;
         t) TgtBed="$OPTARG";; 
-        a) RGID="$OPTARG";;
+        a) ArrNum="$OPTARG";;
+        g) RGID="$OPTARG";;
         s) NewSam="$OPTARG";;
         P) PipeLine="true";;
         F) FixMisencoded="true";;
@@ -85,8 +86,18 @@ source $RefFil
 #Load script library
 source $EXOMPPLN/exome.lib.sh #library functions begin "func"
 
+
+echo $ArrNum
+
+if [[ -z "${ArrNum}" ]]
+then
+    ArrNum=$SGE_TASK_ID
+fi
+echo $ArrNum
 #set local variables
-BamFil=`readlink -f $InpFil` #resolve absolute path to bam
+InpFil=`readlink -f $InpFil` #resolve absolute path to bam
+BamFil=$(tail -n+$ArrNum $InpFil | head -n 1)
+echo $BamFil
 BamNam=`basename $BamFil` 
 BamNam=`basename $BamFil | sed s/.bam$// | sed s/.cram$//` # a name for the output files
 if [[ -z "$LogFil" ]]; then LogFil=$BamNam.BbB.log; fi # a name for the log file

@@ -41,12 +41,13 @@ PipeLine="false"
 FullCadd="false"
 NoRecal="false"
 
-while getopts i:r:t:l:CXFPBH opt; do
+while getopts i:r:t:l:m:CXFPBH opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
         r) RefFil="$OPTARG";; 
-        l) LogFil="$OPTARG";;
         t) Threads="$OPTARG";;
+        l) LogFil="$OPTARG";;
+		m) Mappability="$OPTARG";;
         C) FullCadd="true";;
         P) PipeLine="true";;
         X) NoRecal="true";;
@@ -57,9 +58,11 @@ done
 
 #check all required paramaters present
 if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
-
 if [[ ! -e "$Threads" ]]; then
 	Threads=1
+fi
+if [[ ! -e "$Mappability" ]]; then
+	Mappability=$MAPPABILITY_FIL
 fi
 
 #Call the RefFil to load variables
@@ -86,8 +89,6 @@ VcfFilSnF=$VcfNam.SnF.vcf # SnpEff annotated VCF output file
 VcfFilOut=$VcfNam.annotated.vcf # final annotated output file
 
 TmpDir=$VcfNam.AnnVCF.tempdir; mkdir -p $TmpDir #temporary directory
-GatkLog=$VcfNam.gatklog #a log for GATK to output to, this is then trimmed and added to the script log
-infofields="-A AlleleBalance -A BaseQualityRankSumTest -A Coverage -A HaplotypeScore -A HomopolymerRun -A MappingQualityRankSumTest -A MappingQualityZero -A QualByDepth -A RMSMappingQuality -A SpanningDeletions -A FisherStrand -A InbreedingCoeff" #Annotation fields for GATK to output into vcf files
 
 #check the vcf file to see if it is zipped 
 FilTyp=${VcfFil##*.}
@@ -99,7 +100,7 @@ funcWriteStartLog
 
 ##Run Annovar to Annotate VCF file
 StepName="Build Annotation table using ANNOVAR"
-StepCmd="table_annovar.pl $VcfFil $ANNHDB --buildver hg19 --remove -protocol refGene,gnomad_exome,gnomad_genome,1000g2015aug_all,1000g2015aug_eur,1000g2015aug_amr,1000g2015aug_eas,1000g2015aug_afr,1000g2015aug_sas,exac03,dbnsfp30a,cadd13gt10,cosmic70,genomicSuperDups,mcap,avsnp147 -operation g,f,f,f,f,f,f,f,f,f,f,f,f,r,f,f -otherinfo  -nastring .  -vcfinput "
+StepCmd="table_annovar.pl $VcfFil $ANNHDB --buildver hg19 --remove -protocol refGene,gnomad_exome,gnomad_genome,1000g2015aug_all,1000g2015aug_eur,1000g2015aug_amr,1000g2015aug_eas,1000g2015aug_afr,1000g2015aug_sas,exac03,dbnsfp33a,cadd13gt10,cosmic70,genomicSuperDups,mcap,revel,avsnp147 -operation g,f,f,f,f,f,f,f,f,f,f,f,f,r,f,f,f -otherinfo  -nastring .  -vcfinput "
 if [[ "$FullCadd" == "true" ]]; then 
     StepCmd=${StepCmd/cadd13gt10/cadd13}
     echo "  Using full CADD database..." >> $TmpLog

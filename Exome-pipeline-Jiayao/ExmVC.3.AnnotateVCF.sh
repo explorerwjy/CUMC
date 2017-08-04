@@ -138,7 +138,7 @@ StepCmd="
 		 bgzip -f $VCFout;
 		 tabix -f -p vcf $VCFout.gz;"
 funcRunStep
-rm $Content $Genotype $Header $VCFAnn $AnnOut 
+#rm $Content $Genotype $Header $VCFAnn $AnnOut 
 funcWriteEndLog
 
 #Cleanup

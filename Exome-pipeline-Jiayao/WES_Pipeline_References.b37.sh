@@ -15,11 +15,13 @@ export INDEL="$EXOMRES/references/b37/Mills_and_1000G_gold_standard.indels.b37.s
 export TGVCF="$EXOMRES/references/b37/1000G_omni2.5.b37.sites.vcf" 
 export INDEL1KG="$EXOMRES/references/b37/1000G_phase1.indels.b37.vcf" # INDEL reference from 1000 genomes
 #export DBSNP="$EXOMRES/references/b37/dbsnp_138.b37.vcf" # dbSNP vcf from GATK
-export DBSNP="/home/local/users/jw/resources/references/b37/dbsnp_138.b37.excluding_sites_after_129.vcf"
+export DBSNP="$EXOMRES/references/b37/dbsnp_138.b37.excluding_sites_after_129.vcf"
 export ONEKG="$EXOMRES/references/b37/1000G_phase1.snps.high_confidence.b37.vcf" # 1000 genome SNPs vcf
-export ANNOVAR='/home/local/users/jw/software_packages/annovar'
-export ANNHDB='/home/local/users/jw/software_packages/annovar/humandb' #Location of annovar databases
+export ANNOVAR="/home/local/users/jw/software_packages/annovar"
+export ANNHDB="$EXOMRES/ANNOVAR_DB" #Location of annovar databases
 export HUMANREF="$EXOMRES/human_g1k_v37.fasta" # human 1000 genome assembly from GATK
+export COSMIC_Coding="$EXOMRES/COSMIC/v81_mutation/CosmicCodingMuts.vcf.gz"
+export COSMIC_nonCoding="$EXOMRES/COSMIC/v81_mutation/CosmicNonCodingVariants.vcf.gz"
 
 export STHSH="$EXOMRES/references/b37/stampy_b37" # hash file for Stampy - omit ".sthash" extension for compatibility with Stampy
 export STIDX="$EXOMRES/references/b37/stampy_b37" # genome index file for Stampy - omit ".stidx" extension for compatibility with Stampy
@@ -40,5 +42,6 @@ export VCRv2="$EXOMRES/CaptureKitBeds/Nimblegen_VCRome_v2.hg19.bed"
 export TGTCODES="AgtV2:AgtV4:AgtV5:AgtV5UTR:NbgV2:NbgV3:IllTS:BigTgt:RefSeq:VCRv2"
 
 #Other resources
-export HapMapReference=/home/local/ARCS/nz2274/Resources/1000Gneome_2013/plink/1KG.XGEN.SNP
-
+#export HapMapReference=/home/local/users/jw/resources/AncestryPCA/PLINK/1KG.XGEN.SNP.Common
+export HapMapReference=$EXOMRES/resources/AncestryPCA/resources/1KG_AJ_Domi_PCAcontrol.vcf.gz
+export MAPPABILITY_FIL=$EXOMRES/mappability/${BUILD}_200bp_mappability.bed.gz

@@ -1,7 +1,20 @@
+#!/bin/bash
+#$ -cwd -l mem=10G,time=4:: -N VcfPCA
+
+#This script takes VCF file and runs PCA on the variants using Eigenstrat.
+#    InpFil - (required) - A vcf file or plink bed/bim/fam trio of files. If plink, supply the bed file name (e.g. myfile.bed)
+#    OutNam - (optional) - A name for the analysis - to be used for naming output files. Will be derived from input filename if not provided
+#    Help - H - (flag) - get usage information
+
+#list of required tools:
+# 
+
+
 ###############################################################
 
 usage="
 ExmAdHoc.5.VCF_PCA.sh -i <InputFile> -l <logfile> -H
+
      -i (required) - A vcf input file
      -o (optional) - output name - will be derived from input filename if not provided
      -H (flag) - echo this message and exit
@@ -19,6 +32,7 @@ done
 
 #some variables
 EXOMFILT=$HOME/CUMC/Filtering_scripts/
+#HapMapReference=$HOME/resources/1000Gneome_2013_B38/plink/plink   #/home/local/ARCS/hq2130/Exome_Seq/resources/hapmap31_pop/hg19/All_HapMap
 source $RefFil
 echo $HapMapReference
 
@@ -26,6 +40,7 @@ echo $HapMapReference
 InpFil=`readlink -f $InpFil`
 if [[ -z "$OutNam" ]];then OutNam=`basename $InpFil`; OutNam=${OutNam/.bed/}; OutNam=${OutNam/.vcf/}; fi # a name for the output files
 LogFil=$OutNam.PCA.log
+
 
 #check for vcf, if vcf convert to plink format
 if [[ "${InpFil##*.}" != "bed" ]]; then
@@ -79,16 +94,32 @@ fi
 folder=$(dirname $BbfNam)
 # remove LD
 plink --bfile $BbfNam --indep-pairwise 50 5 0.5
+#plink --file $BbfNam --extract plink.prune.in --make-bed --out $prune
+#BbfNam=$prune
+#Get a list of SNPs to retrieve from the reference data
+#SnpList=$OutNam.snplist
+#cut -f 2 $BbfNam.bim > $SnpList
 SnpList=plink.prune.in
 
 # Get HapMap data
 HapMapDat=$HapMapReference #$OutNam"_HapMapData"
 echo $HapMapReference
+#plink --bfile $HapMapReference --extract $SnpList --allow-no-sex --make-bed --out $HapMapDat  
 if [[ $? -ne 0 ]]; then exit; fi
 echo
 echo "------------------------------------------------------------------------"
 echo
 
+###HapMap data is b36 so update map before merging
+#cut -f 2,4 $BbfNam.bim > update_map.tab
+#plink --bfile $HapMapReference --update-map update_map.tab --allow-no-sex --make-bed --out $HapMapDat
+#if [[ $? -ne 0 ]]; then exit; fi
+#echo
+#echo "------------------------------------------------------------------------"
+#echo
+
+#change -9 in fam to 1 
+# Merge HapMap data:
 
 EigDat=$OutNam.HapMap
 plink --bfile $BbfNam --bmerge $HapMapDat.bed $HapMapDat.bim $HapMapDat.fam --geno 0.05 --allow-no-sex --make-bed --out $EigDat

@@ -3,7 +3,7 @@
 #$ -j y
 #$ -N MergeGVCF
 #$ -l h_rt=12:00:00
-#$ -l h_vmem=16G
+#$ -l h_vmem=20G
 #$ -cwd
 
 #This script takes a list of gVCF files (filename must end ".list") and combines them into a single file
@@ -82,7 +82,7 @@ funcWriteStartLog
 
 ##Run genomic VCF generation
 StepNam="gVCF generation with GATK HaplotypeCaller"
-StepCmd="java -Xmx7G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx16G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T CombineGVCFs
  -R $REF
  -V $InpFil
