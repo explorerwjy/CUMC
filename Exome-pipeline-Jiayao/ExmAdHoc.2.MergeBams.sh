@@ -46,12 +46,13 @@ Metrix="false"
 PipeLine="false"
 
 #get arguments
-while getopts i:r:l:t:PMH opt; do
+while getopts i:r:l:t:a:PMH opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
         r) RefFil="$OPTARG";; 
         l) LogFil="$OPTARG";;
         t) TgtBed="$OPTARG";; 
+        a) ArrNum="$OPTARG";;
         P) PipeLine="true";;
         M) Metrix="true";;
         H) echo "$usage"; exit;;
@@ -62,17 +63,25 @@ done
 if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
 
 #Call the RefFil to load variables
+echo $ArrNum
 RefFil=`readlink -f $RefFil`
 source $RefFil 
-
+if [[ -z "${ArrNum}" ]]
+then
+    ArrNum=$SGE_TASK_ID
+fi
 #Load script library
 source $EXOMPPLN/exome.lib.sh #library functions begin "func"
 
 #set local variables
 InpFil=`readlink -f $InpFil` #resolve absolute path to bam
-echo $InpFil
-BamNam=`basename $InpFil | sed s/.list//g | sed s/.bam//g` # a name for the output files
+BamList=$(tail -n+$ArrNum $InpFil | head -n 1)
+echo $BamList
+cat $BamList
+BamNam=`basename $BamList | sed s/.list//g | sed s/.bam//g` # a name for the output files
 echo $BamNam
+FilNum=$(cat $BamList | sed '/^\s*#/d;/^\s*$/d' | wc -l)
+echo $FilNum
 if [[ -z "$LogFil" ]]; then LogFil=$BamNam.MrgBam.log; fi # a name for the log file
 MrgDir=wd.$BamNam.merge # directory in which processing will be done
 MrgFil=$BamNam.merged.bam #filename for bwa-mem aligned file
@@ -85,29 +94,42 @@ cd $MrgDir # move into working directory
 TmpLog=$BamNam.MrgBam.temp.log #temporary log file
 TmpDir=$BamNam.MrgBam.tempdir; mkdir -p $TmpDir #temporary directory
 
-
 #start log
 ProcessName="Merge with samtools"
 funcWriteStartLog
 
-#Merge with samtools
-StepName="Merge with Samtools"
-StepCmd="samtools merge -b $InpFil $MrgFil" #commandtoberun
-echo $StepCmd
-funcRunStep
-
+if [[ $FilNum -eq 1 ]];then
+	MrgFil=`less $BamList`
+	echo "Single Bam, no need to merge ${MrgFil}"
+else
+	#Merge with samtools
+	StepName="Merge with Samtools"
+	StepCmd="samtools merge -b $BamList $MrgFil" #commandtoberun
+	echo $StepCmd
+	funcRunStep
+	#echo "rm `less $InpFil` "
+fi
 #Sort the bam file by coordinate
 StepName="Sort Bam using PICARD"
-StepCmd="java -Xmx8G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar  $PICARD SortSam
+StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar  $PICARD SortSam
  INPUT=$MrgFil
- OUTPUT=$BamFil
+ OUTPUT=$SrtFil
  SORT_ORDER=coordinate
  CREATE_INDEX=TRUE
   2>>$TmpLog"
 funcRunStep
 echo $StepCmd
 rm $MrgFil #removed the "Aligned bam"
-#mv $SrtFil $BamFil
+
+#Mark the duplicates
+StepName="Mark PCR Duplicates using PICARD"
+StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD MarkDuplicates
+ INPUT=$SrtFil
+ OUTPUT=$BamFil
+ METRICS_FILE=$BamFil.dup.metrics.txt
+ CREATE_INDEX=TRUE"
+funcRunStep
+rm $SrtFil ${SrtFil/bam/bai} #removed the "Sorted bam"
 
 #Get flagstat
 StepName="Output flag stats using Samtools"
@@ -130,3 +152,4 @@ funcPipeLine
 
 #End Log
 funcWriteEndLog
+echo "Done!"
