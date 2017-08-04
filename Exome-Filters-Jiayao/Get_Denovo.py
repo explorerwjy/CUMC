@@ -9,7 +9,7 @@ import yaml
 import csv
 import pprint
 
-CSV_HEADER = ['Sample', 'Phenotype', 'Chrom', 'Pos', 'Ref', 'Alt', 'AC', 'Gene', 'GeneName', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC', 'gnomAD', 'VarType', 'MCAP', 'MetaSVM', 'CADD', 'PP2', '1KG', 'mis_z', 'lof_z','pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank','Filter', 'QUAL', 'ProbandGT', 'FatherGT', 'MotherGT', 'Relateness']
+CSV_HEADER = ['Sample', 'Phenotype', 'Chrom', 'Pos', 'Ref', 'Alt', 'AC', 'Mappability', 'Gene', 'GeneName', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC', 'gnomAD', 'VarType', 'REVEL', 'MPC','MCAP', 'MetaSVM', 'CADD', 'PP2', '1KG', 'mis_z', 'lof_z','pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank','Filter', 'QUAL', 'ProbandGT', 'FatherGT', 'MotherGT', 'Relateness']
 VQSR = re.compile('([\d.]+)')
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -96,7 +96,10 @@ class GENE_ANNOTATION:
 			Rank = row[idx_rank]
 			if Gene not in self.Genes:
 				self.Genes[Gene] = GENE(Gene)
-			self.Genes[Gene].LungRank = Rank
+			try:
+				self.Genes[Gene].LungRank = str(100 - float(Rank))
+			except:
+				self.Genes[Gene].LungRank = "0"
 		print 'Finished Reading Gene Score Lung %.3f' % (time.time() - stime)
 
 	def Load_MouseBrain(self):
@@ -266,6 +269,10 @@ class Variant():
 				#print segdupScore
 				if float(segdupScore) >= Filters.INFO['max_seqdup']:
 					return False
+		if Filters.INFO['min_Mappability'] != None:
+			Mappability = self.Info['Mappability'][idx]
+			if Mappability < Filters.INFO['min_Mappability']:
+				return False
 		#print self.Info['Gene.refGene'][idx], AF(self.Info['ExAC_ALL'][idx]), VarFunc, self.Info['AC'][idx], Proband.show(), Father.show(), Mother.show(), segdupScore
 		return True
 
@@ -371,7 +378,9 @@ class Variant():
 		Indi = Pedigree.GetIndi(Proband.name)
 		Phenotype = Indi.PhenotypeDetail
 		Relateness = Indi.Relateness
-		return [Proband.name, Phenotype, self.Chrom, self.Pos, self.Ref, self.Alt, ','.join(str(x) for x in self.Info['AC']), Gene, GeneName,','.join( self.Info['Func.refGene']), ','.join(self.Info['ExonicFunc.refGene']), ','.join(self.Info['AAChange.refGene']),','.join(str(AF(x)) for x in self.Info['ExAC_ALL']), ','.join(str(AF(x)) for x in self.Info['gnomAD_genome_ALL']), VarType, ','.join(self.Info['MCAP']), ','.join(self.Info['MetaSVM_pred']),','.join(self.Info['CADD_phred']),','.join(self.Info['Polyphen2_HDIV_pred']) , ','.join(str(AF(x)) for x in self.Info['1000g2015aug_all']), mis_z, lof_z, pLI, pRec, HeartRank, LungRank, BrainRank, self.Filter, self.Qual, Proband.Format, Father.Format, Mother.Format ,Relateness   ]
+
+		#'Sample', 'Phenotype', 'Chrom', 'Pos', 'Ref', 'Alt', 'AC', 'Mappability', Gene', 'GeneName', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC', 'gnomAD', 'VarType', 'REVEL', 'MPC', 'MCAP', 'MetaSVM', 'CADD', 'PP2', '1KG', 'mis_z', 'lof_z','pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank','Filter', 'QUAL', 'ProbandGT', 'FatherGT', 'MotherGT', 'Relateness'
+		return [Proband.name, Phenotype, self.Chrom, self.Pos, self.Ref, self.Alt, ','.join(str(x) for x in self.Info['AC']), ','.join(self.Info.get("Mappability",".")), Gene, GeneName,','.join( self.Info['Func.refGene']), ','.join(self.Info['ExonicFunc.refGene']), ','.join(self.Info['AAChange.refGene']),','.join(str(AF(x)) for x in self.Info['ExAC_ALL']), ','.join(str(AF(x)) for x in self.Info['gnomAD_genome_ALL']), VarType, ','.join(self.Info['REVEL']), ','.join(self.Info.get("MPC",".")), ','.join(self.Info['MCAP']), ','.join(self.Info['MetaSVM_pred']),','.join(self.Info['CADD_phred']),','.join(self.Info['Polyphen2_HDIV_pred']) , ','.join(str(AF(x)) for x in self.Info['1000g2015aug_all']), mis_z, lof_z, pLI, pRec, HeartRank, LungRank, BrainRank, self.Filter, self.Qual, Proband.Format, Father.Format, Mother.Format ,Relateness   ]
 
 	def GetVarType(self, GeneFunc, ExonicFunc, MetaSVM, CADD, PP2):
 		if GeneFunc in ['splicing', 'exonic_splicing']:
@@ -395,7 +404,7 @@ class Variant():
 class Individual():
 	def __init__(self, List, Header):
 		self.Fam, self.Sample, self.Father, self.Mother, self.Gender, self.Pheno = List[:6]
-		self.Relationship = List[Header.index('Relationship')]
+		#self.Relationship = List[Header.index('Relationship')]
 		#self.PhenotypeDetail = List[Header.index('Disease')] + '/' + List[Header.index('DistinguishingFeatures')]
 		try:
 			self.PhenotypeDetail = List[Header.index('PhenotypeDetail')] 
@@ -425,7 +434,9 @@ class Pedigree():
 			self.individuals.append(indi)
 		self.Proband, self.Father, self.Mother = None, None, None
 		for ind in self.individuals:
-			if ind.Relationship == 'Proband':
+			#if ind.Relationship == 'Proband':
+			#	self.Proband = ind
+			if ind.Father != "0" and ind.Mother != "0":
 				self.Proband = ind
 		for ind in self.individuals:
 			if self.Proband.Father == ind.Sample:

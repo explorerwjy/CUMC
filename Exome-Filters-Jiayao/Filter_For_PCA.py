@@ -16,23 +16,22 @@ def GetOptions():
 			help="Input VCF file", metavar="VCFfile")
 	parser.add_option("-o", "--outvcf", dest="OutVCF",
 			help="Name of Output VCF file", metavar="OutVCF", default="Filterd.vcf")
-	parser.add_option("-f", "--filters", dest="Filters", metavar="Filters",
-			help="Filters apply on the variants. Splited by ','"
+	parser.add_option("-c", "--control", dest="Control", metavar="Control",
+			help="Control data"
 			)
 	(options, args) = parser.parse_args()
 	VCFin = options.VCF
 	VCFout = options.OutVCF
-	Filters = ""
-	if options.Filters != None:
-		Filters = options.Filters.split(',')
+	if options.Control == None:
+		Control = "/home/local/users/jw/resources/AncestryPCA/resources/1KG_AJ_Domi_PCAcontrol.vcf.gz"
+	else:
+		Control = options.Control
 
-	return VCFin, VCFout, Filters
+	return VCFin, VCFout, Control
 
 class Controls:
-	def __init__(self):
-		#self.OneKGFil = "/home/local/users/jw/resources/AncestryPCA/resources/1KG.XGEN.SNP.Common.vcf.gz"
-		#self.OneKGFil = "/home/local/users/jw/resources/1KG/1KG.XGEN.SNP.Common.vcf.gz"
-		self.OneKGFil = "/home/local/users/jw/resources/AncestryPCA/resources/1KG.XGEN.SNP.Common.vcf.gz"
+	def __init__(self,Control):
+		self.OneKGFil = Control
 		self.Out = open("1KG.vcf",'wb')
 	def LoadVar(self):
 		self.Variants = {}
@@ -45,8 +44,8 @@ class Controls:
 			#self.Variants["{}:{}".format(llist[0],llist[1])] = llist[0:9]
 			self.Variants["{}:{}".format(llist[0],llist[1])] = l
 
-def Filter(VCFin, VCFout, Filters):
-	_1KG = Controls()
+def Filter(VCFin, VCFout, Control):
+	_1KG = Controls(Control)
 	_1KG.LoadVar()
 	#_1KG = _1KG.Variants
 	if VCFin.endswith('.gz'):
@@ -111,8 +110,8 @@ def F_ExAC_Coding(INFO, cutoff):
 
 
 def main():
-	VCFin, VCFout, Filters = GetOptions()
-	Filter(VCFin, VCFout, Filters)
+	VCFin, VCFout, Control = GetOptions()
+	Filter(VCFin, VCFout, Control)
 
 
 if __name__ == '__main__':
