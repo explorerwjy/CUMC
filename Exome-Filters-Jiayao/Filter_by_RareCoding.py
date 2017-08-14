@@ -47,7 +47,7 @@ def Filter(VCFin, VCFout, Debug):
 			fout.write(l)
 			continue
 		elif l.startswith('#'):
-			fout.write('##FiltersByRareCoing. ExAC_ALL:1e-2. RefGene.Func:exonic,splicing,exonic-splicing\n')
+			fout.write('##FiltersByRareCoing="ExAC_ALL:1e-2. RefGene.Func:exonic,splicing,exonic-splicing"\n')
 			fout.write(l)
 			continue
 		llist = l.strip().split('\t')

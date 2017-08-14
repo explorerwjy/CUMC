@@ -8,6 +8,7 @@ import argparse
 import sys
 import os
 import re
+import gzip
 
 # =================================================================================
 # Get the basename of a vcf file, should be name of a variant caller
@@ -37,7 +38,7 @@ def seperate_by_trios(work_dir,vcf_file,fams,filters=None):
 	if not work_dir.endswith('/'):
 		work_dir += '/'
 	os.chdir(work_dir)
-	vcf_hand = open(vcf_file,'rb')
+	vcf_hand = gzip.open(vcf_file,'rb')
 	vcf_file_basename = get_basename(vcf_file)
 	print "Processiing",vcf_file_basename,"variants"
 	#open len(fams) handle to save variants in each proband

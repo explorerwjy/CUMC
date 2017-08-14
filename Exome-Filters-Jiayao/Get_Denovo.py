@@ -19,8 +19,8 @@ HEARTRANK = '/home/local/users/jw/resources/Annotations/diaphragm_rank.csv'
 LUNGRANK = '/home/local/users/jw/resources/Annotations/Lung_rank_RNAseq_Asselin-Labat-GPL13112_human.csv'
 MOUSEBRIANRANK = '/home/local/users/jw/resources/Annotations/mousebrain.csv'
 
-ALL_FILTER='/home/local/users/jw/CUMC/Tools/ALL_FILTER.yml'
-DENOVO_FILTER='/home/local/users/jw/CUMC/Tools/DENOVO_FILTER.yml'
+ALL_FILTER='/home/local/users/jw/CUMC/Exome-Filters-Jiayao/ALL_FILTER.yml'
+DENOVO_FILTER='/home/local/users/jw/CUMC/Exome-Filters-Jiayao/DENOVO_FILTER.yml'
 
 
 
@@ -136,6 +136,8 @@ class YML_Filter():
 		self.INFO = yml_dict['INFO']
 		self.READS = yml_dict['READS']
 		self.FILTER = yml_dict['FILTER']
+		if self.FILTER == None:
+			self.FILTER = {}
 		self.SNP = yml_dict['SNP']
 		self.INDEL = yml_dict['INDEL']
 
@@ -261,7 +263,7 @@ class Variant():
 			if self.Chrom in Filters.INFO['excluded_chrom']:
 				return False
 		#print self.Info['Gene.refGene'][idx], AF(self.Info['ExAC_ALL'][idx]), VarFunc, self.Info['AC'][idx], Proband.show(), Father.show(), Mother.show()
-		if Filters.INFO['max_seqdup'] != None:
+		if Filters.INFO.get('max_seqdup',None) != None:
 			segdupScore = self.Info['genomicSuperDups'][idx]
 			if segdupScore != '.':
 				#print self.Info['genomicSuperDups'][idx]
@@ -269,9 +271,9 @@ class Variant():
 				#print segdupScore
 				if float(segdupScore) >= Filters.INFO['max_seqdup']:
 					return False
-		if Filters.INFO['min_Mappability'] != None:
-			Mappability = self.Info['Mappability'][idx]
-			if Mappability < Filters.INFO['min_Mappability']:
+		if Filters.INFO.get('min_Mappability',None) != None:
+			Mappability = self.Info['Mappability'][0]
+			if float(Mappability) < float(Filters.INFO['min_Mappability']):
 				return False
 		#print self.Info['Gene.refGene'][idx], AF(self.Info['ExAC_ALL'][idx]), VarFunc, self.Info['AC'][idx], Proband.show(), Father.show(), Mother.show(), segdupScore
 		return True
@@ -316,14 +318,21 @@ class Variant():
 	def isINDEL(self, Proband):
 		return not self.isSNP(Proband)
 
-	def CheckFilter(self, Proband, Filter):
-		if self.Filter == 'PASS' or Filter == '.':
+	def CheckFILTER(self, Proband, Filters):
+		if self.Filter == 'PASS' or self.Filter == '.':
 			return True
-		v1, v2 = VQSR.findall(Filter)
-		if float(v2) > Filters.Filter['VQSRSNP']:
-			return False
-		else:
+		try:
+			v1, v2 = VQSR.findall(self.Filter)
+			if Filters.FILTER.get('VQSRSNP', None) != None:
+				if float(v2) > Filters.FILTER.get('VQSRSNP', None):
+					return False
+			elif Filters.FILTER.get('VQSRINDEL', None) != None:
+				if float(v2) > Filters.FILTER.get('VQSRINDEL', None):
+					return False
 			return True
+		except Exception, e:
+			print str(e)
+			print self.Filter
 
 	def CheckDeNovo(self, headers, Pedigree, Filters):
 		Proband = self.List[headers.index(Pedigree.Proband.Sample)]
@@ -337,6 +346,8 @@ class Variant():
 			#print self.List[headers.index(Pedigree.Proband.Sample)], self.List[headers.index(Pedigree.Father.Sample)], self.List[headers.index(Pedigree.Mother.Sample)] 
 			return False, None, None, None 
 		if not self.CheckGT(Proband, Father, Mother, Filters):
+			return False, None, None, None
+		if not self.CheckFILTER(Proband, Filters):
 			return False, None, None, None
 		else:
 			#print 'pass GT'
@@ -365,7 +376,7 @@ class Variant():
 			GeneName = '.'
 			tmp = GENE(Gene)
 			genescore[tmp.Symbol] = tmp
-		VarType = self.GetVarType(self.Info['Func.refGene'][idx],self.Info['ExonicFunc.refGene'][idx],self.Info['MetaSVM_pred'][idx],self.Info['CADD_phred'][idx],self.Info['Polyphen2_HDIV_pred'][idx])
+		VarType = self.GetVarType(self.Info['Func.refGene'][idx],self.Info['ExonicFunc.refGene'][idx],self.Info['REVEL'][idx])
 		mis_z = genescore[Gene].Mis_z
 		lof_z = genescore[Gene].Lof_z
 		pLI = genescore[Gene].pLI
@@ -382,22 +393,25 @@ class Variant():
 		#'Sample', 'Phenotype', 'Chrom', 'Pos', 'Ref', 'Alt', 'AC', 'Mappability', Gene', 'GeneName', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC', 'gnomAD', 'VarType', 'REVEL', 'MPC', 'MCAP', 'MetaSVM', 'CADD', 'PP2', '1KG', 'mis_z', 'lof_z','pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank','Filter', 'QUAL', 'ProbandGT', 'FatherGT', 'MotherGT', 'Relateness'
 		return [Proband.name, Phenotype, self.Chrom, self.Pos, self.Ref, self.Alt, ','.join(str(x) for x in self.Info['AC']), ','.join(self.Info.get("Mappability",".")), Gene, GeneName,','.join( self.Info['Func.refGene']), ','.join(self.Info['ExonicFunc.refGene']), ','.join(self.Info['AAChange.refGene']),','.join(str(AF(x)) for x in self.Info['ExAC_ALL']), ','.join(str(AF(x)) for x in self.Info['gnomAD_genome_ALL']), VarType, ','.join(self.Info['REVEL']), ','.join(self.Info.get("MPC",".")), ','.join(self.Info['MCAP']), ','.join(self.Info['MetaSVM_pred']),','.join(self.Info['CADD_phred']),','.join(self.Info['Polyphen2_HDIV_pred']) , ','.join(str(AF(x)) for x in self.Info['1000g2015aug_all']), mis_z, lof_z, pLI, pRec, HeartRank, LungRank, BrainRank, self.Filter, self.Qual, Proband.Format, Father.Format, Mother.Format ,Relateness   ]
 
-	def GetVarType(self, GeneFunc, ExonicFunc, MetaSVM, CADD, PP2):
+	def GetVarType(self, GeneFunc, ExonicFunc, REVEL):
 		if GeneFunc in ['splicing', 'exonic_splicing']:
 			return "LGD"
 		elif ExonicFunc in ['stoploss', 'stopgain', 'frameshift_insertion', 'frameshift_deletion', 'frameshift_block_substitution']:
 			return "LGD"
 		elif GeneFunc == "exonic" and ExonicFunc in ['nonsynonymous_SNV','unknown']:
-			if MetaSVM == 'D':
-				return "D-mis"
-			elif MetaSVM == 'T' and PP2 == 'D' and float(CADD) >= 15:
-				return "PD-mis"
+			try:
+				if float(REVEL) >= 0.5:
+					return "D-mis"
+			except:
+				return "mis"
 			else:
 				return "mis"
 		elif GeneFunc == "exonic" and ExonicFunc == 'synonymous_SNV':
-			return 'slient'
+			return 'silent'
+		elif GeneFunc == "exonic" and ExonicFunc in ['nonframeshift_insertion', 'nonframeshift_deletion']:
+			return 'inframe'
 		else:
-			print GeneFunc, ExonicFunc, MetaSVM, CADD, PP2
+			print GeneFunc, ExonicFunc
 			return '.'
 
 
@@ -455,10 +469,13 @@ def GetOptions():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-d", "--dir", type=str, required=True, help="<Required> Dir contains family Ped and VCF files")
 	parser.add_argument("-f", "--filter", type=str, help="ymal file contains filter criteria")
+	parser.add_argument("-o", "--output", type=str, help="Out put file")
 	args = parser.parse_args()
 	if args.filter == None:
 		args.filter = DENOVO_FILTER
-	return args.dir, args.filter
+	if args.output == None:
+		args.output = "Denovo.csv"
+	return args.dir, args.filter, args.output
 
 def MatchVcfPed(vcfs, peds):
 	res = []
@@ -498,14 +515,14 @@ def For_one_vcf(VCF, Ped, Writer, Filters, CSV_HEADER, gene_score):
 				#var.show()
 				Writer.writerow(var.OutAsCSV(Proband, Father, Mother, Ped, gene_score))
 
-def Call_DeNovo(InpDir, yaml_fname):
+def Call_DeNovo(InpDir, yaml_fname, outname):
 	Filters = YML_Filter(yaml_fname)
 	genescore = GENE_ANNOTATION()
 	genescore = genescore.Genes
 	vcfs = utils.get_files(InpDir, '.vcf')
 	peds = utils.get_files(InpDir, '.ped')
 	vcf_peds = MatchVcfPed(vcfs, peds)
-	OutFil = open('Denovo.csv','wb')
+	OutFil = open(outname,'wb')
 	Writer = csv.writer(OutFil, delimiter=',')
 	#CSV_HEADER[0] = '#'+CSV_HEADER[0]
 	Writer.writerow(CSV_HEADER)
@@ -519,12 +536,12 @@ def Call_DeNovo(InpDir, yaml_fname):
 
 
 def main():
-	dirc, yaml_fname = GetOptions()
+	dirc, yaml_fname, outname = GetOptions()
 	dirc = os.path.abspath(dirc)
 	if not dirc.endswith('/'):
 		dirc += '/'
 	print "Vcf list is", dirc
-	Call_DeNovo(dirc, yaml_fname)
+	Call_DeNovo(dirc, yaml_fname, outname)
 
 
 if __name__ == '__main__':
