@@ -20,7 +20,7 @@ def GetOptions():
 	parser.add_argument('-v','--vcf', type=str, required=True, help = 'VCF File')
 	parser.add_argument('-p','--ped', type=str, required=True, help = 'Pedigree File')
 	parser.add_argument('-d','--dir', type=str, help = 'work dir to generate results')
-	parser.add_argument('-p', '--parallel', type=int, help='Number of Parallel to go. ')
+	parser.add_argument('--parallel', type=int, default=20, help='Number of Parallel to go. ')
 	args = parser.parse_args()
 	if args.dir == None:
 		args.dir="./" + args.ped.rstrip(".ped") + ".PSAP"
@@ -43,16 +43,16 @@ class Pedigree:
 		self.isTrio = False
 
 class FamAnalysis:
-	def __init__(self, VCFname, PEDname, RESdir):
-		self.VCFname = os.path.abspath(VCFname)
-		self.PEDname = PEDname
-		self.RESdir = os.path.abspath(RESdir)
+	def __init__(self, args):
+		self.VCFname = os.path.abspath(args.vcf)
+		self.PEDname = args.ped
+		self.RESdir = os.path.abspath(args.dir)
 		tmp = self.PEDname.split('/')[-1].rstrip('ped') + self.VCFname.split('/')[-1].rstrip('.gz').rstrip('vcf')
 		self.ArrFil = 'Arr.' + tmp + 'list'  
 		self.CmdFil = 'Cmd.' + tmp + 'sh'
 		self.foutArr = open(self.ArrFil,'wb')
 		self.foutCmd = open(self.CmdFil,'wb')
-
+		self.Nparallel = args.parallel
 	def run(self):
 		Samples = self.GetIndividualList()
 		WorkDir = self.RESdir
@@ -133,14 +133,15 @@ class FamAnalysis:
 		self.foutCmd.write('InpFil={}\n'.format(os.getcwd() + '/' + self.ArrFil))
 		self.foutCmd.write('COLLECT={}\n'.format(COLLECT))
 		self.foutCmd.write("Num_Job=`wc -l $InpFil | awk '{print $1}'`\n\n")
-		self.foutCmd.write('seq $Num_Job | parallel -j {} --ETA bash $CMD -i $InpFil -v $VCF -a {}'.format(self.NParallel, "{}"))
+		self.foutCmd.write('seq $Num_Job | parallel -j {} --ETA bash $CMD -i $InpFil -v $VCF -a {}\n'.format(self.Nparallel, "{}"))
 		self.foutCmd.write('python $COLLECT -d {} \n'.format(self.RESdir))
 		self.foutCmd.write('python $PREPAREIGV -d {} \n'.format(PREPARE_IGV))
 		self.foutCmd.close()
 
 def main():
-	VCF, PED, DIR = GetOptions()
-	instance = FamAnalysis(VCF, PED, DIR)
+	#VCF, PED, DIR = GetOptions()
+	args = GetOptions()
+	instance = FamAnalysis(args)
 	instance.run()
 	return
 

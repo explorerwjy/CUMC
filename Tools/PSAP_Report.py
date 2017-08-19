@@ -18,7 +18,8 @@ import pandas as pd
 #HEADERS_PSAP_TO_BE_POP = ['Chr','Start','Ref','Alt','Gene.wgEncodeGencodeBasicV19', 'Func.wgEncodeGencodeBasicV19', 'ExonicFunc.wgEncodeGencodeBasicV19','AAChange.wgEncodeGencodeBasicV19','mac63kFreq_ALL','1000g2014sep_all','esp6500si_all']
 HEADERS_PSAP_TO_BE_POP = ['Gene.wgEncodeGencodeBasicV19', 'Func.wgEncodeGencodeBasicV19', 'ExonicFunc.wgEncodeGencodeBasicV19','AAChange.wgEncodeGencodeBasicV19','mac63kFreq_ALL','1000g2014sep_all','esp6500si_all']
 HeaderFromVCF_P1 = ['Chrom', 'Pos', 'Ref', 'Alt']
-CSV_HEADER = ['Gene', 'GeneName', 'Allele Count', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC_ALL', 'gnomAD_genome_ALL', '1KG', 'VarType', 'MetaSVM', 'CADD13', 'PP2', 'MCAP', 'mis_z', 'lof_z', 'pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank', 'Mappability', 'Filter']
+#CSV_HEADER = ['Gene', 'GeneName', 'Allele Count', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC_ALL', 'gnomAD_genome_ALL', '1KG', 'VarType', 'MetaSVM', 'CADD13', 'PP2', 'MCAP', 'mis_z', 'lof_z', 'pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank', 'Mappability', 'Filter']
+CSV_HEADER = ['Gene', 'GeneName', 'Allele Count', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC_ALL', 'gnomAD_genome_ALL', '1KG', 'VarType', 'MetaSVM', 'CADD13', 'PP2', 'MCAP', 'mis_z', 'lof_z', 'pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank', 'Filter']
 
 def GetOptions():
 	parser = argparse.ArgumentParser()
@@ -115,7 +116,7 @@ class Record():
 		gnomAD_genome_ALL = ','.join(str(AF(x)) for x in self.VCF.Info['gnomAD_genome_ALL'])
 		MCAP = ','.join(self.VCF.Info['MCAP'])
 		MetaSVM = ','.join(self.VCF.Info['MetaSVM_pred'])
-		REVEL = ','.join(self.VCF.Info['revel'])
+		REVEL = ','.join(self.VCF.Info.get('REVEL','.'))
 		CADD = ','.join(self.VCF.Info['CADD_phred'])
 		PP2 = ','.join(self.VCF.Info['Polyphen2_HDIV_pred'])
 		VarType = []
