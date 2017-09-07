@@ -11,9 +11,11 @@ import csv
 import re
 
 SampleName = re.compile('CARE[A-Za-z0-9-]+')
-EXM_REF = '/home/yufengshen/CUMC/Exome-pipeline-Jiayao/WES_Pipeline_References.b37.biocluster.sh'
-BAMOUT_CMD = '/home/yufengshen/CUMC/Exome-pipeline-Jiayao/ExmAdHoc.15b.BamOut.sh'
-RUN = 'qsub'
+EXM_REF = '/home/yufengshen/CUMC/Exome-pipeline-Jiayao/WES_Pipeline_References.b38.sh'
+#BAMOUT_CMD = '/home/yufengshen/CUMC/Exome-pipeline-Jiayao/ExmAdHoc.15b.BamOut.sh'
+BAMOUT_CMD = '/home/local/users/jw/CUMC/Exome-pipeline-Jiayao/ExmAdHoc.15b.BamOut.sh'
+#RUN = 'qsub'
+RUN = 'nohup'
 
 def GetOptions():
     parser = argparse.ArgumentParser()
