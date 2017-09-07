@@ -37,6 +37,7 @@ DIR=$BamNam'_snapshot' ## figure output folder
 mkdir -p $DIR
 
 ###=========================================================
+#ADDRESS="/home/local/ARCS/hq2130/src/IGV_2.3.68/"
 ADDRESS="/home/local/ARCS/hq2130/src/IGV_2.3.68/"
 IGVR=$ADDRESS"igv.sh" ## igv 
 SCRF=$INDELS.txt
