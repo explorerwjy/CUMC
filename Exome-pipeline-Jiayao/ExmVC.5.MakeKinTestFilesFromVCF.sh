@@ -161,6 +161,11 @@ StepName="Get missingness with plink"
 StepCmd="plink --bfile KinshipFiles/$OutNam --missing --out KinshipFiles/$OutNam"
 funcRunStep
 
+#get missingness
+StepName="Run relationship Inference by KING"
+StepCmd="king -b KinshipFiles/$OutNam.bed --kinship"
+funcRunStep
+
 #End Log
 funcWriteEndLog
 

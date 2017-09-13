@@ -3,49 +3,81 @@ RefFil=$HOME/CUMC/Exome-pipeline-Jiayao/WES_Pipeline_References.b37.sh
 FastQC=
 BWA=
 MergeBAM=$HOME/CUMC/Exome-pipeline-Jiayao/ExmVC.2.MergeVCF.sh
-DoC=
-HapCaller=/home/local/users/jw/CUMC/Exome-pipeline-Jiayao/ExmAln.2.HaplotypeCaller_GVCFmode.sh
-JointGT=/home/local/users/jw/CUMC/Exome-pipeline-Jiayao/ExmVC.1hc.GenotypeGVCFs.sh
-VCFMerge=/home/local/users/jw/CUMC/Exome-pipeline-Jiayao/ExmVC.2.MergeVCF.sh
-VQSR=/home/local/users/jw/CUMC/Exome-pipeline-Jiayao/ExmVC.4.RecalibrateVariantQuality.sh
-Annovar=/home/local/users/jw/CUMC/Exome-pipeline-Jiayao/Test.AnnotateVCF_direct.sh
+DoC=$HOME/CUMC/Exome-pipeline-Jiayao/ExmAln.8a.DepthofCoverage.sh
+HapCaller=$HOME/CUMC/Exome-pipeline-Jiayao/ExmAln.2.HaplotypeCaller_GVCFmode.sh
+JointGT=$HOME/CUMC/Exome-pipeline-Jiayao/ExmVC.1hc.GenotypeGVCFs.sh
+VCFMerge=$HOME/CUMC/Exome-pipeline-Jiayao/ExmVC.2.MergeVCF.sh
+VQSR=$HOME/CUMC/Exome-pipeline-Jiayao/ExmVC.4.RecalibrateVariantQuality.sh
+Annovar=$HOME/CUMC/Exome-pipeline-Jiayao/Test.AnnotateVCF_direct.sh
 
-ProjectHome=/home/local/users/jw/Analysis/0613/
-ProjectName=PAH_16_393914
-BedFil=/home/local/users/jw/resources/references/b37/CaptureKitBeds/CCDS_hg19.bed
+ProjectHome=
+ProjectName=
+BedFil=
 FastQList=
 RawBamList=
-BamList=${ProjectHome}/PAH.16_393914.bam.list 
-GVCFList=${ProjectHome}PAH.16_393914.g.vcf.list
-SplitedDir=${ProjectHome}/JointGenotyping/${ProjectName}.splitfiles
-RawVCF=${ProjectHome}/JointGenotyping/${ProjectName}.rawvariants.vcf.gz
-VQSRVCF=${ProjectHome}/JointGenotyping/${ProjectName}.rawvariants.recalibrated.vcf
-AnnovarVCF=${ProjectHome}/JointGenotyping/${ProjectName}.rawvariants.recalibrated.vcf.hg19_multianno.vcf.gz
+BamList=
+GVCFList=
+SplitedDir=
+RawVCF=
+VQSRVCF=
+AnnovarVCF=
 
-mkdir -p ${ProjectHome}/JointGenotyping
 
+#==========================================================================================================
 #HaploytypeCaller
+#GVCF=${ProjectHome}/GVCF
+#mkdir -p $GVCF
+#cd $GVCF
 #NJob=`wc -l $BamList|cut -f 1 -d ' '`
 #echo $NJob
 #seq $NJob | parallel -j 20 --eta $HapCaller -i $BamList -r $RefFil -t $BedFil -a {}
+#find `pwd` -name '*.g.vcf.gz' > $GVCFList
+#==========================================================================================================
 
-#Joint Genotyping
-GVCFList=/home/local/users/jw/Analysis/0613/PAH.16_393914.g.vcf.list
-cd ${ProjectHome}/JointGenotyping
-#seq 20 | parallel -j 20 --eta sh $JointGT -i $GVCFList -r $RefFil -a {} -j 20 -t $BedFil -n $ProjectName
+mkdir -p ${ProjectHome}/JointGenotyping
+##==========================================================================================================
+##Joint Genotyping
+#cd ${ProjectHome}/JointGenotyping
+#NUM_JOB=30
+#GVCFList=/home/local/users/jw/Genetics_Projects/SPARK/Batch1-10/src/SPARK_BATCH1-10.gvcf.list
+#GVCFList=/home/local/users/jw/Genetics_Projects/SPARK/Batch1-10/src/SPARK_BATCH1-10.withoutRGN.gvcf.list
+#seq $NUM_JOB | parallel -j $NUM_JOB --eta sh $JointGT -i $GVCFList -r $RefFil -a {} -j $NUM_JOB -t $BedFil -n $ProjectName
+##==========================================================================================================
 
+
+#==========================================================================================================
+#DoC
+#DoC_DIR=${ProjectHome}/DoC
+#mkdir -p $DoC_DIR
+#cd $DoC_DIR
+#NJob=`wc -l $BamList|cut -f 1 -d ' '`
+#echo $NJob
+#nohup seq $NJob | parallel -j 20 --eta $DoC -i $BamList -r $RefFil -t $BedFil -a {} &
+#==========================================================================================================
+
+#==========================================================================================================
 #MergeVCF
+#cd ${ProjectHome}/JointGenotyping
 #echo $SplitedDir
 #$VCFMerge -i $SplitedDir -r $RefFil 
+#==========================================================================================================
 
+#==========================================================================================================
 #VQSR
-#echo $RawVcf
-#$VQSR -i $RawVCF -r $RefFil 
+cd ${ProjectHome}/JointGenotyping
+echo $RawVcf
+$VQSR -i $RawVCF -r $RefFil 
+#==========================================================================================================
 
+#==========================================================================================================
 #Annovar
+cd ${ProjectHome}/JointGenotyping
 if [ -e $VQSRVCF ]
 then
+	echo $VQSRVCF
+	echo $Annovar -i $VQSRVCF -r $RefFil 
 	$Annovar -i $VQSRVCF -r $RefFil 
 else
 	$Annovar -i $RawVCF -r $RefFil 
 fi
+#==========================================================================================================

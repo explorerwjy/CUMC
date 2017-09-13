@@ -118,7 +118,7 @@ funcRunStep
 
 ##Run Annovar to Annotate VCF file
 StepName="Annotation with Annovar"
-StepCmd="table_annovar.pl $VCFAnn $ANNHDB --buildver $BUILD --remove -protocol refGene,gnomad_exome,gnomad_genome,1000g2015aug_all,1000g2015aug_eur,1000g2015aug_amr,1000g2015aug_eas,1000g2015aug_afr,1000g2015aug_sas,exac03,dbnsfp30a,cadd13gt10,cosmic70,genomicSuperDups,mcap,avsnp147 -operation g,f,f,f,f,f,f,f,f,f,f,f,f,r,f,f -otherinfo  -nastring .  -vcfinput --thread $Threads --tempdir $TmpDir"
+StepCmd="table_annovar.pl $VCFAnn $ANNHDB --buildver $BUILD --remove -protocol refGene,gnomad_exome,gnomad_genome,1000g2015aug_all,1000g2015aug_eur,1000g2015aug_amr,1000g2015aug_eas,1000g2015aug_afr,1000g2015aug_sas,exac03,dbnsfp33a,cadd13gt10,cosmic70,genomicSuperDups,mcap,revel,avsnp147 -operation g,f,f,f,f,f,f,f,f,f,f,f,f,r,f,f,f -otherinfo  -nastring .  -vcfinput --thread $Threads --tempdir $TmpDir"
 #StepCmd="table_annovar.pl $VCFAnn $ANNHDB --buildver $BUILD --remove -protocol refGene,avsnp147 -operation g,f -otherinfo  -nastring .  -vcfinput --thread $Threads --tempdir $TmpDir"
 if [[ "$FullCadd" == "true" ]]; then 
     StepCmd=${StepCmd/cadd13gt10/cadd13}

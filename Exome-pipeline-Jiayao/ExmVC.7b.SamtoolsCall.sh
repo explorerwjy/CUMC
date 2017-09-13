@@ -121,9 +121,9 @@ PrgFil=$VcfNam.genotypingcomplete
 VcfFil=$VcfDir/$VcfNam.vcf #Output File
 VcfAnnFil=$VcfDir/$VcfNam.ann.vcf
 VcfLeftAlnFil=$VcfDir/$VcfNam.LA.vcf
-GatkLog=$VcfNam.GgVCF.gatklog #a log for GATK to output to, this is then trimmed and added to the script log
-TmpLog=$VcfNam.GgVCF.temp.log #temporary log file
-TmpDir=$VcfNam.GgVCF.tempdir; mkdir -p $TmpDir #temporary directory
+GatkLog=$VcfNam.VCF.samtoolslog #a log for GATK to output to, this is then trimmed and added to the script log
+TmpLog=$VcfNam.VCF.temp.log #temporary log file
+TmpDir=$VcfNam.VCF.tempdir; mkdir -p $TmpDir #temporary directory
 TgtFil=$TmpDir/Range.$VcfNam.bed #exome capture range
 tail -n+$SttLn $TgtBed | head -n $DivLen > $TgtFil #get exome capture range
 

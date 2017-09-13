@@ -129,4 +129,5 @@ funcPipeLine
 
 #End Log
 funcWriteEndLog
-rm -r $InpFil $SrtDir
+#rm -r $InpFil $SrtDir
+rm -r $SrtDir

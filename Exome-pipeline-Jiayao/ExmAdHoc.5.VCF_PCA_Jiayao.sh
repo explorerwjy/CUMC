@@ -1,6 +1,8 @@
 #!/bin/bash
 ###############################################################
-
+# PCA for population structure
+# Jiayao Wang 0815 2017
+###############################################################
 usage="
 ExmAdHoc.5.VCF_PCA.sh -i <InputFile> -l <logfile> -H
      -i (required) - A vcf input file
@@ -19,7 +21,6 @@ while getopts i:r:o:H opt; do
 done
 
 #some variables
-#EXOMFILT=/home/local/users/jw/resources/AncestryPCA/src/Filter_For_PCA.py
 EXOMFILT=/home/local/users/jw/CUMC/Exome-Filters-Jiayao/Filter_For_PCA.py
 source $RefFil
 echo $HapMapReference
@@ -27,7 +28,6 @@ echo $HapMapReference
 
 InpFil=`readlink -f $InpFil`
 if [[ -z "$OutNam" ]];then OutNam=`basename $InpFil`; OutNam=${OutNam/.bed/}; OutNam=${OutNam/.vcf/}; fi # a name for the output files
-
 
 LogFil=$OutNam.PCA.log
 
@@ -48,28 +48,40 @@ if [[ "${InpFil##*.}" != "bed" ]]; then
     bgzip $BbfNam.filter.aaf.vcf
     VcfFil=$BbfNam.filter.aaf.vcf.gz
     tabix -p vcf $VcfFil
-	rm -rf $FilteredOut sort_$(basename ${VcfFil})
+	rm -rf $FilteredOut sort_$(basename ${VCFFil})
 	else
 		echo "Filtered VCF present"
+		VcfFil=$BbfNam.filter.aaf.vcf.gz	
     fi    
 # convert vcf --> plink using vcftools; if there are more than 1000 samples in the vcf vcftools cannot generate the necesary number of temporary files (cluster limitiation) so we need to do it in multiple batches and then remerge
+	touch ExcludeSNPs.list
     SamLst=$OutNam.samples.list
-    less $VcfFil | grep -m 1 "^#CHROM" | cut -f 10- | tr '\t' '\n' > $SamLst
+    less $VcfFil | grep -m 1 "^#CHROM" | cut -f 10- | tr '\t' '\n' >> $SamLst
     SamLen=`cat $SamLst | wc -l`
     if [[ $SamLen -lt 500 ]]; then
+		echo vcftools --gzvcf $VcfFil --plink --out $BbfNam.tmp
         vcftools --gzvcf $VcfFil --plink --out $BbfNam.tmp
+		echo plink --file $BbfNam.tmp --make-bed --out $BbfNam
         plink --file $BbfNam.tmp --make-bed --out $BbfNam
         rm -f $BbfNam.tmp*
     else
+		echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+		echo "PLINK THE CASE"
+		echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
         mkdir -p TempSplit
         split --additional-suffix=.list -l 500 $SamLst $OutNam.samples.split.
         for i in $OutNam.samples.split.*.list; do
-            nohup vcftools --gzvcf $VcfFil --keep $i --exclude ExcludeSNPs.list --plink --out TempSplit/${i/.list/} &
-            vcftools --gzvcf $VcfFil --keep $i --plink --out TempSplit/${i/.list/}
+			echo $i
+            echo vcftools --gzvcf $VcfFil --keep $i --exclude ExcludeSNPs.list --plink --out TempSplit/${i/.list/} &
+            vcftools --gzvcf $VcfFil --keep $i --exclude ExcludeSNPs.list --plink --out TempSplit/${i/.list/} &
+            #vcftools --gzvcf $VcfFil --keep $i --plink --out TempSplit/${i/.list/}
+            echo plink --file TempSplit/${i/.list/} --make-bed --out TempSplit/${i/.list/}
             plink --file TempSplit/${i/.list/} --make-bed --out TempSplit/${i/.list/}
         done
         wait
+		echo $BbfNam.tmp.splitlist
         ls TempSplit/*ped | awk -v OFS='\t' '{ $2=$1 ; gsub ( /ped$/, "map", $2) ; print }' > $BbfNam.tmp.splitlist
+		echo plink --merge-list $BbfNam.tmp.splitlist --make-bed --out $BbfNam
         plink --merge-list $BbfNam.tmp.splitlist --make-bed --out $BbfNam
         rm -rf TempSplit
     fi
@@ -93,6 +105,7 @@ folder=$(dirname $BbfNam)
 plink --bfile $BbfNam --indep-pairwise 50 5 0.5
 SnpList=plink.prune.in
 
+
 # Get HapMap data
 bash /home/local/users/jw/resources/AncestryPCA/PLINK/MakePlink.sh 1KG.vcf
 HapMapDat=1KG.XGEN.SNP.Common
@@ -107,10 +120,6 @@ echo
 
 EigDat=$OutNam.HapMap
 plink --bfile $BbfNam --bmerge $HapMapDat.bed $HapMapDat.bim $HapMapDat.fam --geno 0.0005 --allow-no-sex --make-bed --out $EigDat
-#if [[ ! -e $EigDat.missnp && $? -ne 0 ]]; then exit; fi
-echo
-echo "------------------------------------------------------------------------"
-echo
 
 #check for mismatched snps and multiple position/chr snps and exclude and remerge if necessary
 grep "Warning: Multiple [cp]" $EigDat.log | sed s/.*\ \'//g | sed s/\'.*//g > ExcludeSNPs.list
