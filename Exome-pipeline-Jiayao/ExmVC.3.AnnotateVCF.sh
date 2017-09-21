@@ -112,9 +112,11 @@ Header=Tmp.Header.$VcfNam
 Content=Tmp.Content.$VcfNam
 Genotype=Tmp.Genotype.$VcfNam
 StepName="Trim the VCF to handle large VCF"
-StepCmd="less $VcfFil|cut -f 1-10 > $VCFAnn; less $VcfFil|grep -v -P '^##'|cut -f 11-  > $Genotype"
-echo $StepCmd
-funcRunStep
+#StepCmd="less $VcfFil|grep -v -P "^##"|cut -f 1-10 > $VCFAnn; less $VcfFil|grep -v -P '^##'|cut -f 11-  > $Genotype"
+#funcRunStep
+nohup less $VcfFil|grep -v -P "^##"|cut -f 1-10 > $VCFAnn &
+nohup less $VcfFil|grep -v -P '^##'|cut -f 11-  > $Genotype &
+wait
 
 ##Run Annovar to Annotate VCF file
 StepName="Annotation with Annovar"

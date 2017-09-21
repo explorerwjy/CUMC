@@ -100,26 +100,16 @@ StepName="Convert VCF to ANNOVAR input file using ANNOVAR"
 OneSam=`less $VcfFil | grep -m 1 ^#CHROM | cut -f 10`
 echo $OneSam
 
-StepCmd="vcftools --vcf $VcfFil --indv $OneSam --recode --out TEMP.$VcfFil;
- convert2annovar.pl -includeinfo -allsample -withfreq -format vcf4 TEMP.$VcfFil.recode.vcf -outfile $TmpVar;
- cut -f 1-5,9-13 $TmpVar > $TmpVar.2;
- mv $TmpVar.2 $TmpVar"
-if [[ $FilTyp == "gz" ]]; then StepCmd=`echo $StepCmd | sed s/--vcf/--gzvcf/g`; fi
-echo $StepCmd
-
-#funcRunStep
-#rm -f TEMP.$VcfFil.recode.vcf
-
 ##Run Annovar to Annotate VCF file
 StepName="Build Annotation table using ANNOVAR"
-StepCmd="table_annovar.pl $VcfFil $ANNHDB --buildver hg38 --remove -protocol refGene,gnomad_exome,gnomad_genome,esp6500siv2_all,esp6500siv2_aa,esp6500siv2_ea,1000g2015aug_all,1000g2015aug_eur,1000g2015aug_amr,1000g2015aug_eas,1000g2015aug_afr,1000g2015aug_sas,exac03,dbnsfp30a,cosmic70,genomicSuperDups,mcap,avsnp147 -operation g,f,f,f,f,f,f,f,f,f,f,f,f,f,f,r,f,f -otherinfo  -nastring .  -vcfinput"
+StepCmd="table_annovar.pl $VcfFil $ANNHDB --buildver hg38 --remove -protocol refGene,gnomad_exome,gnomad_genome,1000g2015aug_all,1000g2015aug_eur,1000g2015aug_amr,1000g2015aug_eas,1000g2015aug_afr,1000g2015aug_sas,exac03,dbnsfp33a,cosmic70,genomicSuperDups,mcap,revel,avsnp147 -operation g,f,f,f,f,f,f,f,f,f,f,f,r,f,f,f -otherinfo  -nastring .  -vcfinput"
 if [[ "$FullCadd" == "true" ]]; then 
     StepCmd=${StepCmd/cadd13gt10/cadd13}
     echo "  Using full CADD database..." >> $TmpLog
 fi
 funcRunStep
 #mv $VcfFil.hg19_multianno.vcf $basename.hg19_multianno.vcf
-VcfFilOut=$VcfFil.hg19_multianno.vcf
+VcfFilOut=$VcfFil.hg38_multianno.vcf
 #
 StepName="Chenge invalid char"
 StepCmd="sed -i -e 's/\\\x3d/:/g' $VcfFilOut;

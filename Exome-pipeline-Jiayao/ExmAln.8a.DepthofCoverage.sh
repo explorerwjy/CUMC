@@ -2,8 +2,8 @@
 #$ -S /bin/bash
 #$ -j y
 #$ -N DoC 
-#$ -l h_rt=12:00:00
-#$ -l h_vmem=15G
+#$ -l h_rt=20:00:00
+#$ -l h_vmem=20G
 #$ -cwd
 
 
@@ -71,6 +71,12 @@ if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]] ; then echo "Missing/Incorrect r
 #Call the RefFil to load variables
 RefFil=`readlink -f $RefFil`
 source $RefFil
+
+
+if [[ -z "${ArrNum}" ]]
+then
+    ArrNum=$SGE_TASK_ID
+fi
 
 #Load script library
 source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"

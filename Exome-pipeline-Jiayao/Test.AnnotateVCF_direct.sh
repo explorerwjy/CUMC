@@ -100,7 +100,7 @@ funcWriteStartLog
 
 ##Run Annovar to Annotate VCF file
 StepName="Build Annotation table using ANNOVAR"
-StepCmd="table_annovar.pl $VcfFil $ANNHDB --buildver hg19 --remove -protocol refGene,gnomad_exome,gnomad_genome,1000g2015aug_all,1000g2015aug_eur,1000g2015aug_amr,1000g2015aug_eas,1000g2015aug_afr,1000g2015aug_sas,exac03,dbnsfp33a,cadd13gt10,cosmic70,genomicSuperDups,mcap,revel,avsnp147 -operation g,f,f,f,f,f,f,f,f,f,f,f,f,r,f,f,f -otherinfo  -nastring .  -vcfinput "
+StepCmd="table_annovar.pl $VcfFil $ANNHDB --buildver $BUILD --remove -protocol refGene,gnomad_exome,gnomad_genome,1000g2015aug_all,1000g2015aug_eur,1000g2015aug_amr,1000g2015aug_eas,1000g2015aug_afr,1000g2015aug_sas,exac03,dbnsfp33a,cadd13gt10,cosmic70,genomicSuperDups,mcap,revel,avsnp147 -operation g,f,f,f,f,f,f,f,f,f,f,f,f,r,f,f,f -otherinfo  -nastring .  -vcfinput "
 if [[ "$FullCadd" == "true" ]]; then 
     StepCmd=${StepCmd/cadd13gt10/cadd13}
     echo "  Using full CADD database..." >> $TmpLog
