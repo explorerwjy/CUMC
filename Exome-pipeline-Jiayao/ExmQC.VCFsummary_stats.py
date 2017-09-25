@@ -289,9 +289,8 @@ def Summary(VCF, QCdir, Nprocs):
 			REF = [str(item) for item in linelist[3].split(',')]
 			ALT = [str(item) for item in linelist[4].split(',')]
 			# Two Allele
-			if len(ALT) > 1:
-				continue
-			# Two Allele
+			#if len(ALT) > 1:
+			#	continue
 			Known = (INFOdict['avsnp147'].split(',')[0] != '.' or ID != '.')
 			Indel = not (all(i in Nucleotides for i in REF)
 					and all(i in Nucleotides for i in ALT))
