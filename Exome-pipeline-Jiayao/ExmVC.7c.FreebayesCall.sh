@@ -95,6 +95,12 @@ funcGetTargetFile #If the target file has been specified using a code, get the f
 
 if [[ $JobNum ]]; then NumJobs=$JobNum; fi
 echo $NumJobs
+
+if [[ -z "${ArrNum}" ]]
+then
+    ArrNum=$SGE_TASK_ID
+fi
+
 TarLen=$(cat $TgtBed | wc -l) 
 RemTar=$(( TarLen % NumJobs )) # get remainder of target file length and number of jobs
 QuoTar=$(( TarLen / NumJobs )) # get quotient of target file length and number of jobs
@@ -137,7 +143,17 @@ echo "Target file line range: $SttLn - $(( $SttLn + $DivLen - 1 ))" >> $TmpLog
 
 ##Run Joint Variant Calling
 StepName="Joint call Variants with Freebayes"
-StepCmd="$FREEBAYES -f $REF -t $TgtFil -L $InpFil 2>$GatkLog > $VcfFil" #command to be run
+StepCmd="$FREEBAYES -f $REF -t $TgtFil
+		--min-alternate-count 2
+		--min-alternate-fraction 0.1
+		--min-alternate-qsum 40
+		--pvar 0.0001
+		--use-best-n-alleles 6
+		--min-base-quality 20
+		--min-mapping-quality 20
+		--use-mapping-quality
+
+		-L $InpFil 2>$GatkLog > $VcfFil" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep
 
