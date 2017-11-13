@@ -4,6 +4,7 @@
 
 PSAP_PATH=/home/local/users/jw/CUMC/
 ANNOVAR_PATH=/home/local/users/jw/software_packages/annovar/ #INSERT PATH TO ANNOVAR DIRECTORY HERE eg. /scratch/dclab/annovar/
+ANNOVAR_DATA=/home/local/users/jw/resources/ANNOVAR_DB/
 curpath=$(pwd)
 echo $PWD
 echo "PSAP path is "${PSAP_PATH}"psap/"
@@ -27,7 +28,7 @@ then
 	MISSING=0
 	for FILE in "hg19_ALL.sites.2014_09.txt" "hg19_cadd.txt" "hg19_esp6500si_all.txt" "hg19_snp137.txt" "hg19_wgEncodeGencodeBasicV19Mrna.fa" "hg19_wgEncodeGencodeBasicV19.txt" "hg19_mac63kFreq_ALL.txt"
 	do
-		if [ ! -f ${ANNOVAR_PATH}humandb/$FILE ]
+		if [ ! -f ${ANNOVAR_DATA}$FILE ]
 		then
 			MISSING=$(( $MISSING+1 ))
 		fi
@@ -70,7 +71,7 @@ if [ ! -e $curpath/annotated/${OUTFILE}.avinput.hg19_multianno.txt  ]; then
         fi
 # Annotate with ANNOVAR
 	echo "PROGRESS: Annotating data with ANNOVAR"
-	perl ${ANNOVAR_PATH}table_annovar.pl $curpath/${OUTFILE}.avinput -remove -outfile $curpath/annotated/${OUTFILE}.avinput ${ANNOVAR_PATH}humandb/ -buildver hg19 -protocol wgEncodeGencodeBasicV19,mac63kFreq_ALL,esp6500si_all,1000g2014sep_all,snp137,cadd -operation g,f,f,f,f,f -nastring NA -otherinfo -argument -separate,,,,,-otherinfo
+	perl ${ANNOVAR_PATH}table_annovar.pl $curpath/${OUTFILE}.avinput -remove -outfile $curpath/annotated/${OUTFILE}.avinput ${ANNOVAR_DATA} -buildver hg19 -protocol wgEncodeGencodeBasicV19,mac63kFreq_ALL,esp6500si_all,1000g2014sep_all,snp137,cadd -operation g,f,f,f,f,f -nastring NA -otherinfo -argument -separate,,,,,-otherinfo
 else 
     echo "$curpath/annotated/${OUTFILE}.avinput.hg19_multianno.txt existed!"
 fi
