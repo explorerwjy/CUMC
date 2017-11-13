@@ -35,7 +35,7 @@ then
 	echo "Step3 not successful." >> $LogFil
 	exit
 fi
-rm $OutName.vcf
+#rm $OutName.vcf
 
 if [ -f $OutName.avinput ];
 then

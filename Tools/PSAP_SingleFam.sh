@@ -15,16 +15,18 @@ ListFil=${FAMID}.list
 VCFFil=`readlink -f ${VCFFil}`
 LogFil=$FAMID.log
 cat $PedFil |grep -v "^#" |cut -f2 > $ListFil 
-step1="vcftools --gzvcf $VCFFil --recode --recode-INFO-all --out $FAMID --keep $ListFil"
-echo $step1 >$LogFil
-$step1 >>$LogFil 2>>$LogFil
 
-step2="python $HOME/CUMC/Exome-Filters-Jiayao/Clean.py -v $FAMID.recode.vcf -o $FAMID.vcf" 
-echo $step2 >>$LogFil
-$step2 >>$LogFil 2>>$LogFil
-rm $FAMID.recode.vcf
+#step1="vcftools --gzvcf $VCFFil --recode --recode-INFO-all --out $FAMID --keep $ListFil"
+#echo $step1 >$LogFil
+#$step1 >>$LogFil 2>>$LogFil
 
-step3="python $HOME/CUMC/Exome-Filters-Jiayao/ExmFilter.py -v $FAMID.vcf -p $FAMID.ped -o $FAMID.RareCoding.vcf -f ${HOME}/CUMC/Exome-Filters-Jiayao/ALL_FILTER.yml"
+#step2="python $HOME/CUMC/Exome-Filters-Jiayao/Clean.py -v $FAMID.recode.vcf -o $FAMID.vcf" 
+#echo $step2 >>$LogFil
+#$step2 >>$LogFil 2>>$LogFil
+#rm $FAMID.recode.vcf
+step12="vcftools --gzvcf $VCFFil --recode --recode-INFO-all --keep $ListFil -c | python $HOME/CUMC/Exome-Filters-Jiayao/Clean.py -v stdin  -o stdout| bgzip > $FAMID.vcf.gz"
+eval $step12 2>$LogFil
+step3="python $HOME/CUMC/Exome-Filters-Jiayao/ExmFilter.py -v $FAMID.vcf.gz -p $FAMID.ped -o $FAMID.RareCoding.vcf -f ${HOME}/CUMC/Exome-Filters-Jiayao/ALL_FILTER.yml"
 $step3 >>$LogFil 2>>$LogFil
 Signal=`tail -n 1 $LogFil`
 if [[ $Signal != "Done" ]] ;

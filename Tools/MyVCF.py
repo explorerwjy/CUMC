@@ -484,7 +484,7 @@ class Variant():
 			else:
 				return "mis"
 		elif GeneFunc == "exonic" and ExonicFunc == 'synonymous_SNV':
-			return 'slient'
+			return 'silent'
 		else:
 			print GeneFunc, ExonicFunc, MetaSVM, CADD, PP2
 			return '.'

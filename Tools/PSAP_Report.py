@@ -19,7 +19,9 @@ import pandas as pd
 HEADERS_PSAP_TO_BE_POP = ['Gene.wgEncodeGencodeBasicV19', 'Func.wgEncodeGencodeBasicV19', 'ExonicFunc.wgEncodeGencodeBasicV19','AAChange.wgEncodeGencodeBasicV19','mac63kFreq_ALL','1000g2014sep_all','esp6500si_all']
 HeaderFromVCF_P1 = ['Chrom', 'Pos', 'Ref', 'Alt']
 #CSV_HEADER = ['Gene', 'GeneName', 'Allele Count', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC_ALL', 'gnomAD_genome_ALL', '1KG', 'VarType', 'MetaSVM', 'CADD13', 'PP2', 'MCAP', 'mis_z', 'lof_z', 'pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank', 'Mappability', 'Filter']
-CSV_HEADER = ['Gene', 'GeneName', 'Allele Count', 'GeneFunc', 'ExonicFunc', 'AAchange', 'ExAC_ALL', 'gnomAD_genome_ALL', '1KG', 'VarType', 'MetaSVM', 'CADD13', 'PP2', 'MCAP', 'mis_z', 'lof_z', 'pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank', 'Filter']
+CSV_HEADER = ['Gene', 'GeneName', 'Allele Count', 'GeneFunc', 'ExonicFunc', 'AAchange', 
+'ExAC_ALL', 'gnomAD_genome_ALL','gnomAD_exome_ALL', 'gnomAD_exome_AFR', 'gnomAD_exome_AMR', 'gnomAD_exome_ASJ', 'gnomAD_exome_EAS', 'gnomAD_exome_FIN', 'gnomAD_exome_NFE', 'gnomAD_exome_OTH', 'gnomAD_exome_SAS',
+'1KG', 'VarType', 'MetaSVM', 'CADD13', 'PP2', 'MCAP', 'mis_z', 'lof_z', 'pLI', 'pRec','HeartRank', 'LungRank', 'BrainRank', 'Filter']
 
 def GetOptions():
 	parser = argparse.ArgumentParser()
@@ -90,7 +92,9 @@ class Record():
 			#	self.VCF = vcf_dict[self.CHROM + ':' + self.POS]
 			#elif self.ALT == '-':
 			#	self.VCF = vcf_dict[self.CHROM + ':' + str(int(self.POS) - len(self.REF) + 1)]
+			#self.VCF = vcf_dict.get(key,"NA")
 			self.VCF = vcf_dict[key]
+			
 		except KeyError:
 			print "KeyError while fetch record in VCF, {}:{}:{}:{}".format(self.CHROM, self.POS, self.REF, self.ALT)
 			exit()
@@ -114,6 +118,15 @@ class Record():
 		AAchange = ','.join(self.VCF.Info['AAChange.refGene'])
 		ExAC_ALL = ','.join(str(AF(x)) for x in self.VCF.Info['ExAC_ALL'])
 		gnomAD_genome_ALL = ','.join(str(AF(x)) for x in self.VCF.Info['gnomAD_genome_ALL'])
+		gnomAD_exome_ALL = ','.join(str(AF(x)) for x in self.VCF.Info['gnomAD_exome_ALL'])
+		gnomAD_exome_AFR = ','.join(str(AF(x)) for x in self.VCF.Info['gnomAD_exome_AFR'])
+		gnomAD_exome_AMR = ','.join(str(AF(x)) for x in self.VCF.Info['gnomAD_exome_AMR'])
+		gnomAD_exome_ASJ = ','.join(str(AF(x)) for x in self.VCF.Info['gnomAD_exome_ASJ'])
+		gnomAD_exome_EAS = ','.join(str(AF(x)) for x in self.VCF.Info['gnomAD_exome_EAS'])
+		gnomAD_exome_FIN = ','.join(str(AF(x)) for x in self.VCF.Info['gnomAD_exome_FIN'])
+		gnomAD_exome_NFE = ','.join(str(AF(x)) for x in self.VCF.Info['gnomAD_exome_NFE'])
+		gnomAD_exome_OTH = ','.join(str(AF(x)) for x in self.VCF.Info['gnomAD_exome_OTH'])
+		gnomAD_exome_SAS = ','.join(str(AF(x)) for x in self.VCF.Info['gnomAD_exome_SAS'])
 		MCAP = ','.join(self.VCF.Info['MCAP'])
 		MetaSVM = ','.join(self.VCF.Info['MetaSVM_pred'])
 		REVEL = ','.join(self.VCF.Info.get('REVEL','.'))
@@ -133,7 +146,7 @@ class Record():
 		BrainRank = genesocre[Gene].MouseBrainRank
 
 		#return '\t'.join([self.CHROM, self.POS, self.REF, self.ALT, self.Gene, self.GeneName, self.GeneFunc, self.ExonicFunc, self.AAchange, self.ExACfreq, self.gnomAD_genome, self._1KGfreq, self.MetaSVM, self.CADD, self.PolyPhen2, self.pLI, self.misZ, self.lofZ, self.pREC, self.HRank, self.LRank, self.BRank, self.Proband, self.Father, self.Mother, self.DzModel, self.Pval, self.Flag])
-		INFO = [Gene, GeneName, AC, GeneFunc, ExonicFunc, AAchange, ExAC_ALL, gnomAD_genome_ALL, _1KG, VarType, MetaSVM, CADD, PP2, MCAP, mis_z, lof_z, pLI, pRec, HeartRank, LungRank, BrainRank]
+		INFO = [Gene, GeneName, AC, GeneFunc, ExonicFunc, AAchange, ExAC_ALL, gnomAD_genome_ALL, gnomAD_exome_ALL, gnomAD_exome_AFR, gnomAD_exome_AMR, gnomAD_exome_ASJ, gnomAD_exome_EAS, gnomAD_exome_FIN, gnomAD_exome_NFE, gnomAD_exome_OTH, gnomAD_exome_SAS, _1KG, VarType, MetaSVM, CADD, PP2, MCAP, mis_z, lof_z, pLI, pRec, HeartRank, LungRank, BrainRank]
 		GTs = self.VCF.getSampleGenotypes()
 		return INFO + [self.VCF.Filter] + GTs
 
