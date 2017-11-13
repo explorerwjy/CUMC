@@ -8,15 +8,15 @@ INFO:
   - 'exonic,splicing'
   - 'exonic-splicing'
   - 'exonic_splicing'
-  excluded_ExonicFunc:
-      - 'synonymous_SNV'
+ #excluded_ExonicFunc:
+      #- 'synonymous_SNV'
   max_AC: 30
   max_1KG: 0.01
   max_gnomAD: 0.01
   max_ExAC: 0.01
   excluded_gene:
-  - MUC
-  - HLA
+      #- MUC
+      #- HLA
   excluded_chrom:
   - GL
   max_seqdup: 0.95
@@ -24,8 +24,8 @@ INFO:
   #rmsk: true
 
 FILTER:
-  VQSRSNP: 99.8
-  VQSRINDEL: 99.7
+  VQSRSNP: 100
+  VQSRINDEL: 99.90
 
 READS:
   # proband filter

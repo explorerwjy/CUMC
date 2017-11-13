@@ -79,13 +79,7 @@ def F_ExAC_Coding(INFO, ExACfreq, Region):
 				infodict[k] = v
 
 	Pass_region = False
-	#print Region, infodict['Func.refGene'].split(',')
-#	for item, v in zip(Region, infodict['Func.refGene'].split(',')):
-#		print "||{}||{}||".format(item, v)
-#		if item == v:
-#			print "Yeah"
-#			Pass_region = True
-#			break
+	
 	VarRegions = set(infodict['Func.refGene'].split(','))
 	Region = set(Region)
 	Pass_region = ( len(VarRegions.intersection(Region)) >= 1 )

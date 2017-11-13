@@ -111,7 +111,7 @@ class PEDIGREE():
 		# Search for Proband.
 		try:
 			for indi in self.individuals:
-				if indi.llist[self.Header.index('Relationship')] == 'Proband':
+				if indi.llist[self.Header.index('Relationship')].lower().strip() == 'proband':
 					self.Proband = indi.SampleID
 					self.Father = indi.FatherID
 					self.Mother = indi.MotherID
@@ -119,9 +119,10 @@ class PEDIGREE():
 						return True
 					else:
 						return False
+			print "Proband is",self.Proband
 		except ValueError:
 			print "Proband not int header, Try to infer Proband by Affected"
-			Max = 0
+			Max = -1
 			Max_Candidate = None
 			Tmp = 0
 			if len(self.individuals) == 1: # Only one individual, this is proband
@@ -144,6 +145,7 @@ class PEDIGREE():
 						if Tmp > Max:
 							Max = Tmp
 							Max_Candidate = indi
+							print Max_Candidate
 			if Max_Candidate != None:
 				self.Proband = Max_Candidate.SampleID
 				self.Father = Max_Candidate.FatherID
@@ -259,11 +261,15 @@ class VARIANT():
 		# Filter on GenomeRegion/Mappability        
 		if Filters.INFO.get('max_seqdup', None) != None:
 			segdupScore = self.Info.get('genomicSuperDups',[0])[0]
-			if segdupScore != '.':
-				segdupScore = re.search(
-						'Score:(\d+?\.?\d+)', segdupScore).group(1)
-				if float(segdupScore) >= Filters.INFO['max_seqdup']:
-					return 'max_seqdup'
+			try:
+				if segdupScore != '.':
+					segdupScore = re.search(
+							'Score:(\d+?\.?\d+)', segdupScore).group(1)
+					if float(segdupScore) >= Filters.INFO['max_seqdup']:
+						return 'max_seqdup'
+			except:
+				print "Unparseable segdup score",segdupScore
+				pass	
 		if Filters.INFO.get('Mappability', None) != None:
 			if float(self.Info.get('Mappability', [1])[0]) < Filters.INFO['Mappability']:
 				return 'Mappability'
@@ -328,6 +334,8 @@ class VARIANT():
 			else:
 				return None, Genotype
 		else:
+			print "No Proband Find, exit"
+			exit()
 			print "No Proband Find, use First one as ref" 
 			Genotype = GENOTYPE(self.Format, self.Genotypes[1])
 			return 1, Genotype

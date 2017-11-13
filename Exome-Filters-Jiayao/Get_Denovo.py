@@ -347,8 +347,8 @@ class Variant():
 			return False, None, None, None 
 		if not self.CheckGT(Proband, Father, Mother, Filters):
 			return False, None, None, None
-		if not self.CheckFILTER(Proband, Filters):
-			return False, None, None, None
+		#if not self.CheckFILTER(Proband, Filters):
+		#	return False, None, None, None
 		else:
 			#print 'pass GT'
 			pass 
