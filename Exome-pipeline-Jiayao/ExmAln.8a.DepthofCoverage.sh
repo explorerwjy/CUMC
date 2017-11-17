@@ -2,8 +2,8 @@
 #$ -S /bin/bash
 #$ -j y
 #$ -N DoC 
-#$ -l h_rt=20:00:00
-#$ -l h_vmem=20G
+#$ -l h_rt=80:00:00
+#$ -l h_vmem=16G
 #$ -cwd
 
 
@@ -97,7 +97,7 @@ funcWriteStartLog
 
 #Calculate depth of coverage statistics
 StepName="Calculate depth of coverage statistics using GATK DepthOfCoverage" # Description of this step - used in log
-StepCmd="java -Xmx10G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T DepthOfCoverage
  -R $REF
  -I $BamFil
@@ -109,6 +109,9 @@ StepCmd="java -Xmx10G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -ct 15
  -ct 20
  --countType COUNT_FRAGMENTS 
+ --omitDepthOutputAtEachBase
+ --omitIntervalStatistics
+ --omitLocusTable
  --minMappingQuality 20
  --filter_mismatching_base_and_quals
  -log $GatkLog" #command to be run

@@ -49,13 +49,13 @@ usage="
 BadET="false"
 FixMisencoded="false"
 
-while getopts i:r:a:n:l:t:BFH opt; do
+while getopts :i:r:t:a:l:BFH opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
         r) RefFil="$OPTARG";; 
+        t) TgtBed="$OPTARG";;
         a) ArrNum="$OPTARG";; 
         l) LogFil="$OPTARG";;
-        t) TgtBed="$OPTARG";;
         B) BadET="true";;
         F) FixMisencoded="true";;
         H) echo "$usage"; exit;;
@@ -63,7 +63,9 @@ while getopts i:r:a:n:l:t:BFH opt; do
 done
 
 #check all required paramaters present
-if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]] || [[ -z "$TgtBed" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
+if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
+
+if [[ ! -e "$TgtBed" ]]; then echo "Missing Target bed File"; exit;     fi
 
 #Call the RefFil to load variables
 RefFil=`readlink -f $RefFil`
@@ -84,20 +86,21 @@ BamFil=$(tail -n+$ArrNum $InpFil | head -n 1)
 BamNam=`basename $BamFil | sed s/.bam//`
 BamNam=${BamNam/.bam/} # a name for the output files
 if [[ -z $LogFil ]]; then LogFil=$BamNam.HCgVCF.log; fi # a name for the log file
-VcfFil=$BamNam.g.vcf #Output File
-GatkLog=$BamNam.HCgVCF.gatklog #a log for GATK to output to, this is then trimmed and added to the script log
-TmpLog=$BamNam.HCgVCF.temp.log #temporary log file
-TmpDir=$BamNam.HCgVCF.tempdir; mkdir -p $TmpDir #temporary directory
+VcfFil=$BamNam.vcf #Output File
+GatkLog=$BamNam.FB.FBlog #a log for GATK to output to, this is then trimmed and added to the script log
+TmpLog=$BamNam.FB.temp.log #temporary log file
+TmpDir=$BamNam.FBVCF.tempdir; mkdir -p $TmpDir #temporary directory
 
 echo "Reference Genome File is $REF"
-
+echo "BamFile is $BamFil"
+echo "TgtFil is $TgtFil" 
 #Start Log File
 ProcessName="Genomic VCF generatation with Freebayes" # Description of the script - used in log
 funcWriteStartLog
 
 ##Run genomic VCF generation
 StepName="Joint call Variants with Freebayes"
-StepCmd="$FREEBAYES -f $REF -t $TgtFil
+StepCmd="$FREEBAYES -f $REF -t $TgtBed
         --min-alternate-count 2
         --min-alternate-fraction 0.1
         --min-alternate-qsum 40
@@ -106,8 +109,8 @@ StepCmd="$FREEBAYES -f $REF -t $TgtFil
         --min-base-quality 20
         --min-mapping-quality 20
         --use-mapping-quality
-
-        -L $InpFil 2>$GatkLog > $VcfFil" #command to be run
+        $BamFil > $VcfFil" #command to be run
+echo $StepCmd
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep
 

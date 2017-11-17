@@ -1,9 +1,9 @@
 #!/bin/bash
 #$ -S /bin/bash
 #$ -j y
-#$ -N CollectInsertSizeMetrics 
+#$ -N BAMQC 
 #$ -l h_rt=12:00:00
-#$ -l h_vmem=8G
+#$ -l h_vmem=16G
 #$ -cwd
 
 # This script add or change the Read Groups for bam files
@@ -49,7 +49,10 @@ source $RefFil
 source $EXOMPPLN/exome.lib.sh #library functions begin "func"
 
 #set local variables
-#ArrNum=1 #line of table to read
+if [[ -z "${ArrNum}" ]]
+then
+    ArrNum=$SGE_TASK_ID
+fi
 
 InpFil=`readlink -f $InpFil`  # resolve input file path
 BAM=`readlink -f $(tail -n+$ArrNum $InpFil | head -n 1 | cut -f1)`
@@ -61,7 +64,7 @@ TmpLog=$BamNam.FqB.temp.log #temporary log file
 TmpDir=$BamNam.FqB.tempdir; mkdir -p $TmpDir #temporary directory
 
 #start log
-ProcessName="CollectInsertSizeMetrics with Picard"
+ProcessName="Collect BAMQC Metrics with Samtools&Picard"
 funcWriteStartLog
 echo " Build of reference files: "$BUILD >> $TmpLog
 echo "----------------------------------------------------------------" >> $TmpLog
@@ -76,7 +79,15 @@ StepName="Output idx stats using Samtools"
 StepCmd="samtools idxstats $BAM > $IdxStat"
 funcRunStep
 
-StepName="Add Read Groups with Picard"
+StepName="LibraryComplexity"
+StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD EstimateLibraryComplexity 
+ INPUT=$BAM
+ OUTPUT=$BamNam.est_lib_complex_metrics.txt
+ 2>>$TmpLog"
+funcRunStep
+
+
+StepName="CollectInsertSize"
 StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD CollectInsertSizeMetrics 
  INPUT=$BAM
  OUTPUT=$BamNam.insert_size_metrics.txt
@@ -87,6 +98,8 @@ StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICA
  ASSUME_SORTED=true
  2>>$TmpLog"
 funcRunStep
+
+
 
 #End Log
 funcWriteEndLog
