@@ -2,7 +2,7 @@
 #$ -S /bin/bash
 #$ -j y
 #$ -N SamtoolsVariantCalling 
-#$ -l h_rt=12:00:00
+#$ -l h_rt=128:00:00
 #$ -l h_vmem=20G
 #$ -cwd
 
@@ -134,7 +134,7 @@ echo "Target file line range: $SttLn - $(( $SttLn + $DivLen - 1 ))" >> $TmpLog
 
 ##Run Joint Variant Calling
 StepName="Joint call Variants with Samtools/bcftools"
-StepCmd="$SAMTOOLS mpileup -u -t DP,AD,ADF,ADR,SP,INFO/AD,INFO/ADF,INFO/ADR -f $REF -l $TgtFil -b $InpFil 2>GatkLog | $BCFTOOLS call - -c -v 2>GatkLog > $VcfFil" #command to be run
+StepCmd="samtools mpileup -u -t DP,AD,ADF,ADR,SP,INFO/AD,INFO/ADF,INFO/ADR -f $REF -l $TgtFil -b $InpFil 2>GatkLog | bcftools call - -c -v 2>GatkLog > $VcfFil" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep
 

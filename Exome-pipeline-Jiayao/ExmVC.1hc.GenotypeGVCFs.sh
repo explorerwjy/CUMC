@@ -87,6 +87,11 @@ source $RefFil
 source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
 
 
+if [[ -z "${ArrNum}" ]]
+then
+    ArrNum=$SGE_TASK_ID
+fi
+
 #Set local Variables
 funcGetTargetFile #If the target file has been specified using a code, get the full path from the exported variable
 # The target file needs to be divided evenly between all the jobs. i.e. if the target file is 1000 lines long and there are 40 jobs, each job should have 25 lines of the target file
