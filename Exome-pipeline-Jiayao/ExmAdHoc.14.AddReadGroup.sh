@@ -2,8 +2,8 @@
 #$ -S /bin/bash
 #$ -j y
 #$ -N AddReadGroup 
-#$ -l h_rt=24:00:00
-#$ -l h_vmem=16G
+#$ -l h_rt=48:00:00
+#$ -l h_vmem=20G
 #$ -cwd
 
 # This script add or change the Read Groups for bam files
@@ -91,7 +91,7 @@ funcRunStep
 
 #Sort the bam file by coordinate
 StepName="Sort Bam using PICARD"
-StepCmd="java -Xmx8G -XX:ParallelGCThreads=4 -Djava.io.tmpdir=$TmpDir -jar $PICARD SortSam
+StepCmd="java -Xmx8G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD SortSam
  INPUT=$ADRFil
  OUTPUT=$SrtFil
  SORT_ORDER=coordinate
@@ -102,7 +102,7 @@ rm $ADRFil #remove the "Aligned bam"
 
 #Mark the duplicates
 StepName="Mark PCR Duplicates using PICARD"
-StepCmd="java -Xmx8G -XX:ParallelGCThreads=4 -Djava.io.tmpdir=$TmpDir -jar $PICARD MarkDuplicates
+StepCmd="java -Xmx8G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD MarkDuplicates
  INPUT=$SrtFil
  OUTPUT=$DdpFil
  METRICS_FILE=$DdpFil.dup.metrics.txt

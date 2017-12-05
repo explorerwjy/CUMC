@@ -2,7 +2,7 @@
 #$ -S /bin/bash
 #$ -j y
 #$ -N SamtoolsVariantCalling 
-#$ -l h_rt=128:00:00
+#$ -l h_rt=12:00:00
 #$ -l h_vmem=20G
 #$ -cwd
 
@@ -72,7 +72,7 @@ while getopts i:r:a:t:n:l:j:PXBH opt; do
 done
 
 #check all required paramaters present
-if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]] || [[ -z "$TgtBed" ]]; then
+if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]] ; then
  echo "Missing/Incorrect required arguments"
  echo "provided arguments: -i $InpFil -r $RefFil -t $TgtBed"
  echo "usage: $usage"
@@ -89,70 +89,26 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions
 
 #Set local Variables
 funcGetTargetFile #If the target file has been specified using a code, get the full path from the exported variable
-# The target file needs to be divided evenly between all the jobs. i.e. if the target file is 1000 lines long and there are 40 jobs, each job should have 25 lines of the target file
-# bash arithmetic division actually gives the quotient, so if there are 1010 lines and 40 jobs the division would still give 25 lines per a job and the last 10 lines would be lost
-# to compensate for this we will find the remainder (RemTar) and then add an extra line to the first $RemTar jobs
-
-if [[ $JobNum ]]; then NumJobs=$JobNum; fi
-echo $NumJobs
-TarLen=$(cat $TgtBed | wc -l) 
-RemTar=$(( TarLen % NumJobs )) # get remainder of target file length and number of jobs
-QuoTar=$(( TarLen / NumJobs )) # get quotient of target file length and number of jobs
-SttLn=1
-DivLen=0
-echo $RemTar
-echo $SttLn
-for ((i=1; i <= $ArrNum; i++)); do
-    SttLn=$(( SttLn + DivLen ))
-    if [[ $i -le $RemTar ]]; then
-        DivLen=$(( QuoTar + 1 ))
-        else
-        DivLen=$QuoTar
-    fi
-done
 
 
 if [[ -z "$VcfNam" ]];then VcfNam=`basename $InpFil`; VcfNam=${VcfNam/.list/}; fi # a name for the output files
 if [[ -z $LogFil ]]; then LogFil=$VcfNam.GgVCF.log; fi # a name for the log file
-VcfDir=$VcfNam.splitfiles; mkdir -p $VcfDir # Directory to output slices to
-PrgDir=$VcfNam.progfiles; mkdir -p $PrgDir # "Progress directory" to output completion logs to, these are used by the merge script to check that all jobs in this array have finished (if jobs run out of time the hold is released even if the jobs did not complete)
-VcfNam=$VcfNam.$ArrNum
-PrgFil=$VcfNam.genotypingcomplete
-VcfFil=$VcfDir/$VcfNam.vcf #Output File
-VcfAnnFil=$VcfDir/$VcfNam.ann.vcf
-VcfLeftAlnFil=$VcfDir/$VcfNam.LA.vcf
+VcfNam=$(basename $InpFil|sed s/.gz//g|sed s/.vcf//g)
+VcfLeftAlnFil=$VcfNam.LA.vcf
 GatkLog=$VcfNam.VCF.samtoolslog #a log for GATK to output to, this is then trimmed and added to the script log
 TmpLog=$VcfNam.VCF.temp.log #temporary log file
 TmpDir=$VcfNam.VCF.tempdir; mkdir -p $TmpDir #temporary directory
-TgtFil=$TmpDir/Range.$VcfNam.bed #exome capture range
-tail -n+$SttLn $TgtBed | head -n $DivLen > $TgtFil #get exome capture range
-
-#Start Log File
-ProcessName="Running Samtools/bcftools Calling Variants on Give Bam List" # Description of the script - used in log
-funcWriteStartLog
-echo "Target file line range: $SttLn - $(( $SttLn + $DivLen - 1 ))" >> $TmpLog
-
-##Run Joint Variant Calling
-StepName="Joint call Variants with Samtools/bcftools"
-StepCmd="samtools mpileup -u -t DP,AD,ADF,ADR,SP,INFO/AD,INFO/ADF,INFO/ADR -f $REF -l $TgtFil -b $InpFil 2>GatkLog | bcftools call - -c -v 2>GatkLog > $VcfFil" #command to be run
-funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
-funcRunStep
 
 ##Left Align variants
 StepName="Left align variants in the VCF with GATK"
 StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T LeftAlignAndTrimVariants
  -R $REF
- -V $VcfFil
+ -V $InpFil
  -o $VcfLeftAlnFil
  -log $GatkLog" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep
-mv -f $VcfLeftAlnFil $VcfFil 
-mv -f $VcfLeftAlnFil.idx $VcfFil.idx
-
-##Write completion log
-touch $PrgDir/$PrgFil
 
 
 #End Log

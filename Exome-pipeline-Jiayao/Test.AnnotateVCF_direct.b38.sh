@@ -2,7 +2,7 @@
 #$ -S /bin/bash
 #$ -j y
 #$ -N Annovar 
-#$ -l h_rt=12:00:00
+#$ -l h_rt=256:00:00
 #$ -l h_vmem=20G
 #$ -cwd
 

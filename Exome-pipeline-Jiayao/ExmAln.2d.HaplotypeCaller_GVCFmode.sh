@@ -2,7 +2,7 @@
 #$ -S /bin/bash
 #$ -j y
 #$ -N HaplotypeCaller_GVCFmode
-#$ -l h_rt=12:00:00
+#$ -l h_rt=128:00:00
 #$ -l h_vmem=20G
 #$ -cwd
 
@@ -64,13 +64,7 @@ done
 
 #check all required paramaters present
 if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]] || [[ -z "$TgtBed" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
-
-
-if [[ -z "${ArrNum}" ]]
-then
-    ArrNum=$SGE_TASK_ID
-fi
-
+start=`date +%s`
 #Call the RefFil to load variables
 RefFil=`readlink -f $RefFil`
 source $RefFil
@@ -78,11 +72,15 @@ source $RefFil
 #Load script library
 source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
 
+if [[ ! -e "${ArrNum}" ]]
+then
+	ArrNum=$SGE_TASK_ID
+fi
 #Set local Variables
 funcGetTargetFile
 InpFil=`readlink -f $InpFil` #resolve absolute path to bam
 BamFil=$(tail -n+$ArrNum $InpFil | head -n 1) 
-BamNam=`basename $BamFil | sed s/.bam//`
+BamNam=`basename $BamFil | sed s/.bam// | sed s/.cram//`
 BamNam=${BamNam/.bam/} # a name for the output files
 if [[ -z $LogFil ]]; then LogFil=$BamNam.HCgVCF.log; fi # a name for the log file
 VcfFil=$BamNam.g.vcf #Output File
@@ -99,7 +97,7 @@ funcWriteStartLog
 
 ##Run genomic VCF generation
 StepName="gVCF generation with GATK HaplotypeCaller"
-StepCmd="java -Xmx16G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx16G -XX:ParallelGCThreads=4 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T HaplotypeCaller
  -R $REF
  -L $TgtBed
@@ -118,7 +116,6 @@ StepCmd="java -Xmx16G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GAT
  $infofields
  --filter_mismatching_base_and_quals
  --interval_padding 100
- --dontUseSoftClippedBases
  -log $GatkLog" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep
@@ -136,3 +133,6 @@ rm $VcfFil.idx
 funcWriteEndLog
 
 #End
+end=`date +%s`
+runtime=$((end-start))
+echo $runtime

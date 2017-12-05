@@ -65,12 +65,6 @@ done
 #check all required paramaters present
 if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]] || [[ -z "$TgtBed" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
 
-
-if [[ -z "${ArrNum}" ]]
-then
-    ArrNum=$SGE_TASK_ID
-fi
-
 #Call the RefFil to load variables
 RefFil=`readlink -f $RefFil`
 source $RefFil
@@ -84,11 +78,13 @@ InpFil=`readlink -f $InpFil` #resolve absolute path to bam
 BamFil=$(tail -n+$ArrNum $InpFil | head -n 1) 
 BamNam=`basename $BamFil | sed s/.bam//`
 BamNam=${BamNam/.bam/} # a name for the output files
-if [[ -z $LogFil ]]; then LogFil=$BamNam.HCgVCF.log; fi # a name for the log file
-VcfFil=$BamNam.g.vcf #Output File
-GatkLog=$BamNam.HCgVCF.gatklog #a log for GATK to output to, this is then trimmed and added to the script log
-TmpLog=$BamNam.HCgVCF.temp.log #temporary log file
-TmpDir=$BamNam.HCgVCF.tempdir; mkdir -p $TmpDir #temporary directory
+TgtNam=`basename $TgtBed|sed s/.bed//`
+echo $TgtBed $TgtNam
+if [[ -z $LogFil ]]; then LogFil=$BamNam.$TgtNam.HCgVCF.log; fi # a name for the log file
+VcfFil=$BamNam.$TgtNam.g.vcf #Output File
+GatkLog=$BamNam.$TgtNam.HCgVCF.gatklog #a log for GATK to output to, this is then trimmed and added to the script log
+TmpLog=$BamNam.$TgtNam.HCgVCF.temp.log #temporary log file
+TmpDir=$BamNam.$TgtNam.HCgVCF.tempdir; mkdir -p $TmpDir #temporary directory
 infofields="-A AlleleBalance -A BaseQualityRankSumTest -A Coverage -A HaplotypeScore -A HomopolymerRun -A MappingQualityRankSumTest -A MappingQualityZero -A QualByDepth -A RMSMappingQuality -A SpanningDeletions -A FisherStrand -A InbreedingCoeff -A ClippingRankSumTest -A DepthPerSampleHC" #Annotation fields to output into vcf files
 
 echo "Reference Genome File is $REF"
@@ -118,7 +114,6 @@ StepCmd="java -Xmx16G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GAT
  $infofields
  --filter_mismatching_base_and_quals
  --interval_padding 100
- --dontUseSoftClippedBases
  -log $GatkLog" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep

@@ -1,5 +1,11 @@
 #!/bin/bash
-#$ -cwd -l mem=4G,time=6:: -N AnnVCF
+#$ -S /bin/bash
+#$ -j y
+#$ -N ANNOVAR 
+#$ -l h_rt=256:00:00
+#$ -l h_vmem=100G
+#$ -cwd
+
 
 
 #This script takes a bam file or a list of bam files (filename must end ".list") and runs variant calling using the HaplotypeCaller in gVCF mode
@@ -57,7 +63,7 @@ while getopts i:r:t:l:m:CXFPBH opt; do
 done
 
 #check all required paramaters present
-if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
+#if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
 if [[ ! -e "$Threads" ]]; then
 	Threads=1
 fi
@@ -100,7 +106,7 @@ funcWriteStartLog
 
 ##Run Annovar to Annotate VCF file
 StepName="Build Annotation table using ANNOVAR"
-StepCmd="table_annovar.pl $VcfFil $ANNHDB --buildver $BUILD --remove -protocol refGene,gnomad_exome,gnomad_genome,1000g2015aug_all,1000g2015aug_eur,1000g2015aug_amr,1000g2015aug_eas,1000g2015aug_afr,1000g2015aug_sas,exac03,dbnsfp33a,cadd13gt10,cosmic70,genomicSuperDups,mcap,revel,avsnp147 -operation g,f,f,f,f,f,f,f,f,f,f,f,f,r,f,f,f -otherinfo  -nastring .  -vcfinput "
+StepCmd="table_annovar.pl $VcfFil $ANNHDB --buildver $BUILD  --tempdir $TmpDir --remove -protocol refGene,gnomad_exome,gnomad_genome,1000g2015aug_all,1000g2015aug_eur,1000g2015aug_amr,1000g2015aug_eas,1000g2015aug_afr,1000g2015aug_sas,exac03,dbnsfp33a,cadd13gt10,cosmic70,genomicSuperDups,mcap,revel,avsnp147 -operation g,f,f,f,f,f,f,f,f,f,f,f,f,r,f,f,f -otherinfo  -nastring .  -vcfinput "
 if [[ "$FullCadd" == "true" ]]; then 
     StepCmd=${StepCmd/cadd13gt10/cadd13}
     echo "  Using full CADD database..." >> $TmpLog

@@ -81,6 +81,11 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func"
 
 #set local variables
 
+if [[ -z "${ArrNum}" ]]
+then
+    ArrNum=$SGE_TASK_ID
+fi
+
 InpFil=`readlink -f $InpFil`  # resolve input file path
 NCOL=$(head -n1 $InpFil | wc -w | cut -d" " -f1) #get number of columns in file to determine SE or PE
 fastq1=`readlink -f $(tail -n+$ArrNum $InpFil | head -n 1 | cut -f1)` #R1 or SE fastq from first column

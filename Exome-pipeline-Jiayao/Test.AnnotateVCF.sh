@@ -1,5 +1,11 @@
 #!/bin/bash
-#$ -cwd -l mem=4G,time=6:: -N AnnVCF
+#$ -S /bin/bash
+#$ -j y
+#$ -N ANNOVAR 
+#$ -l h_rt=24:00:00
+#$ -l h_vmem=60G
+#$ -cwd
+
 
 
 #This script takes a bam file or a list of bam files (filename must end ".list") and runs variant calling using the HaplotypeCaller in gVCF mode
