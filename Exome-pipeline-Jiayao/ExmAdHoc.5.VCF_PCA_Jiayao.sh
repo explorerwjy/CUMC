@@ -11,7 +11,7 @@ ExmAdHoc.5.VCF_PCA.sh -i <InputFile> -l <logfile> -H
 "
 
 SamOnly="false"
-while getopts i:r:o:H opt; do
+while getopts i:r:o:b:H opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
         r) RefFil="$OPTARG";;
@@ -40,8 +40,8 @@ if [[ "${InpFil##*.}" != "bed" ]]; then
    if [ ! -f $BbfNam.filter.aaf.vcf.gz  ]; then
 	   FilteredOut=$(basename ${VCFFil}).filtered.vcf
 	   echo `pwd`
-	   echo $EXOMFILT -v $VCFFil -o $FilteredOut
-	   $EXOMFILT -v $VCFFil -o $FilteredOut
+	   echo $EXOMFILT -v $VCFFil -o $FilteredOut -c $HapMapReference
+	   $EXOMFILT -v $VCFFil -o $FilteredOut -c $HapMapReference
 	   mkdir sort_$(basename ${VCFFil})
 	   vcf-sort $FilteredOut  -t ./sort_$(basename ${VCFFil}) > $BbfNam.filter.aaf.vcf
     VcfFil=$BbfNam.filter.aaf.vcf

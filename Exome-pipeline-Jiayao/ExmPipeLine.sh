@@ -25,41 +25,39 @@ AnnovarVCF=
 
 #==========================================================================================================
 #HaploytypeCaller
-#GVCF=${ProjectHome}/GVCF
-#mkdir -p $GVCF
-#cd $GVCF
-#NJob=`wc -l $BamList|cut -f 1 -d ' '`
-#echo $NJob
-#seq $NJob | parallel -j 20 --eta $HapCaller -i $BamList -r $RefFil -t $BedFil -a {}
-#find `pwd` -name '*.g.vcf.gz' > $GVCFList
+GVCF=${ProjectHome}/GVCF
+mkdir -p $GVCF
+cd $GVCF
+NJob=`wc -l $BamList|cut -f 1 -d ' '`
+echo $NJob
+seq $NJob | parallel -j 20 --eta $HapCaller -i $BamList -r $RefFil -t $BedFil -a {}
+find `pwd` -name '*.g.vcf.gz' > $GVCFList
 #==========================================================================================================
 
 mkdir -p ${ProjectHome}/JointGenotyping
 ##==========================================================================================================
 ##Joint Genotyping
-#cd ${ProjectHome}/JointGenotyping
-#NUM_JOB=30
-#GVCFList=/home/local/users/jw/Genetics_Projects/SPARK/Batch1-10/src/SPARK_BATCH1-10.gvcf.list
-#GVCFList=/home/local/users/jw/Genetics_Projects/SPARK/Batch1-10/src/SPARK_BATCH1-10.withoutRGN.gvcf.list
-#seq $NUM_JOB | parallel -j $NUM_JOB --eta sh $JointGT -i $GVCFList -r $RefFil -a {} -j $NUM_JOB -t $BedFil -n $ProjectName
+cd ${ProjectHome}/JointGenotyping
+NUM_JOB=30
+seq $NUM_JOB | parallel -j $NUM_JOB --eta sh $JointGT -i $GVCFList -r $RefFil -a {} -j $NUM_JOB -t $BedFil -n $ProjectName
 ##==========================================================================================================
 
 
 #==========================================================================================================
 #DoC
-#DoC_DIR=${ProjectHome}/DoC
-#mkdir -p $DoC_DIR
-#cd $DoC_DIR
-#NJob=`wc -l $BamList|cut -f 1 -d ' '`
-#echo $NJob
-#nohup seq $NJob | parallel -j 20 --eta $DoC -i $BamList -r $RefFil -t $BedFil -a {} &
+DoC_DIR=${ProjectHome}/DoC
+mkdir -p $DoC_DIR
+cd $DoC_DIR
+NJob=`wc -l $BamList|cut -f 1 -d ' '`
+echo $NJob
+nohup seq $NJob | parallel -j 20 --eta $DoC -i $BamList -r $RefFil -t $BedFil -a {} &
 #==========================================================================================================
 
 #==========================================================================================================
 #MergeVCF
-#cd ${ProjectHome}/JointGenotyping
-#echo $SplitedDir
-#$VCFMerge -i $SplitedDir -r $RefFil 
+cd ${ProjectHome}/JointGenotyping
+echo $SplitedDir
+$VCFMerge -i $SplitedDir -r $RefFil 
 #==========================================================================================================
 
 #==========================================================================================================

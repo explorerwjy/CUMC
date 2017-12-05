@@ -1,6 +1,6 @@
 ## Resource Directories
-export EXOMPPLN="/home/local/users/jw/wes_pipeline/Exome-vc-pipeline-V3-master_AshGit" # Directory containing pipeline shell scripts
-export EXOMRES="/home/local/users/jw/resources" # Directory containing resources/references for pipeline
+export EXOMPPLN="$HOME/CUMC/Exome-pipeline-Jiayao/" # Directory containing pipeline shell scripts
+export EXOMRES="$HOME/resources/" # Directory containing resources/references for pipeline
 
 #jar files  and directories for software
 GATKJAR="/home/local/users/jw/bin/GenomeAnalysisTK.jar" #Current GATK jar file
@@ -17,9 +17,8 @@ export TGVCF="$EXOMRES/references/GRCh38/1000G_omni2.5.hg38.vcf"
 export DBSNP="$EXOMRES/references/GRCh38/dbsnp_146.hg38.vcf" # dbSNP vcf from GATK
 export ONEKG="$EXOMRES/references/GRCh38/1000G_phase1.snps.high_confidence.hg38.vcf" # 1000 genome SNPs vcf
 export ANNOVAR='/home/local/users/jw/software_packages/annovar'
-export ANNHDB='/home/local/users/jw/software_packages/annovar/humandb' #Location of annovar databases
-
-
+export ANNHDB='/home/local/users/jw/resources/ANNOVAR_DB' #Location of annovar databases
+HapMapReference=/home/local/users/jw/resources/AncestryPCA/resources/1KG_AJ_Domi_PCAcontrol.HG38.sort.vcf.gz
 #Capture Kit Target Files
 export TGTCODES="AgtV2:AgtV4:AgtV5:AgtV5UTR:NbgV2:NbgV3:IllTS:BigTgt:RefSeq:VCRv2"
 
