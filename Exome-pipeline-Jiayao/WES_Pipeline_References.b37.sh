@@ -14,8 +14,8 @@ export HAPMAP="$EXOMRES/references/b37/hapmap_3.3.b37.vcf" # hapmap vcf from GAT
 export INDEL="$EXOMRES/references/b37/Mills_and_1000G_gold_standard.indels.b37.sites.vcf" # Gold standard INDEL reference from GATK
 export TGVCF="$EXOMRES/references/b37/1000G_omni2.5.b37.sites.vcf" 
 export INDEL1KG="$EXOMRES/references/b37/1000G_phase1.indels.b37.vcf" # INDEL reference from 1000 genomes
-#export DBSNP="$EXOMRES/references/b37/dbsnp_138.b37.vcf" # dbSNP vcf from GATK
-export DBSNP="$EXOMRES/references/b37/dbsnp_138.b37.excluding_sites_after_129.vcf"
+export DBSNP="$EXOMRES/references/b37/dbsnp_138.b37.vcf" # dbSNP vcf from GATK
+#export DBSNP="$EXOMRES/references/b37/dbsnp_138.b37.excluding_sites_after_129.vcf"
 export ONEKG="$EXOMRES/references/b37/1000G_phase1.snps.high_confidence.b37.vcf" # 1000 genome SNPs vcf
 export ANNOVAR="/home/local/users/jw/software_packages/annovar"
 export ANNHDB="$EXOMRES/ANNOVAR_DB" #Location of annovar databases
@@ -43,5 +43,5 @@ export TGTCODES="AgtV2:AgtV4:AgtV5:AgtV5UTR:NbgV2:NbgV3:IllTS:BigTgt:RefSeq:VCRv
 
 #Other resources
 #export HapMapReference=/home/local/users/jw/resources/AncestryPCA/PLINK/1KG.XGEN.SNP.Common
-export HapMapReference=$EXOMRES/resources/AncestryPCA/resources/1KG_AJ_Domi_PCAcontrol.vcf.gz
+export HapMapReference=$EXOMRES/AncestryPCA/resources/1KG_AJ_Domi_PCAcontrol.vcf.gz
 export MAPPABILITY_FIL=$EXOMRES/mappability/${BUILD}_200bp_mappability.bed.gz
