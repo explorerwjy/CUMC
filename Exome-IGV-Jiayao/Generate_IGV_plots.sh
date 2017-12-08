@@ -15,6 +15,7 @@ usage="
 
 #get arguments
 ExpandMode="false"
+ExpandMode="true"
 while getopts v:b:g:EH opt; do
     case "$opt" in
         v) INDELS="$OPTARG";;
@@ -38,7 +39,7 @@ mkdir -p $DIR
 
 ###=========================================================
 #ADDRESS="/home/local/ARCS/hq2130/src/IGV_2.3.68/"
-ADDRESS="/home/local/ARCS/hq2130/src/IGV_2.3.68/"
+ADDRESS="/home/local/ARCS/nz2274/Application/IGV_2.3.97/"
 IGVR=$ADDRESS"igv.sh" ## igv 
 SCRF=$INDELS.txt
 rm -rf $SCRF
@@ -102,7 +103,7 @@ do
 	fi
 
 
-	printf "maxPanelHeight 400 \n" >> $SCRF
+	printf "maxPanelHeight 800 \n" >> $SCRF
 	#printf "snapshot $SAMPLE.$NAME.$VALUE.png \n" >> $SCRF
 	SAMPLENAME=`basename $SAMPLE|grep -P -o '[a-zA-Z0-9-]+'`
 	SAMPLENAME=`echo $SAMS|cut -d ' ' -f1 `

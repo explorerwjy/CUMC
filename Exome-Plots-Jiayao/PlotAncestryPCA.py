@@ -8,7 +8,10 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import random
 from mpl_toolkits.mplot3d import Axes3D
+fontsize = 15
 
+ControlDefault="/home/local/users/jw/resources/AncestryPCA/resources/1KG_AJ_Domi_PCAcontrol.vcf.gz"
+IndvPanelDefault="/home/local/users/jw/resources/AncestryPCA/resources/AncestryPCA.master.panel"
 
 class Control:
 	def __init__(self, row):
@@ -57,8 +60,10 @@ class PloyAncestryPCA:
 
 	def loadEigenValue(self):
 		fin = open(self.EvecFil, 'rb')
-		self.Colors = {'SAS':"green" , 'EAS':"blue", 'AMR':"orange", 'AFR':"purple", 'EUR':"red", 'CASE':"grey"}
-		self.SuperPops = {'SAS':[] , 'EAS':[], 'AMR':[], 'AFR':[], 'EUR':[]} #'SAS', 'EAS', 'AMR', 'AFR', 'EUR'
+		#self.Colors = {'SAS':"green" , 'EAS':"blue", 'AMR':"orange", 'AFR':"purple", 'EUR':"red", 'CASE':"grey"}
+		self.Colors = {'SAS':"green" , 'EAS':"blue", 'AMR':"orange", 'AFR':"purple", 'EUR':"red", 'AJ':"pink", 'DOMI':"yellow",'CASE':"grey"}
+		#self.SuperPops = {'SAS':[] , 'EAS':[], 'AMR':[], 'AFR':[], 'EUR':[]} #'SAS', 'EAS', 'AMR', 'AFR', 'EUR'
+		self.SuperPops = {'SAS':[] , 'EAS':[], 'AMR':[], 'AFR':[], 'EUR':[], 'AJ':[], 'DOMI':[]} #'SAS', 'EAS', 'AMR', 'AFR', 'EUR'
 		self.Cases = []
 		header = fin.next()
 		for line in fin:
@@ -73,7 +78,7 @@ class PloyAncestryPCA:
 				except KeyError:
 					print "Sample %s marked as control but not in Control Panel" % (evec.ID)
 
-
+# Not in Use
 	def ReduceSuperPop(self):
 		self.Colors = {'SAS':"green" , 'EAS':"blue", 'AMR':"orange", 'AFR':"purple", 'EUR':"red", 'CASE':"grey"}
 		self.SuperPops = {'SAS':[] , 'EAS':[], 'AMR':[], 'AFR':[], 'EUR':[]} #'SAS', 'EAS', 'AMR', 'AFR', 'EUR'
@@ -94,18 +99,28 @@ class PloyAncestryPCA:
 	def Plot(self, OutName):
 		with PdfPages('%s.pdf'%OutName, 'wb') as pdf:
 			for PCx, PCy in [(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8),(8,9),(9,10)]:
-				plt.figure(figsize=(15, 15))
+				fig = plt.figure(figsize=(15, 15))
+				ax = fig.add_subplot(111)
 				for k,SuperPop in self.SuperPops.items():
 					color = self.Colors[k]
 					X, Y = self.ReadEigenvaluesFromList(SuperPop, PCx-1, PCy-1)
 					plt.scatter(X, Y, color=color, marker='x', label=k)
 				X, Y = self.ReadEigenvaluesFromList(self.Cases, PCx-1, PCy-1)
 				plt.scatter(X, Y, color="grey", marker='o', label="Cases")
-				plt.xlabel("PC%d, %.3f%s of variance" % (PCx,self.EigenEvals[PCx-1]*100,"%"))
-				plt.ylabel("PC%d, %.3f%s of variance" % (PCy,self.EigenEvals[PCy-1]*100,"%"))
-				plt.title('PC%d - PC%d'%(PCx,PCy))
-				plt.legend(loc='upper right')
+				plt.xlabel("PC%d, %.3f%s of variance" % (PCx,self.EigenEvals[PCx-1]*100,"%"), fontsize=35)
+				plt.ylabel("PC%d, %.3f%s of variance" % (PCy,self.EigenEvals[PCy-1]*100,"%"), fontsize=35)
+				plt.title('PC%d - PC%d'%(PCx,PCy), fontsize=40)
+				if (PCx, PCy) in [(1,2),(2,3),(3,4)]:
+					plt.legend(loc='lower left')
+				else:
+					plt.legend(loc='lower left')
+					#plt.legend()
+				font = {
+					'weight' : 'normal',
+					'size'   : fontsize}
+				mpl.rc('font', **font)
 				plt.grid(True)
+				ax.tick_params(labelsize=25)
 				#plt.show()
 				pdf.savefig()
 				plt.close()
@@ -148,7 +163,7 @@ def GetOptions():
 	#EVAL = "data/RGN.plus.HapMap.eval"
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-s', '--prefix', type=str, help='Prefix of PCA results')
-	parser.add_argument('-c', '--control', type=str, default='/home/local/users/jw/resources/AncestryPCA/resources/1KG.20130502.ALL.panel', help='Control Panel')
+	parser.add_argument('-c', '--control', type=str, default=IndvPanelDefault, help='Control Panel')
 	parser.add_argument('--evec', type=str, help='EigenValue Evaluation File')
 	parser.add_argument('--eval', type=str, help='Sample EigenVector Files')
 	args = parser.parse_args()
