@@ -1,7 +1,7 @@
 # all values are not filtered if at that value
 
 INFO:
-  exon: true
+  exon: false 
   exon_flag:
   - 'splicing'
   - 'exonic'

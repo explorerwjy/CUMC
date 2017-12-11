@@ -1,0 +1,23 @@
+# all values are not filtered if at that value
+
+INFO:
+  max_gnomAD: 0.001
+  max_ExAC: 0.001
+  excluded_gene:
+  - MUC
+  - HLA
+  excluded_chrom:
+  - GL
+  #max_seqdup: 0.99
+  #rmsk: true
+
+READS:
+  # proband filter
+  min_proband_AD: 5
+  min_proband_PL: 70
+  min_proband_alt_freq: 0.2 #0.2 # AD < 10
+  # parents filter
+  min_parents_DP: 10
+  min_parents_GQ: 30
+  min_parents_ref_freq: 0.965
+
