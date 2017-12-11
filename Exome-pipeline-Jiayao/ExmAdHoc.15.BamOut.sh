@@ -99,7 +99,8 @@ StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATK
  -L $TgtBed
  -I $BamFil
  -bamout $BamNam.bamout.bam
- -forceActive -disableOptimizations
+ --forceActive --disableOptimizations
+ --dontTrimActiveRegions
  --genotyping_mode DISCOVERY
  -stand_emit_conf 10
  -stand_call_conf 30
