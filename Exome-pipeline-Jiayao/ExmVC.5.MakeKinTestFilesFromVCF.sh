@@ -55,7 +55,12 @@ source $RefFil
 source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
 
 #set local variables
-VcfFil=`readlink -f $InpFil` #resolve absolute path to vcf
+FILTER_COMMON=$HOME/CUMC/Exome-Filters-Jiayao/Filter_WGS_common.py
+InpFil=`readlink -f $InpFil` #resolve absolute path to vcf
+VcfFil=$(basename $InpFil | sed s/.gz//g| sed s/.vcf//g)
+VcfFil="${VcfFil}.common.vcf"
+FilterStep="python $FILTER_COMMON -v $InpFil -o $VcfFil"
+eval $FilterStep
 if [[ ! $OutNam ]]; then OutNam=`basename $InpFil | sed s/.gz$// | sed s/.vcf$// | sed s/.hardfiltered$// `; fi
 if [[ ! $LogFil ]];then LogFil=$OutNam.kinshipfiles.log; fi
 TmpLog=Temp.$LogFil
