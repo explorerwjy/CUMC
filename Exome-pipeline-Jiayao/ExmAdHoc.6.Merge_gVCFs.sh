@@ -68,7 +68,8 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions
 
 #Set local Variables
 funcGetTargetFile #If the target file has been specified using a code, get the full path from the exported variable
-if [[ -z "$VcfNam" ]];then VcfNam=`basename $InpFil`; VcfNam=${VcfNam%%.*}; fi  # a name for the output files
+#if [[ -z "$VcfNam" ]];then VcfNam=`basename $InpFil`; VcfNam=${VcfNam%%.*}; fi  # a name for the output files
+if [[ -z "$VcfNam" ]];then VcfNam=$(basename $InpFil|sed s/.list//g); fi  # a name for the output files
 if [[ -z $LogFil ]]; then LogFil=$VcfNam.CmbGVCF.log; fi # a name for the log file
 InpFil=`readlink -f $InpFil` #resolve absolute path to bam
 VcfFil=$VcfNam.Combined.g.vcf #Output File
