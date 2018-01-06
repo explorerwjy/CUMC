@@ -92,7 +92,7 @@ StepCmd="java -Xmx16G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -o $VcfFil
  -log $GatkLog" #command to be run
 if [[ -e "$Target" ]];then 
-	StepCmd="${StepCmd} -L $Targe "
+	StepCmd="${StepCmd} -L $Target "
 else
 	echo "No Target File Provided or Target File not exists"
 fi
