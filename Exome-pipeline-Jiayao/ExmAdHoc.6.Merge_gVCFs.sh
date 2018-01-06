@@ -44,11 +44,12 @@ ExmAdHoc.6.Merge_gVCFs.sh -i <InputFile> -r <reference_file> -o <OutputName> -l 
 
 BadET="false"
 
-while getopts i:r:o:l:PBH opt; do
+while getopts i:r:o:t:l:PBH opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
         r) RefFil="$OPTARG";; 
         o) VcfNam="$OPTARG";;
+        t) Target="$OPTARG";;
         l) LogFil="$OPTARG";;
         B) BadET="true";;
         H) echo "$usage"; exit;;
@@ -57,6 +58,7 @@ done
 
 #check all required paramaters present
 if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
+
 
 #Call the RefFil to load variables
 RefFil=`readlink -f $RefFil`
@@ -89,6 +91,11 @@ StepCmd="java -Xmx16G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -V $InpFil
  -o $VcfFil
  -log $GatkLog" #command to be run
+if [[ -e "$Target" ]];then 
+	StepCmd="${StepCmd} -L $Targe "
+else
+	echo "No Target File Provided or Target File not exists"
+fi
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep
 
