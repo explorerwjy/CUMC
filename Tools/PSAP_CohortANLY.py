@@ -56,6 +56,7 @@ class FamAnalysis:
 	def run(self):
 		Samples = self.GetIndividualList()
 		WorkDir = self.RESdir
+		self.RootDir = os.getcwd()
 		fin = open(self.PEDname, 'rb')
 		NewFam = 'None'
 		for l in fin:
@@ -117,6 +118,7 @@ class FamAnalysis:
 			#print cmd
 			#process = subprocess.Popen(cmd, shell=True)
 			self.foutArr.write(cmd)
+		self.ArrFilPath = self.RootDir + '/' + self.ArrFil
 		os.chdir(WorkDir)
 
 	def printSample(self, Fam):
@@ -130,7 +132,8 @@ class FamAnalysis:
 		self.foutCmd.write('#/bin/bash\n\n')
 		self.foutCmd.write('CMD={}\n'.format(PrepareVCF))
 		self.foutCmd.write('VCF={}\n'.format(self.VCFname))
-		self.foutCmd.write('InpFil={}\n'.format(os.getcwd() + '/' + self.ArrFil))
+		#self.foutCmd.write('InpFil={}\n'.format(os.getcwd() + '/' + self.ArrFil))
+		self.foutCmd.write('InpFil={}\n'.format(self.ArrFilPath))
 		self.foutCmd.write('COLLECT={}\n'.format(COLLECT))
 		self.foutCmd.write("Num_Job=`wc -l $InpFil | awk '{print $1}'`\n\n")
 		self.foutCmd.write('seq $Num_Job | parallel -j {} --ETA bash $CMD -i $InpFil -v $VCF -a {}\n'.format(self.Nparallel, "{}"))
