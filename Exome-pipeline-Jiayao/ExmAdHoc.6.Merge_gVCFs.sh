@@ -2,8 +2,8 @@
 #$ -S /bin/bash
 #$ -j y
 #$ -N MergeGVCF
-#$ -l h_rt=12:00:00
-#$ -l h_vmem=20G
+#$ -l h_rt=256:00:00
+#$ -l h_vmem=40G
 #$ -cwd
 
 #This script takes a list of gVCF files (filename must end ".list") and combines them into a single file

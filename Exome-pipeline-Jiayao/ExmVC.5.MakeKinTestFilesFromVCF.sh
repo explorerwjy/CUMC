@@ -1,4 +1,10 @@
 #!/bin/bash
+#$ -S /bin/bash
+#$ -j y
+#$ -N KINSHIP 
+#$ -l h_rt=256:00:00
+#$ -l h_vmem=50G
+#$ -cwd
 
 #This script takes a VCF file and generates files to check the familial relationships and sex of the samples
 #    InpFil - (required) - Path to VCF file or a list of VCF Files to be recalibrated
@@ -89,7 +95,7 @@ if [[ $FilTyp == "gz" ]]; then
     mv -f $TmpRelatScript.2 $TmpRelatScript
 fi
 chmod 775 $TmpRelatScript
-StepCmd="nohup ./$TmpRelatScript > $TmpRelatScript.o 2>&1 &"
+StepCmd="./$TmpRelatScript > $TmpRelatScript.o 2>&1 "
 funcRunStep
 
 #get missingness for each individual
@@ -101,7 +107,7 @@ if [[ $FilTyp == "gz" ]]; then
     mv -f $TmpMissingScript.2 $TmpMissingScript
 fi
 chmod 775 $TmpMissingScript
-StepCmd="nohup ./$TmpMissingScript  > $TmpMissingScript.o 2>&1 &"
+StepCmd="./$TmpMissingScript  > $TmpMissingScript.o 2>&1 "
 funcRunStep
 
 
@@ -168,7 +174,7 @@ funcRunStep
 
 #get missingness
 StepName="Run relationship Inference by KING"
-StepCmd="king -b KinshipFiles/$OutNam.bed --kinship"
+StepCmd="king -b KinshipFiles/$OutNam.bed --kinship --prefix $OutNam.kin"
 funcRunStep
 
 #End Log

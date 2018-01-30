@@ -2,8 +2,8 @@
 #$ -S /bin/bash
 #$ -j y
 #$ -N JointGenotyping 
-#$ -l h_rt=12:00:00
-#$ -l h_vmem=30G
+#$ -l h_rt=128000:00:00
+#$ -l h_vmem=60G
 #$ -cwd
 
 
@@ -142,7 +142,7 @@ echo "Target file line range: $SttLn - $(( $SttLn + $DivLen - 1 ))" >> $TmpLog
 
 ##Run Joint Variant Calling
 StepName="Joint call gVCFs with GATK"
-StepCmd="java -Xmx10G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx50G -XX:ParallelGCThreads=20 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T GenotypeGVCFs
  -R $REF
  -L $TgtFil
@@ -158,7 +158,7 @@ funcRunStep
 ##Annotate VCF with GATK
 infofields="-A AlleleBalance -A BaseQualityRankSumTest -A Coverage -A HaplotypeScore -A HomopolymerRun -A MappingQualityRankSumTest -A MappingQualityZero -A QualByDepth -A RMSMappingQuality -A SpanningDeletions -A FisherStrand -A InbreedingCoeff -A ClippingRankSumTest -A DepthPerSampleHC -A ChromosomeCounts -A GenotypeSummaries -A StrandOddsRatio"
 StepName="Joint call gVCFs"
-StepCmd="java -Xmx8G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx50G -XX:ParallelGCThreads=20 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T VariantAnnotator 
  -R $REF
  -L $VcfFil
@@ -173,7 +173,7 @@ mv -f $VcfAnnFil $VcfFil
 
 ##Left Align variants
 StepName="Left align variants in the VCF with GATK"
-StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
+StepCmd="java -Xmx50G -XX:ParallelGCThreads=20 -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T LeftAlignAndTrimVariants
  -R $REF
  -V $VcfFil
