@@ -2,8 +2,8 @@
 #$ -S /bin/bash
 #$ -j y
 #$ -N MergeVCF 
-#$ -l h_rt=12:00:00
-#$ -l h_vmem=10G
+#$ -l h_rt=24:00:00
+#$ -l h_vmem=20G
 #$ -cwd
 #This script concatenates multiple vcfs into a single vcf, for example vcfs that have been split by chromosome. 
 #    InpFil - (required) - A driectory containging vcf files to be concatenated - they should all contain the same samples 
