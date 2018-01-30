@@ -99,14 +99,14 @@ rgheader=$(tail -n+$ArrNum $InpFil | head -n 1 | cut -f2) #RG header from second
 echo $rgheader
 SM=$(echo $rgheader|grep -P -o "SM:([0-9a-zA-Z-_]+)"|sed s/SM://g)
 ID=$(echo $rgheader|grep -P -o "ID:([0-9]+)"|sed s/ID://g)
-BamNam="$SM"_"$ID"
+BamNam=$SM
 echo $BamNam
 
 if [[ -z "$LogFil" ]]; then LogFil=$BamNam.FqB.log; fi # a name for the log file
 AlnDir=$BamNam.align; mkdir -p $AlnDir; cd $AlnDir # create working and move into a working directory
 AlnFil=$BamNam.bwamem.bam #filename for bwa-mem aligned file
 SrtFil=$BamNam.bwamem.sorted.bam #output file for sorted bam
-DdpFil=$BamNam.bwamem.mkdup.bam #output file with PCR duplicates marked
+DdpFil=$BamNam.bam #output file with PCR duplicates marked
 FlgStat=$BamNam.bwamem.flagstat #output file for bam flag stats
 IdxStat=$BamNam.idxstats #output file for bam index stats
 TmpLog=$BamNam.FqB.temp.log #temporary log file
@@ -156,12 +156,12 @@ rm $SrtFil ${SrtFil/bam/bai} #remove the "Sorted bam"
 #Get flagstat
 StepName="Output flag stats using Samtools"
 StepCmd="samtools flagstat $DdpFil > $FlgStat"
-#funcRunStep
+funcRunStep
 
 #get index stats
 StepName="Output idx stats using Samtools"
 StepCmd="samtools idxstats $DdpFil > $IdxStat"
-#funcRunStep
+funcRunStep
 
 
 #End Log
