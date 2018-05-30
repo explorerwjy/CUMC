@@ -95,6 +95,7 @@ class YML_Filter():
 class INDIVIDUAL:
 	def __init__(self, line):
 		self.llist = line.strip().split('\t')
+		print self.llist
 		self.FamID, self.SampleID, self.FatherID, self.MotherID, self.Gender, self.Affected = self.llist[0:6]
 
 class PEDIGREE():
@@ -199,7 +200,10 @@ class VARIANT():
 		if not Genotype.isCalled:
 			return "NotCall"
 		GT1, GT2 = Genotype.GT
-		DP = int(Genotype.Dict['DP'])
+		try:
+			DP = int(Genotype.Dict['DP'])
+		except ValueError:
+			return "NoDP"
 		ADs =  Genotype.Dict['AD'].split(',')
 		AD1, AD2 = ADs[GT1], ADs[GT2]
 		PL_NotRef = Genotype.Dict['PL'].split(',')[0]

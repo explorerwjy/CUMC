@@ -3,7 +3,7 @@
 #$ -j y
 #$ -N DoC 
 #$ -l h_rt=80:00:00
-#$ -l h_vmem=16G
+#$ -l h_vmem=8G
 #$ -cwd
 
 

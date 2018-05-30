@@ -67,9 +67,11 @@ source $RefFil
 source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
 
 ##Set local parameters
+InpFil=$(basename $InpFil)
 InpFil=${InpFil%/} # remove trailing slash
 PrgDir=${InpFil/splitfiles/progfiles}
-VcfNam=${InpFil%%.*}
+#VcfNam=${InpFil%%.*}
+VcfNam=$(echo $InpFil|sed s/.splitfiles//g)
 #MrgFil=$VcfNam.merged.vcf #Merged VCF temporary
 SrtDir=$VcfNam.sort.tempdir # temporary directory for the vcf-sort command
 mkdir -p $SrtDir
@@ -106,6 +108,7 @@ fi
 StepName="Merge with vcftools" # Description of this step - used in log
 echo "Merging ... "$CountVCF" ... vcfs" >> $TmpLog
 StepCmd="vcf-concat -p $InpFil/*vcf | vcf-sort -t $SrtDir -c > $VcfFil"
+echo $StepCmd
 funcRunStep
 
 #Create a list of sample names used in the vcf

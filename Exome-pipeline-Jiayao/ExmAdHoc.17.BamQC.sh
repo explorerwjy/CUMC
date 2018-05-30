@@ -6,7 +6,7 @@
 #$ -l h_vmem=16G
 #$ -cwd
 
-# This script add or change the Read Groups for bam files
+# This script do some QC on bam files. Including flagstats, idxstats, duplications, insertion sizes and gc bias.
 
 #set default arguments
 usage="
@@ -24,14 +24,12 @@ usage="
 PipeLine="false"
 
 #get arguments
-while getopts i:r:a:g:l:t:PFH opt; do
+while getopts i:r:a:l:PFH opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
         r) RefFil="$OPTARG";; 
         a) ArrNum="$OPTARG";; 
-	    g) ReadGroup="$OPTARG";;
 		l) LogFil="$OPTARG";;
-        t) TgtBed="$OPTARG";; 
         P) PipeLine="true";;
         F) FixMisencoded="true";;
         H) echo "$usage"; exit;;
@@ -65,42 +63,54 @@ TmpDir=$BamNam.FqB.tempdir; mkdir -p $TmpDir #temporary directory
 
 #start log
 ProcessName="Collect BAMQC Metrics with Samtools&Picard"
-funcWriteStartLog
+#funcWriteStartLog
 echo " Build of reference files: "$BUILD >> $TmpLog
 echo "----------------------------------------------------------------" >> $TmpLog
 
 #Get flagstat
 StepName="Output flag stats using Samtools"
 StepCmd="samtools flagstat $BAM > $FlgStat"
-funcRunStep
+#funcRunStep
 
 #get index stats
 StepName="Output idx stats using Samtools"
 StepCmd="samtools idxstats $BAM > $IdxStat"
-funcRunStep
+#funcRunStep
 
 StepName="LibraryComplexity"
 StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD EstimateLibraryComplexity 
  INPUT=$BAM
  OUTPUT=$BamNam.est_lib_complex_metrics.txt
  2>>$TmpLog"
-funcRunStep
-
+#funcRunStep
 
 StepName="CollectInsertSize"
-StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD CollectInsertSizeMetrics 
+StepCmd="java -Xmx4G -XX:ParallelGCThresdfsdfsads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD CollectInsertSizeMetrics 
  INPUT=$BAM
  OUTPUT=$BamNam.insert_size_metrics.txt
  H=$BamNam.insert_size_histogram.pdf
  M=0.05
  DEVIATIONS=10.0
- INCLUDE_DUPLICATES=false
+ INCLUDE_DUPLICATES=falsegc_bias_metrics
  ASSUME_SORTED=true
+ 2>>$TmpLog"
+#funcRunStep
+
+#======================================================================================================
+# Notice This Step Require Exactly The Same Reference Genome as Bam Files. You May Want to Change
+# $REF Here.
+#======================================================================================================
+StepName="GC Bias"
+StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD CollectGcBiasMetrics 
+ INPUT=$BAM
+ OUTPUT=$BamNam.gc_bias_metrics.txt
+ CHART=$BamNam.gc_bias_metrics.pdf
+ S=$BamNam.summary_metrics.txt
+ R=$REF
  2>>$TmpLog"
 funcRunStep
 
-
-
+#R=/home/local/users/jw/Genetics_Projects/SPARK/Regeneron_NovoSeq_Freeze_One/resouces/genome.fa
 #End Log
 funcWriteEndLog
 echo "Done BAM QC "$BAM

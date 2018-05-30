@@ -3,7 +3,7 @@
 #$ -j y
 #$ -N BWAMEM 
 #$ -l h_rt=12:00:00
-#$ -l h_vmem=20G
+#$ -l h_vmem=5G
 #$ -cwd
 
 # This script takes fastq files and aligns them with BWA mem

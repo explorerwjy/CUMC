@@ -3,6 +3,7 @@ export EXOMPPLN="/home/local/users/jw/CUMC/Exome-pipeline-Jiayao" # Directory co
 export EXOMRES="/home/local/users/jw/resources" # Directory containing resources/references for pipeline
 
 #jar files  and directories for software
+#GATKJAR="/home/local/users/jw/bin/GenomeAnalysisTK.jar" #Current GATK jar file
 GATKJAR="/home/local/users/jw/bin/GenomeAnalysisTK.jar" #Current GATK jar file
 PICARD="/home/local/users/jw/bin/picard.jar" #directory containing Picard jar files
 SNPEFF="/home/local/users/jw/bin/snpEff.jar" # Current snpEff jar file

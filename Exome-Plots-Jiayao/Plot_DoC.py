@@ -47,10 +47,13 @@ def Plot_D15(Table):
 	Means, D10, D15 = [], [], []
 	for l in fin:
 		tmps = l.strip().split('\t')
-		if float(tmps[8]) > 80:
-			Means.append(float(tmps[2]))
-			D10.append(float(tmps[8]))
-			D15.append(float(tmps[9]))
+		#if float(tmps[8]) > 80:
+		#	Means.append(float(tmps[2]))
+		#	D10.append(float(tmps[8]))
+		#	D15.append(float(tmps[9]))
+		Means.append(float(tmps[2]))
+		D10.append(float(tmps[8]))
+		D15.append(float(tmps[9]))
 	fin.close()
 	Plot_scatter(Means, D10, D15)
 

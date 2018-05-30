@@ -11,9 +11,9 @@ import csv
 import re
 
 SampleName = re.compile('.+.bam')
-EXM_REF = '/home/yufengshen/CUMC/Exome-pipeline-Jiayao/WES_Pipeline_References.b37.biocluster.sh'
-BAMOUT_CMD = '/home/yufengshen/CUMC/Exome-pipeline-Jiayao/ExmAdHoc.15b.BamOut.sh'
-RUN = 'qsub'
+EXM_REF = '$HOME/CUMC/Exome-pipeline-Jiayao/WES_Pipeline_References.b37.biocluster.sh'
+BAMOUT_CMD = '$HOME/CUMC/Exome-pipeline-Jiayao/ExmAdHoc.15b.BamOut.sh'
+RUN = 'nohup'
 
 def GetOptions():
 	parser = argparse.ArgumentParser()
@@ -43,15 +43,19 @@ class Pedigree:
 			if l.startswith('#'):
 				continue
 			llist = l.strip().split('\t')
+			print llist
 			fam, sample, father, mother, sex, phenotype = llist[:6]
-			if fam == sample: # Proband
+			#if fam == sample: # Proband
+			if father != '0' and mother != '0' and phenotype == '2':
 				#print sample, father, mother
 				self.Probands[sample] = Proband(sample, father, mother)
+
 class BAM:
 	def __init__(self, fpath):
 		self.FullPath = fpath.strip()
 		self.BamName = self.FullPath.split('/')[-1]
 		self.Sample = SampleName.search(self.BamName).group(0)
+		self.Sample = self.Sample.rstrip(".bam")
 		print self.BamName, self.Sample
 
 class BamLocation:
@@ -73,9 +77,12 @@ class Variant:
 		self.end = self.Pos + 150
 	def addPed(self, pedigree):
 		print pedigree.Probands
-		self.Father = pedigree.Probands[self.Sample].Father
-		self.Mother = pedigree.Probands[self.Sample].Mother
-	def addBam(self, bamlocation ):
+		try:
+			self.Father = pedigree.Probands[self.Sample].Father
+			self.Mother = pedigree.Probands[self.Sample].Mother
+		except KeyError:
+			print pedigree.Probands.keys()
+	def addBam(self, bamlocation):
 		for bam in bamlocation.Bams.values():
 			if self.Sample == bam.Sample:
 				self.SampleBam = bam

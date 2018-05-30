@@ -8,7 +8,7 @@ PICARD="/home/local/users/jw/bin/picard.jar" #directory containing Picard jar fi
 SNPEFF="/home/local/users/jw/bin/snpEff.jar" # Current snpEff jar file
 
 ## References
-export BUILD="b38" # shorthand for build
+export BUILD="hg38" # shorthand for build
 #export REF="$EXOMRES/reference_genomes/GRCh38/Homo_sapiens_assembly38.fasta" 
 export REF="$EXOMRES/reference_genomes/GRCh38/GRCh38.no_alt_analysis_set.fa" 
 export HAPMAP="$EXOMRES/references/GRCh38/hapmap_3.3.hg38.vcf" # hapmap vcf from GATK
