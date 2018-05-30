@@ -19,7 +19,7 @@
 #    Help - H - (flag) - get usage information
 
 #Required Variable:
-EXOMPPLN="/home/yufengshen/CUMC/Exome-pipeline-Jiayao"
+EXOMPPLN="$HOME/CUMC/Exome-pipeline-Jiayao"
 
 #list of required tools:
 # standard linux library

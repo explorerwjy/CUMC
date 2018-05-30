@@ -49,7 +49,10 @@ done
 #source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
 
 #Set Local Variables
-#ArrNum=$SGE_TASK_ID
+if [[ -z "${ArrNum}" ]]
+then
+    ArrNum=$SGE_TASK_ID
+fi
 
 #funcFilfromList #if the input is a list get the appropriate input file for this job of the array --> $InpFil
 InpFil=`readlink -f $InpFil`
